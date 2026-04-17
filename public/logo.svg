@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+
+  <!-- Background -->
+  <rect width="800" height="800" rx="100" fill="#FAF8F4"/>
+
+  <!-- ===== DESK ===== -->
+  <rect x="80" y="518" width="640" height="22" rx="5" fill="#1A1A1A"/>
+  <rect x="120" y="540" width="18" height="80" fill="#1A1A1A"/>
+  <rect x="662" y="540" width="18" height="80" fill="#1A1A1A"/>
+
+  <!-- ===== SLEEPING PERSON (left) ===== -->
+  <!-- Torso/chair (below desk) -->
+  <rect x="148" y="520" width="56" height="110" rx="16" fill="#3D5A8A"/>
+  <!-- Arm stretched on desk -->
+  <rect x="92" y="497" width="175" height="24" rx="12" fill="#3D5A8A"/>
+  <!-- Forearm/hand skin -->
+  <rect x="92" y="497" width="80" height="24" rx="12" fill="#D4956A"/>
+  <!-- Head resting on arm -->
+  <ellipse cx="195" cy="500" rx="42" ry="32" fill="#D4956A"/>
+  <!-- Hair -->
+  <path d="M155 490 Q195 462 235 490 Q233 466 195 460 Q157 466 155 490Z" fill="#2A1A0A"/>
+  <!-- Closed eye -->
+  <path d="M180 496 Q195 502 210 496" stroke="#8A5A3A" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Ear -->
+  <ellipse cx="237" cy="502" rx="8" ry="11" fill="#C4855A"/>
+
+  <!-- ZZZ (floating up from head) -->
+  <text x="200" y="462" font-family="Georgia, serif" font-size="38" font-weight="700" fill="#C8860A" opacity="0.85">z</text>
+  <text x="228" y="433" font-family="Georgia, serif" font-size="28" font-weight="700" fill="#C8860A" opacity="0.6">z</text>
+  <text x="252" y="410" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#C8860A" opacity="0.38">z</text>
+
+  <!-- ===== LAPTOP ===== -->
+  <!-- Screen bezel -->
+  <rect x="295" y="338" width="236" height="182" rx="12" fill="#1A1A1A"/>
+  <!-- Screen surface -->
+  <rect x="308" y="350" width="210" height="156" rx="7" fill="#0D1E2C"/>
+  <!-- Laptop base -->
+  <rect x="375" y="520" width="76" height="8" rx="3" fill="#1A1A1A"/>
+  <rect x="355" y="528" width="116" height="6" rx="3" fill="#252525"/>
+
+  <!-- ===== AGENTS ON SCREEN ===== -->
+  <!-- Agent 1 -->
+  <g transform="translate(358, 428)">
+    <rect x="-22" y="-18" width="44" height="42" rx="8" fill="#C8860A"/>
+    <rect x="-14" y="-10" width="11" height="11" rx="3" fill="#0D1E2C"/>
+    <rect x="3" y="-10" width="11" height="11" rx="3" fill="#0D1E2C"/>
+    <rect x="-10" y="9" width="20" height="4" rx="2" fill="#0D1E2C"/>
+    <rect x="-3" y="-26" width="6" height="11" rx="3" fill="#C8860A"/>
+    <circle cx="0" cy="-29" r="5" fill="#E8A832"/>
+    <rect x="-22" y="33" width="44" height="4" rx="2" fill="#C8860A" opacity="0.4"/>
+    <rect x="-22" y="41" width="30" height="4" rx="2" fill="#C8860A" opacity="0.28"/>
+  </g>
+
+  <!-- Agent 2 -->
+  <g transform="translate(468, 428)">
+    <rect x="-22" y="-18" width="44" height="42" rx="8" fill="#C8860A"/>
+    <rect x="-14" y="-10" width="11" height="11" rx="3" fill="#0D1E2C"/>
+    <rect x="3" y="-10" width="11" height="11" rx="3" fill="#0D1E2C"/>
+    <!-- Smile (working hard) -->
+    <path d="M-10 10 Q0 18 10 10" stroke="#0D1E2C" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <rect x="-3" y="-26" width="6" height="11" rx="3" fill="#C8860A"/>
+    <circle cx="0" cy="-29" r="5" fill="#E8A832"/>
+    <rect x="-22" y="33" width="44" height="4" rx="2" fill="#C8860A" opacity="0.4"/>
+    <rect x="-22" y="41" width="22" height="4" rx="2" fill="#C8860A" opacity="0.28"/>
+  </g>
+
+  <!-- Screen ambient glow line -->
+  <rect x="308" y="485" width="210" height="2" rx="1" fill="#C8860A" opacity="0.12"/>
+
+  <!-- ===== PRINTER (right) ===== -->
+  <!-- Body -->
+  <rect x="574" y="438" width="122" height="84" rx="10" fill="#2D2D2D"/>
+  <!-- Paper input top -->
+  <rect x="591" y="425" width="88" height="18" rx="5" fill="#3A3A3A"/>
+  <!-- Status LED -->
+  <circle cx="666" cy="465" r="6" fill="#C8860A"/>
+  <!-- Front slots -->
+  <rect x="591" y="456" width="55" height="3" rx="1" fill="#404040"/>
+  <rect x="591" y="465" width="40" height="3" rx="1" fill="#404040"/>
+  <rect x="591" y="474" width="50" height="3" rx="1" fill="#404040"/>
+  <!-- Output slot -->
+  <rect x="591" y="519" width="88" height="6" rx="2" fill="#1A1A1A"/>
+
+  <!-- ===== MONEY BILLS ===== -->
+  <!-- Bill 1: in output slot -->
+  <rect x="596" y="510" width="78" height="46" rx="4" fill="#D8EDD8"/>
+  <rect x="602" y="516" width="66" height="34" rx="2" fill="none" stroke="#48A860" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="630" y="540" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#2E7A3C">$</text>
+
+  <!-- Bill 2: floating up, slight tilt -->
+  <g transform="translate(628, 445) rotate(-12)">
+    <rect x="-38" y="-22" width="76" height="44" rx="4" fill="#D8EDD8" opacity="0.9"/>
+    <rect x="-32" y="-16" width="64" height="32" rx="2" fill="none" stroke="#48A860" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.9"/>
+    <text x="-10" y="6" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#2E7A3C" opacity="0.9">$</text>
+  </g>
+
+  <!-- Bill 3: floating higher -->
+  <g transform="translate(652, 360) rotate(9)">
+    <rect x="-32" y="-19" width="64" height="38" rx="4" fill="#D8EDD8" opacity="0.65"/>
+    <rect x="-26" y="-13" width="52" height="26" rx="2" fill="none" stroke="#48A860" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.65"/>
+    <text x="-8" y="5" font-family="Georgia, serif" font-size="17" font-weight="700" fill="#2E7A3C" opacity="0.65">$</text>
+  </g>
+
+  <!-- Bill 4: floating highest, fading -->
+  <g transform="translate(670, 290) rotate(-5)">
+    <rect x="-26" y="-16" width="52" height="32" rx="4" fill="#D8EDD8" opacity="0.38"/>
+    <text x="-6" y="4" font-family="Georgia, serif" font-size="14" font-weight="700" fill="#2E7A3C" opacity="0.38">$</text>
+  </g>
+
+  <!-- ===== DASHED LINE: agents → printer ===== -->
+  <path d="M513 460 Q548 460 574 470" stroke="#C8860A" stroke-width="2" fill="none" stroke-dasharray="6,5" opacity="0.3"/>
+
+  <!-- ===== DECORATIVE GEARS ===== -->
+  <!-- Large gear, top-left -->
+  <g transform="translate(118, 178)" opacity="0.32">
+    <circle r="42" fill="none" stroke="#C8860A" stroke-width="14"/>
+    <circle r="16" fill="#C8860A"/>
+    <rect x="-9" y="-60" width="18" height="20" rx="4" fill="#C8860A"/>
+    <rect x="-9" y="40" width="18" height="20" rx="4" fill="#C8860A"/>
+    <rect x="-60" y="-9" width="20" height="18" rx="4" fill="#C8860A"/>
+    <rect x="40" y="-9" width="20" height="18" rx="4" fill="#C8860A"/>
+    <g transform="rotate(45)">
+      <rect x="-9" y="-60" width="18" height="20" rx="4" fill="#C8860A"/>
+      <rect x="-9" y="40" width="18" height="20" rx="4" fill="#C8860A"/>
+      <rect x="-60" y="-9" width="20" height="18" rx="4" fill="#C8860A"/>
+      <rect x="40" y="-9" width="20" height="18" rx="4" fill="#C8860A"/>
+    </g>
+  </g>
+
+  <!-- Small gear, top-right -->
+  <g transform="translate(664, 200)" opacity="0.22">
+    <circle r="28" fill="none" stroke="#C8860A" stroke-width="9"/>
+    <circle r="11" fill="#C8860A"/>
+    <rect x="-6" y="-40" width="12" height="14" rx="3" fill="#C8860A"/>
+    <rect x="-6" y="26" width="12" height="14" rx="3" fill="#C8860A"/>
+    <rect x="-40" y="-6" width="14" height="12" rx="3" fill="#C8860A"/>
+    <rect x="26" y="-6" width="14" height="12" rx="3" fill="#C8860A"/>
+    <g transform="rotate(45)">
+      <rect x="-6" y="-40" width="12" height="14" rx="3" fill="#C8860A"/>
+      <rect x="-6" y="26" width="12" height="14" rx="3" fill="#C8860A"/>
+      <rect x="-40" y="-6" width="14" height="12" rx="3" fill="#C8860A"/>
+      <rect x="26" y="-6" width="14" height="12" rx="3" fill="#C8860A"/>
+    </g>
+  </g>
+
+  <!-- Tiny floating dots (activity/energy) -->
+  <circle cx="505" cy="295" r="5" fill="#C8860A" opacity="0.35"/>
+  <circle cx="526" cy="272" r="3.5" fill="#C8860A" opacity="0.25"/>
+  <circle cx="543" cy="255" r="2.5" fill="#C8860A" opacity="0.16"/>
+
+</svg>
