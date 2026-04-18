@@ -1,5 +1,5 @@
 // src/components/game/GameCanvas.tsx
-import { Suspense, useState, useCallback, useRef } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { Canvas }            from "@react-three/fiber";
 import { KeyboardControls }  from "@react-three/drei";
 import * as THREE            from "three";
@@ -85,13 +85,13 @@ export const GameCanvas = () => {
 
 // Fallback component to capture Enter key outside Canvas
 const KeyboardInterceptor = ({ onEnter }: { onEnter: () => void }) => {
-  useState(() => {
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.code === "Enter") onEnter();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  });
+  }, [onEnter]);
 
   return null;
 };

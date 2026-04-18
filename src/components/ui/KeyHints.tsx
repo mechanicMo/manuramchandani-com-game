@@ -21,7 +21,10 @@ const HINTS: Record<GamePhase, Hint[]> = {
 
 const sans = "'Inter', system-ui, sans-serif";
 
-type Props = { phase: GamePhase; extraHint?: string; nearbyName?: string | null };
+type Props = {
+  phase: GamePhase;
+  nearbyName: string | null;
+};
 
 export const KeyHints = ({ phase, extraHint, nearbyName }: Props) => {
   const hints = HINTS[phase];

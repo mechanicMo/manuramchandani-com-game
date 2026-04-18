@@ -20,9 +20,12 @@ export const LocationOverlay = ({ location, onDismiss }: Props) => {
       timerRef.current = setTimeout(onDismiss, 3000);
     }
 
-    // Dismiss on Escape
+    // Dismiss on Escape, or Enter for panel/contact
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.code === "Enter") onDismiss();
+      if (e.key === "Escape") onDismiss();
+      if (e.code === "Enter" && (interactionType === "panel" || interactionType === "contact")) {
+        onDismiss();
+      }
     };
     window.addEventListener("keydown", handleKey);
 
