@@ -1,11 +1,15 @@
 // src/components/game/LocationVisuals.tsx
+import { useMemo, memo } from "react";
 import { LOCATIONS } from "@/data/locations";
 import type { GamePhase } from "@/hooks/useGamePhase";
 
 type Props = { phase: GamePhase };
 
 export const LocationVisuals = ({ phase }: Props) => {
-  const locations = LOCATIONS.filter(loc => loc.phase === phase);
+  const locations = useMemo(
+    () => LOCATIONS.filter(loc => loc.phase === phase),
+    [phase]
+  );
 
   return (
     <>
@@ -16,7 +20,7 @@ export const LocationVisuals = ({ phase }: Props) => {
   );
 };
 
-const LocationVisual = ({ y, visualType }: { y: number; visualType: string }) => {
+const LocationVisual = memo(({ y, visualType }: { y: number; visualType: string }) => {
   switch (visualType) {
     case "campfire":
       return (
@@ -194,4 +198,4 @@ const LocationVisual = ({ y, visualType }: { y: number; visualType: string }) =>
     default:
       return null;
   }
-};
+});

@@ -15,6 +15,7 @@ export const LocationManager = ({ characterPos, phase, onLocationChange }: Props
   const activeIdRef = useRef<string | null>(null);
 
   useFrame(() => {
+    if (!characterPos) return;
     // Only check locations matching current phase
     const candidates = LOCATIONS.filter(loc => loc.phase === phase);
 
