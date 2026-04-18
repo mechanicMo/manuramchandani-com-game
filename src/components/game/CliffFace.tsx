@@ -22,7 +22,7 @@ function makeChunks(count: number, seed = 42): Chunk[] {
     pos: [(rand() - 0.5) * CLIFF_W * 0.92, rand() * CLIFF_H - 5, CLIFF_Z + 0.5 + rand() * 0.6] as [number, number, number],
     rot: [rand() * Math.PI, rand() * Math.PI, rand() * Math.PI] as [number, number, number],
     size: 0.15 + rand() * 0.55,
-    lightness: 0.14 + rand() * 0.18,
+    lightness: 0.25 + rand() * 0.25,
   }));
 }
 
@@ -33,7 +33,7 @@ export const CliffFace = () => {
     <group>
       <mesh position={[0, CLIFF_H / 2 - 5, CLIFF_Z]} receiveShadow>
         <boxGeometry args={[CLIFF_W, CLIFF_H, 3]} />
-        <meshStandardMaterial color="#3d3028" roughness={1} metalness={0} />
+        <meshStandardMaterial color="#7a6050" roughness={1} metalness={0} />
       </mesh>
       {chunks.map(c => {
         const isCoolgrey = c.id % 4 === 0;
@@ -60,7 +60,7 @@ export const CliffFace = () => {
             pos: [(rand() - 0.5) * CLIFF_W * 0.92, rand() * CLIFF_H - 5, CLIFF_Z + 0.2 + rand() * 0.6] as [number, number, number],
             rot: [rand() * Math.PI, rand() * Math.PI, rand() * Math.PI] as [number, number, number],
             size: 0.7 + rand() * 0.7,
-            lightness: 0.08 + rand() * 0.06,
+            lightness: 0.18 + rand() * 0.10,
           });
         }
         return boulders.map(b => (
