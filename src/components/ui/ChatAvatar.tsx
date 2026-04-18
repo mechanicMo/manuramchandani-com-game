@@ -32,6 +32,13 @@ export const ChatAvatar = ({ phase }: Props) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const fetchWithTimeout = async (url: string, options: any) => {
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Request timeout (8s)")), 8000)
+    );
+    return Promise.race([fetch(url, options), timeout]);
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -45,7 +52,7 @@ export const ChatAvatar = ({ phase }: Props) => {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       if (!apiKey) throw new Error("VITE_GROQ_API_KEY not set");
 
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      const res = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,10 +70,15 @@ export const ChatAvatar = ({ phase }: Props) => {
         }),
       });
 
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status} ${res.statusText}`);
+      }
+
       const data = await res.json();
       const reply = data.choices?.[0]?.message?.content ?? "Something went wrong.";
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
-    } catch {
+    } catch (err) {
+      console.error("[ChatAvatar]", err);
       setMessages(prev => [...prev, { role: "assistant", content: "Couldn't reach the server right now." }]);
     } finally {
       setLoading(false);
@@ -74,7 +86,6 @@ export const ChatAvatar = ({ phase }: Props) => {
   };
 
   // phase is available for future use (e.g., context-aware prompts)
-  void phase;
 
   return (
     <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 300 }}>
