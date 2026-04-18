@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { GamePhase } from "@/hooks/useGamePhase";
@@ -56,14 +56,14 @@ function lerpParams(a: SkyParams, b: SkyParams, t: number): SkyParams {
 }
 
 export const useSkyTransition = (phase: GamePhase): SkyParams => {
-  const progressRef  = useRef(0);
-  const paramsRef    = useRef<SkyParams>(NIGHT);
+  const [params, setParams] = useState<SkyParams>(NIGHT);
+  const progressRef = useRef(0);
 
   useFrame((_, delta) => {
     const target = phase === "ascent" ? 0 : 1;
     progressRef.current = THREE.MathUtils.lerp(progressRef.current, target, delta * 0.4);
-    paramsRef.current = lerpParams(NIGHT, DAY, progressRef.current);
+    setParams(lerpParams(NIGHT, DAY, progressRef.current));
   });
 
-  return paramsRef.current;
+  return params;
 };

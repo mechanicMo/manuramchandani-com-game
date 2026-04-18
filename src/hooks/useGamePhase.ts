@@ -10,6 +10,7 @@ export const useGamePhase = () => {
 
   const onCharacterY = (y: number) => {
     if (phase === "ascent" && y >= SUMMIT_Y) setPhase("summit");
+    if (phase === "descent" && y <= 2) setPhase("ascent");
   };
 
   const beginDescent = () => {
