@@ -7,6 +7,7 @@ import { World }             from "./World";
 import { LoadingScreen }     from "@/components/ui/LoadingScreen";
 import { KeyHints }          from "@/components/ui/KeyHints";
 import { LocationOverlay }   from "@/components/ui/LocationOverlay";
+import { ChatAvatar }        from "@/components/ui/ChatAvatar";
 import { useGamePhase }      from "@/hooks/useGamePhase";
 import type { Location }     from "@/data/locations";
 
@@ -63,6 +64,7 @@ export const GameCanvas = () => {
       <LoadingScreen loading={loading} />
       <KeyHints phase={gamePhase.phase} nearbyName={nearbyName} />
       <LocationOverlay location={activeLocation} onDismiss={() => setActiveLocation(null)} />
+      <ChatAvatar phase={gamePhase.phase} />
 
       <KeyboardControls map={KEY_MAP}>
         <Canvas
