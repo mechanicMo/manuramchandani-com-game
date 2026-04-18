@@ -1,5 +1,6 @@
 // src/components/game/World.tsx
 import { useRef, useState } from "react";
+import { useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Sky, Stars } from "@react-three/drei";
 import { useKeyboardControls } from "@react-three/drei";
@@ -25,12 +26,20 @@ export const World = ({ gamePhase }: Props) => {
   const sky                                  = useSkyTransition(phase);
   const spacePressed                         = useKeyboardControls((s: Record<string, boolean>) => s.jump);
   const spaceWasDown                         = useRef(false);
+  const ambientLightRef                      = useRef<THREE.Light>(null);
 
   // Summit -> descent trigger: SPACE while in summit phase
   if (spacePressed && !spaceWasDown.current && phase === "summit") {
     beginDescent();
   }
   spaceWasDown.current = spacePressed;
+
+  useFrame(() => {
+    if (ambientLightRef.current) {
+      ambientLightRef.current.intensity = sky.ambientIntensity;
+      (ambientLightRef.current as THREE.Light).color.setStyle(sky.ambientColor);
+    }
+  });
 
   const handlePositionChange = (p: THREE.Vector3) => {
     velocityRef.current = { x: p.x - prevPosRef.current.x, y: p.y - prevPosRef.current.y };
@@ -43,7 +52,7 @@ export const World = ({ gamePhase }: Props) => {
     <>
       <fog attach="fog" args={[sky.fogColor, sky.fogNear, sky.fogFar]} />
 
-      <ambientLight intensity={sky.ambientIntensity} color={sky.ambientColor} />
+      <ambientLight ref={ambientLightRef} intensity={sky.ambientIntensity} color={sky.ambientColor} />
       <directionalLight
         position={[-8, 30, 8]}
         intensity={1.4}
