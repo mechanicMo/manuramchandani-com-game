@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
-import { Sky, Stars } from "@react-three/drei";
+import { Sky, Stars, Environment } from "@react-three/drei";
 import { useKeyboardControls } from "@react-three/drei";
 import * as THREE from "three";
 import { Character }           from "./Character";
@@ -88,6 +88,7 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
           <meshBasicMaterial color="#d8e8ff" />
         </mesh>
       )}
+      <Environment preset="night" />
 
       <CliffFace />
 

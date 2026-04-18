@@ -14,6 +14,8 @@ export type SkyParams = {
   ambientColor: string;
 };
 
+// Task 3 spec calls for fogNear/fogFar here; Task 5 overrides with fogDensity
+// Using Task 5 final state for correct exponential fog behavior
 const NIGHT: SkyParams = {
   fogColor: "#06091A",
   fogNear: 40,
