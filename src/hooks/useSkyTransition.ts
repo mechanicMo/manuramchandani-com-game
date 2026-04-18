@@ -16,19 +16,19 @@ export type SkyParams = {
 
 const NIGHT: SkyParams = {
   fogColor: "#06091A",
-  fogNear: 25,
-  fogFar: 70,
+  fogNear: 32,
+  fogFar: 95,
   sunPosition: [0, 0.02, -1],
   rayleigh: 8,
   turbidity: 12,
-  ambientIntensity: 0.25,
-  ambientColor: "#2a3a5a",
+  ambientIntensity: 0.5,
+  ambientColor: "#3d4f70",
 };
 
 const DAY: SkyParams = {
   fogColor: "#c8e8f8",
-  fogNear: 40,
-  fogFar: 120,
+  fogNear: 55,
+  fogFar: 160,
   sunPosition: [1, 0.8, 0],
   rayleigh: 2,
   turbidity: 4,
