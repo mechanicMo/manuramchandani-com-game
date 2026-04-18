@@ -13,12 +13,18 @@ import { ChossSystem }         from "./ChossSystem";
 import { DustParticles }       from "./DustParticles";
 import { SummitLedge }         from "./SummitLedge";
 import { SnowParticles }       from "./SnowParticles";
+import { LocationManager }     from "./LocationManager";
+import { LocationVisuals }     from "./LocationVisuals";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import type { useGamePhase }   from "@/hooks/useGamePhase";
+import type { Location }       from "@/data/locations";
 
-type Props = { gamePhase: ReturnType<typeof useGamePhase> };
+type Props = {
+  gamePhase: ReturnType<typeof useGamePhase>;
+  onLocationChange: (loc: Location | null) => void;
+};
 
-export const World = ({ gamePhase }: Props) => {
+export const World = ({ gamePhase, onLocationChange }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const velocityRef                          = useRef({ x: 0, y: 0 });
   const prevPosRef                           = useRef(new THREE.Vector3());
@@ -83,6 +89,8 @@ export const World = ({ gamePhase }: Props) => {
       <SummitLedge phase={phase} />
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
+      <LocationVisuals phase={phase} />
+      <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} />
       <CameraRig target={pos} phase={phase} />
     </>
   );

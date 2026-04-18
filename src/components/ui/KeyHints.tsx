@@ -21,9 +21,9 @@ const HINTS: Record<GamePhase, Hint[]> = {
 
 const sans = "'Inter', system-ui, sans-serif";
 
-type Props = { phase: GamePhase; extraHint?: string };
+type Props = { phase: GamePhase; extraHint?: string; nearbyName?: string | null };
 
-export const KeyHints = ({ phase, extraHint }: Props) => {
+export const KeyHints = ({ phase, extraHint, nearbyName }: Props) => {
   const hints = HINTS[phase];
 
   return (
@@ -42,7 +42,7 @@ export const KeyHints = ({ phase, extraHint }: Props) => {
     >
       <AnimatePresence mode="wait">
         <motion.div
-          key={phase + (extraHint ?? "")}
+          key={phase + (extraHint ?? "") + (nearbyName ?? "")}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
@@ -78,6 +78,14 @@ export const KeyHints = ({ phase, extraHint }: Props) => {
               </span>
             </div>
           ))}
+          {nearbyName && (
+            <>
+              <div style={{ width: 1, height: 16, backgroundColor: "rgba(240,237,230,0.15)" }} />
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "11px", color: "rgba(200,134,10,0.8)", letterSpacing: "0.08em" }}>
+                [Enter] View — {nearbyName}
+              </span>
+            </>
+          )}
           {extraHint && (
             <>
               <div style={{ width: 1, height: 16, backgroundColor: "rgba(240,237,230,0.15)" }} />
