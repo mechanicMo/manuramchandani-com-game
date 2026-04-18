@@ -1,60 +1,57 @@
+// src/components/game/World.tsx
 import { useRef, useState } from "react";
-import { Sky, Stars, Grid } from "@react-three/drei";
+import { Physics } from "@react-three/rapier";
+import { Sky, Stars } from "@react-three/drei";
 import * as THREE from "three";
-import { Character }  from "./Character";
-import { CameraRig }  from "./CameraRig";
-import type { useGamePhase } from "@/hooks/useGamePhase";
+import { Character }          from "./Character";
+import { CameraRig }          from "./CameraRig";
+import { CliffFace }          from "./CliffFace";
+import { HoldMarkers, HOLDS } from "./HoldMarkers";
+import { ChossSystem }        from "./ChossSystem";
+import { DustParticles }      from "./DustParticles";
+import type { useGamePhase }  from "@/hooks/useGamePhase";
 
-type Props = {
-  gamePhase: ReturnType<typeof useGamePhase>;
-};
+type Props = { gamePhase: ReturnType<typeof useGamePhase> };
 
 export const World = ({ gamePhase }: Props) => {
-  const charPos = useRef(new THREE.Vector3());
-  const [pos, setPos] = useState(() => new THREE.Vector3());
+  const [pos, setPos]           = useState(() => new THREE.Vector3());
+  const velocityRef             = useRef({ x: 0, y: 0 });
+  const prevPosRef              = useRef(new THREE.Vector3());
   const { phase, onCharacterY } = gamePhase;
 
   const handlePositionChange = (p: THREE.Vector3) => {
-    charPos.current.copy(p);
+    velocityRef.current = { x: p.x - prevPosRef.current.x, y: p.y - prevPosRef.current.y };
+    prevPosRef.current.copy(p);
     setPos(p.clone());
     onCharacterY(p.y);
   };
 
   return (
     <>
-      <ambientLight intensity={0.4} />
+      <fog attach="fog" args={["#06091A", 25, 70]} />
+
+      <ambientLight intensity={0.25} color="#2a3a5a" />
       <directionalLight
-        position={[5, 20, 5]}
-        intensity={1.2}
+        position={[-8, 30, 8]}
+        intensity={1.4}
+        color="#b0c4de"
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
       />
-      <directionalLight position={[-5, 10, -5]} intensity={0.3} color="#4466AA" />
+      <directionalLight position={[6, 10, 4]} intensity={0.15} color="#3a2810" />
 
-      <Sky
-        distance={450000}
-        sunPosition={[0, 0.05, -1]}
-        inclination={0.49}
-        azimuth={0.25}
-        rayleigh={6}
-        turbidity={10}
-      />
-      <Stars radius={100} depth={50} count={3000} factor={4} saturation={0} fade />
+      <Sky distance={450000} sunPosition={[0, 0.02, -1]} inclination={0.49} azimuth={0.25} rayleigh={8} turbidity={12} />
+      <Stars radius={80} depth={50} count={4000} factor={4} saturation={0} fade />
 
-      <Grid
-        position={[0, -0.01, 0]}
-        args={[20, 20]}
-        cellSize={1}
-        cellThickness={0.5}
-        cellColor="#1a2040"
-        sectionSize={5}
-        sectionThickness={1}
-        sectionColor="#2a3060"
-        fadeDistance={30}
-        infiniteGrid
-      />
+      <Physics gravity={[0, -9.81, 0]}>
+        <CliffFace />
+        <HoldMarkers characterPos={pos} />
+        <ChossSystem characterPos={pos} velocityRef={velocityRef} />
+        <Character onPositionChange={handlePositionChange} holds={HOLDS} />
+      </Physics>
 
-      <Character onPositionChange={handlePositionChange} />
+      <DustParticles characterPos={pos} />
       <CameraRig target={pos} phase={phase} />
     </>
   );
