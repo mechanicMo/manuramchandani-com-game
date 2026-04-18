@@ -89,8 +89,9 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
         </mesh>
       )}
 
+      <CliffFace />
+
       <Physics gravity={[0, -9.81, 0]}>
-        <CliffFace />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
         <Character onPositionChange={handlePositionChange} holds={HOLDS} gamePhase={phase} />
