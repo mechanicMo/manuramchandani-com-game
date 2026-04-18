@@ -14,19 +14,26 @@ export type VisualType =
   | "lit-ground";
 
 export type PanelContent = {
-  type: "panel" | "contact";
+  type: "panel";
   title: string;
   description: string;
   link?: string;
   linkLabel?: string;
-  email?: string;
+};
+
+export type ContactContent = {
+  type: "contact";
+  title: string;
+  description: string;
+  email: string;
+  linkLabel?: string;
 };
 
 export type GateContent    = { type: "gate";    headline: string; link?: string };
 export type VignetteContent = { type: "vignette"; text: string };
 export type ViewContent    = { type: "view";    lines: string[] };
 
-export type LocationContent = PanelContent | GateContent | VignetteContent | ViewContent;
+export type LocationContent = PanelContent | GateContent | VignetteContent | ViewContent | ContactContent;
 
 export type Location = {
   id: string;
