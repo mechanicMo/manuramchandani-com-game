@@ -24,6 +24,7 @@ const sans = "'Inter', system-ui, sans-serif";
 type Props = {
   phase: GamePhase;
   nearbyName: string | null;
+  extraHint?: string;
 };
 
 export const KeyHints = ({ phase, extraHint, nearbyName }: Props) => {
