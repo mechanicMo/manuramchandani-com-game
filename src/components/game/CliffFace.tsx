@@ -1,6 +1,9 @@
 // src/components/game/CliffFace.tsx
-import { useMemo } from "react";
+import { useRef, useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import vertexShader from "@/shaders/rockFace.vert?raw";
+import fragmentShader from "@/shaders/rockFace.frag?raw";
 
 const CLIFF_W = 24;
 const CLIFF_H = 120;
@@ -29,11 +32,27 @@ function makeChunks(count: number, seed = 42): Chunk[] {
 export const CliffFace = () => {
   const chunks = useMemo(() => makeChunks(90), []);
 
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uCliffHeight: { value: CLIFF_H },
+  }), []);
+
+  const matRef = useRef<THREE.ShaderMaterial>(null);
+  useFrame((_, delta) => {
+    if (matRef.current) matRef.current.uniforms.uTime.value += delta;
+  });
+
   return (
     <group>
-      <mesh position={[0, CLIFF_H / 2 - 5, CLIFF_Z]} receiveShadow>
-        <boxGeometry args={[CLIFF_W, CLIFF_H, 3]} />
-        <meshStandardMaterial color="#7a6050" roughness={1} metalness={0} />
+      <mesh position={[0, CLIFF_H / 2 - 5, CLIFF_Z]}>
+        <planeGeometry args={[CLIFF_W, CLIFF_H, 48, 240]} />
+        <shaderMaterial
+          ref={matRef}
+          vertexShader={vertexShader}
+          fragmentShader={fragmentShader}
+          uniforms={uniforms}
+          side={THREE.FrontSide}
+        />
       </mesh>
       {chunks.map(c => {
         const isCoolgrey = c.id % 4 === 0;
