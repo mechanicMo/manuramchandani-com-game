@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { useCharacterController } from "@/hooks/useCharacterController";
 import type { Hold } from "./HoldMarkers";
 import type { GamePhase } from "@/hooks/useGamePhase";
+import type { useAudioManager } from "@/hooks/useAudioManager";
 
 useGLTF.preload("/character-animated.glb");
 
@@ -20,9 +21,11 @@ type Props = {
   onPositionChange?: (pos: THREE.Vector3) => void;
   holds?: Hold[];
   gamePhase?: GamePhase;
+  audio?: ReturnType<typeof useAudioManager>;
+  muted?: boolean;
 };
 
-export const Character = ({ onPositionChange, holds = [], gamePhase = "ascent" }: Props) => {
+export const Character = ({ onPositionChange, holds = [], gamePhase = "ascent", audio, muted = false }: Props) => {
   const group  = useRef<THREE.Group>(null);
   const posRef = useRef(new THREE.Vector3(0, 0, 0));
 
@@ -30,11 +33,12 @@ export const Character = ({ onPositionChange, holds = [], gamePhase = "ascent" }
   const { actions, mixer }    = useAnimations(animations, group);
   const velocity              = useCharacterController();
 
-  const jumpPressed   = useKeyboardControls((s: Record<string, boolean>) => s.jump);
-  const downPressed   = useKeyboardControls((s: Record<string, boolean>) => s.down);
-  const jumpWasDown   = useRef(false);
-  const targetHold    = useRef<Hold | null>(null);
-  const jumpingToHold = useRef(false);
+  const jumpPressed      = useKeyboardControls((s: Record<string, boolean>) => s.jump);
+  const downPressed      = useKeyboardControls((s: Record<string, boolean>) => s.down);
+  const jumpWasDown      = useRef(false);
+  const targetHold       = useRef<Hold | null>(null);
+  const jumpingToHold    = useRef(false);
+  const wasJumpingToHold = useRef(false);
 
   useEffect(() => {
     if (!actions) return;
@@ -68,7 +72,14 @@ export const Character = ({ onPositionChange, holds = [], gamePhase = "ascent" }
         const nearest = holds
           .filter(h => h.y > p.y + 0.5)
           .sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0] ?? null;
-        if (nearest) { targetHold.current = nearest; jumpingToHold.current = true; }
+        if (nearest) {
+          targetHold.current = nearest;
+          jumpingToHold.current = true;
+          if (audio && !muted) {
+            const variant = Math.ceil(Math.random() * 4);
+            audio.play(`hold-grab-${variant}`, 0.6);
+          }
+        }
       }
       jumpWasDown.current = jumpPressed;
 

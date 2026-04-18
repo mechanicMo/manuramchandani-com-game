@@ -2,25 +2,45 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Location } from "@/data/locations";
+import type { useAudioManager } from "@/hooks/useAudioManager";
 
 type Props = {
   location: Location | null;
   onDismiss: () => void;
+  audio?: ReturnType<typeof useAudioManager>;
+  muted?: boolean;
 };
 
-export const LocationOverlay = ({ location, onDismiss }: Props) => {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: Props) => {
+  const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevLocRef   = useRef<Location | null>(null);
 
   useEffect(() => {
-    if (!location) return;
-    const { interactionType } = location;
+    const prevLoc = prevLocRef.current;
+    prevLocRef.current = location;
 
-    // Auto-dismiss gate and vignette after 3 seconds
-    if (interactionType === "gate" || interactionType === "vignette") {
-      timerRef.current = setTimeout(onDismiss, 3000);
+    if (location) {
+      const { interactionType } = location;
+
+      // Play panel-open sound for panel/contact types
+      if ((interactionType === "panel" || interactionType === "contact") && audio && !muted) {
+        audio.play("panel-open");
+      }
+
+      // Auto-dismiss gate and vignette after 3 seconds
+      if (interactionType === "gate" || interactionType === "vignette") {
+        timerRef.current = setTimeout(onDismiss, 3000);
+      }
+    } else if (prevLoc) {
+      // Play panel-close when a panel/contact overlay is dismissed
+      const { interactionType } = prevLoc;
+      if ((interactionType === "panel" || interactionType === "contact") && audio && !muted) {
+        audio.play("panel-close");
+      }
     }
 
     // Dismiss on Escape, or Enter for panel/contact
+    const interactionType = location?.interactionType;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onDismiss();
       if (e.code === "Enter" && (interactionType === "panel" || interactionType === "contact")) {
@@ -33,7 +53,7 @@ export const LocationOverlay = ({ location, onDismiss }: Props) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       window.removeEventListener("keydown", handleKey);
     };
-  }, [location, onDismiss]);
+  }, [location, onDismiss, audio, muted]);
 
   return (
     <AnimatePresence>

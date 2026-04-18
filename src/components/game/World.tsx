@@ -1,5 +1,5 @@
 // src/components/game/World.tsx
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Sky, Stars, Environment } from "@react-three/drei";
@@ -16,18 +16,23 @@ import { SnowParticles }       from "./SnowParticles";
 import { GroundTerrain }       from "./GroundTerrain";
 import { ForestBase }          from "./ForestBase";
 import { BoulderField }        from "./BoulderField";
+import { BackgroundMountains } from "./BackgroundMountains";
+import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
+import { useAudioManager }     from "@/hooks/useAudioManager";
 import type { useGamePhase }   from "@/hooks/useGamePhase";
 import type { Location }       from "@/data/locations";
 
 type Props = {
   gamePhase: ReturnType<typeof useGamePhase>;
   onLocationChange: (loc: Location | null) => void;
+  audio: ReturnType<typeof useAudioManager>;
+  muted: boolean;
 };
 
-export const World = ({ gamePhase, onLocationChange }: Props) => {
+export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const velocityRef                          = useRef({ x: 0, y: 0 });
   const prevPosRef                           = useRef(new THREE.Vector3());
@@ -36,6 +41,29 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
   const spacePressed                         = useKeyboardControls((s: Record<string, boolean>) => s.jump);
   const spaceWasDown                         = useRef(false);
   const ambientLightRef                      = useRef<THREE.Light>(null);
+
+  // Start ambient wind loops once (audio buffers may not be ready yet — setLoopVolume handles gracefully)
+  useEffect(() => {
+    if (muted) return;
+    audio.loop("wind-low", 0.5);
+    audio.loop("wind-high", 0.0);
+    return () => {
+      audio.stopAllLoops();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [muted]);
+
+  // Phase-based audio triggers
+  useEffect(() => {
+    if (muted) return;
+    if (phase === "summit") {
+      audio.play("summit-arrive", 0.8);
+    }
+    if (phase === "descent") {
+      audio.loop("snowboard", 0.0); // starts silent; volume set in useFrame by lateral velocity
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, muted]);
 
   // Summit -> descent trigger: SPACE while in summit phase
   if (spacePressed && !spaceWasDown.current && phase === "summit") {
@@ -48,6 +76,22 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       ambientLightRef.current.intensity = sky.ambientIntensity;
       (ambientLightRef.current as THREE.Light).color.setStyle(sky.ambientColor);
     }
+
+    if (!muted) {
+      // Elevation-based wind volumes
+      const y = pos.y;
+      const highVol = Math.min(y / 80, 1.0) * 0.7;
+      const lowVol  = (1.0 - Math.min(y / 80, 1.0)) * 0.5;
+      audio.setLoopVolume("wind-low", lowVol);
+      audio.setLoopVolume("wind-high", highVol);
+
+      // Snowboard carve — loop during descent, volume relative to lateral velocity
+      if (phase === "descent") {
+        const lateralSpeed = Math.abs(velocityRef.current.x);
+        const snowVol = Math.min(lateralSpeed * 2, 1.0) * 0.5;
+        audio.setLoopVolume("snowboard", snowVol);
+      }
+    }
   });
 
   const handlePositionChange = (p: THREE.Vector3) => {
@@ -59,19 +103,32 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
 
   return (
     <>
-      <fog attach="fog" args={[sky.fogColor, sky.fogNear, sky.fogFar]} />
+      <fogExp2 attach="fog" args={[sky.fogColor, sky.fogDensity]} />
 
+      {/* Ambient — night is deep blue-black, not grey */}
       <ambientLight ref={ambientLightRef} intensity={sky.ambientIntensity} color={sky.ambientColor} />
+
+      {/* Key light — warm, from lower-left (campfire direction) */}
       <directionalLight
-        position={[-8, 30, 8]}
-        intensity={2.0}
-        color="#b0c4de"
+        position={[-6, 8, 6]}
+        intensity={1.8}
+        color="#ffd4a0"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
+        shadow-camera-near={0.5}
+        shadow-camera-far={200}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={100}
+        shadow-camera-bottom={-5}
       />
-      <directionalLight position={[0, -10, 15]} intensity={0.4} color="#1a2840" />
-      <directionalLight position={[6, 10, 4]} intensity={0.15} color="#3a2810" />
+
+      {/* Sky fill — cool blue, opposite side */}
+      <directionalLight position={[8, 20, -4]} intensity={0.6} color="#a8c8f0" />
+
+      {/* Rim light — behind cliff, separates character from rock */}
+      <directionalLight position={[0, 5, -8]} intensity={0.8} color="#c0d8f8" />
 
       <Sky
         distance={450000}
@@ -91,11 +148,12 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <Environment preset="night" />
 
       <CliffFace />
+      <BackgroundMountains />
 
       <Physics gravity={[0, -9.81, 0]}>
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
-        <Character onPositionChange={handlePositionChange} holds={HOLDS} gamePhase={phase} />
+        <Character onPositionChange={handlePositionChange} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} />
       </Physics>
 
       <SummitLedge phase={phase} />
@@ -104,8 +162,9 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <GroundTerrain phase={phase} />
       <ForestBase phase={phase} />
       <BoulderField phase={phase} />
+      <ClimbingDetail phase={phase} />
       <LocationVisuals phase={phase} />
-      <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} />
+      <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} />
       <CameraRig target={pos} phase={phase} />
     </>
   );
