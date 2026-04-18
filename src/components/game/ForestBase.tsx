@@ -1,99 +1,86 @@
 // src/components/game/ForestBase.tsx
 import { useMemo } from "react";
-import * as THREE from "three";
 import type { GamePhase } from "@/hooks/useGamePhase";
 
 type Props = {
   phase: GamePhase;
 };
 
-type Tree = {
+type TreeDef = {
   id: number;
-  pos: [number, number, number];
+  x: number;
+  y: number;
+  z: number;
   height: number;
+  radius: number;
+  trunkColor: string;
+  foliageColors: [string, string, string];
 };
 
-function makeTrees(count: number, seed = 123): Tree[] {
+const TRUNK_COLORS  = ["#3d2810", "#4a3218", "#2d2008"];
+const FOLIAGE_TIERS = ["#142010", "#1c2e14", "#0e1a0a"];
+
+function makeTrees(count: number, seed = 123): TreeDef[] {
   let s = seed;
   const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
 
   return Array.from({ length: count }, (_, i) => {
-    const height = 1.5 + rand() * 1.7; // 1.5 to 3.2
-    const xLeft = rand() < 0.5;
-    const x = xLeft ? -16 + rand() * 9 : 7 + rand() * 8; // [-16, -7] or [7, 15]
-    const y = -0.5 + rand() * 38.5; // [-0.5, 38]
-    const z = -3 + rand() * 4; // [-3, 1]
+    const leftCluster = rand() < 0.5;
+    const x = leftCluster
+      ? -18 + rand() * 10   // left: [-18, -8]
+      :   8 + rand() * 10;  // right: [8, 18]
+    const y = -0.5 + rand() * 55.5; // [-0.5, 55]
+    const z = -4 + rand() * 5;      // [-4, 1]
 
-    return {
-      id: i,
-      pos: [x, y, z] as [number, number, number],
-      height,
-    };
+    const height = 2.0 + rand() * 2.5; // 2.0 to 4.5
+    const radius = 0.6 + rand() * 0.8; // 0.6 to 1.4
+
+    const trunkColor    = TRUNK_COLORS[Math.floor(rand() * TRUNK_COLORS.length)];
+    const foliageColors: [string, string, string] = [
+      FOLIAGE_TIERS[0],
+      FOLIAGE_TIERS[1],
+      FOLIAGE_TIERS[2],
+    ];
+
+    return { id: i, x, y, z, height, radius, trunkColor, foliageColors };
   });
 }
 
 export const ForestBase = ({ phase }: Props) => {
-  if (phase !== "ascent") return null;
+  const trees = useMemo(() => makeTrees(24), []);
 
-  const trees = useMemo(() => makeTrees(14), []);
+  if (phase !== "ascent") return null;
 
   return (
     <group>
       {trees.map((tree) => (
-        <group key={tree.id} position={tree.pos}>
-          {/* Trunk */}
-          <mesh position={[0, (tree.height * 0.3) / 2, 0]} castShadow>
-            <cylinderGeometry args={[0.12, 0.18, tree.height * 0.3, 6]} />
-            <meshStandardMaterial color="#1a1008" roughness={1} metalness={0} />
+        <group key={tree.id} position={[tree.x, tree.y, tree.z]}>
+          {/* Trunk: tapered cylinder */}
+          <mesh position={[0, tree.height * 0.35 * 0.5, 0]} castShadow>
+            <cylinderGeometry
+              args={[tree.radius * 0.4, tree.radius * 0.7, tree.height * 0.35, 6]}
+            />
+            <meshStandardMaterial color={tree.trunkColor} roughness={1} />
           </mesh>
 
-          {/* Foliage layer 1 (bottom, widest) */}
-          <mesh
-            position={[0, tree.height * 0.3 + tree.height * 0.15, 0]}
-            castShadow
-            receiveShadow
-          >
-            <coneGeometry
-              args={[
-                tree.height * 0.4,
-                tree.height * 0.35,
-                7,
+          {/* 3 foliage tiers */}
+          {([0, 1, 2] as const).map((tier) => (
+            <mesh
+              key={tier}
+              position={[
+                0,
+                tree.height * 0.25 + tier * tree.height * 0.22,
+                0,
               ]}
-            />
-            <meshStandardMaterial color="#0f2010" roughness={1} metalness={0} />
-          </mesh>
-
-          {/* Foliage layer 2 (middle) */}
-          <mesh
-            position={[0, tree.height * 0.45 + tree.height * 0.2, 0]}
-            castShadow
-            receiveShadow
-          >
-            <coneGeometry
-              args={[
-                tree.height * 0.28,
-                tree.height * 0.3,
-                7,
-              ]}
-            />
-            <meshStandardMaterial color="#152818" roughness={1} metalness={0} />
-          </mesh>
-
-          {/* Foliage layer 3 (top, narrowest) */}
-          <mesh
-            position={[0, tree.height * 0.65 + tree.height * 0.15, 0]}
-            castShadow
-            receiveShadow
-          >
-            <coneGeometry
-              args={[
-                tree.height * 0.18,
-                tree.height * 0.25,
-                6,
-              ]}
-            />
-            <meshStandardMaterial color="#1a3020" roughness={1} metalness={0} />
-          </mesh>
+              castShadow
+              receiveShadow
+            >
+              <coneGeometry
+                args={[tree.radius * (1.2 - tier * 0.3), tree.height * 0.4, 7]}
+              />
+              <meshStandardMaterial color={tree.foliageColors[tier]} roughness={1} />
+            </mesh>
+          ))}
         </group>
       ))}
     </group>

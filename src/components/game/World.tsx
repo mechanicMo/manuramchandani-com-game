@@ -16,6 +16,8 @@ import { SnowParticles }       from "./SnowParticles";
 import { GroundTerrain }       from "./GroundTerrain";
 import { ForestBase }          from "./ForestBase";
 import { BoulderField }        from "./BoulderField";
+import { BackgroundMountains } from "./BackgroundMountains";
+import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
@@ -103,6 +105,7 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       )}
 
       <CliffFace />
+      <BackgroundMountains />
 
       <Physics gravity={[0, -9.81, 0]}>
         <HoldMarkers characterPos={pos} />
@@ -116,6 +119,7 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <GroundTerrain phase={phase} />
       <ForestBase phase={phase} />
       <BoulderField phase={phase} />
+      <ClimbingDetail phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} />
       <CameraRig target={pos} phase={phase} />
