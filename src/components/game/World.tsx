@@ -1,5 +1,5 @@
 // src/components/game/World.tsx
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Sky, Stars } from "@react-three/drei";
@@ -21,15 +21,18 @@ import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
+import { useAudioManager }     from "@/hooks/useAudioManager";
 import type { useGamePhase }   from "@/hooks/useGamePhase";
 import type { Location }       from "@/data/locations";
 
 type Props = {
   gamePhase: ReturnType<typeof useGamePhase>;
   onLocationChange: (loc: Location | null) => void;
+  audio: ReturnType<typeof useAudioManager>;
+  muted: boolean;
 };
 
-export const World = ({ gamePhase, onLocationChange }: Props) => {
+export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const velocityRef                          = useRef({ x: 0, y: 0 });
   const prevPosRef                           = useRef(new THREE.Vector3());
@@ -38,6 +41,29 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
   const spacePressed                         = useKeyboardControls((s: Record<string, boolean>) => s.jump);
   const spaceWasDown                         = useRef(false);
   const ambientLightRef                      = useRef<THREE.Light>(null);
+
+  // Start ambient wind loops once (audio buffers may not be ready yet — setLoopVolume handles gracefully)
+  useEffect(() => {
+    if (muted) return;
+    audio.loop("wind-low", 0.5);
+    audio.loop("wind-high", 0.0);
+    return () => {
+      audio.stopAllLoops();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [muted]);
+
+  // Phase-based audio triggers
+  useEffect(() => {
+    if (muted) return;
+    if (phase === "summit") {
+      audio.play("summit-arrive", 0.8);
+    }
+    if (phase === "descent") {
+      audio.loop("snowboard", 0.0); // starts silent; volume set in useFrame by lateral velocity
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, muted]);
 
   // Summit -> descent trigger: SPACE while in summit phase
   if (spacePressed && !spaceWasDown.current && phase === "summit") {
@@ -49,6 +75,22 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
     if (ambientLightRef.current) {
       ambientLightRef.current.intensity = sky.ambientIntensity;
       (ambientLightRef.current as THREE.Light).color.setStyle(sky.ambientColor);
+    }
+
+    if (!muted) {
+      // Elevation-based wind volumes
+      const y = pos.y;
+      const highVol = Math.min(y / 80, 1.0) * 0.7;
+      const lowVol  = (1.0 - Math.min(y / 80, 1.0)) * 0.5;
+      audio.setLoopVolume("wind-low", lowVol);
+      audio.setLoopVolume("wind-high", highVol);
+
+      // Snowboard carve — loop during descent, volume relative to lateral velocity
+      if (phase === "descent") {
+        const lateralSpeed = Math.abs(velocityRef.current.x);
+        const snowVol = Math.min(lateralSpeed * 2, 1.0) * 0.5;
+        audio.setLoopVolume("snowboard", snowVol);
+      }
     }
   });
 
@@ -110,7 +152,7 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <Physics gravity={[0, -9.81, 0]}>
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
-        <Character onPositionChange={handlePositionChange} holds={HOLDS} gamePhase={phase} />
+        <Character onPositionChange={handlePositionChange} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} />
       </Physics>
 
       <SummitLedge phase={phase} />
@@ -121,7 +163,7 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <BoulderField phase={phase} />
       <ClimbingDetail phase={phase} />
       <LocationVisuals phase={phase} />
-      <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} />
+      <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} />
       <CameraRig target={pos} phase={phase} />
     </>
   );
