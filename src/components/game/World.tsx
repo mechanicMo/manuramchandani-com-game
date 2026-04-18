@@ -13,6 +13,9 @@ import { ChossSystem }         from "./ChossSystem";
 import { DustParticles }       from "./DustParticles";
 import { SummitLedge }         from "./SummitLedge";
 import { SnowParticles }       from "./SnowParticles";
+import { GroundTerrain }       from "./GroundTerrain";
+import { ForestBase }          from "./ForestBase";
+import { BoulderField }        from "./BoulderField";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
@@ -61,12 +64,13 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <ambientLight ref={ambientLightRef} intensity={sky.ambientIntensity} color={sky.ambientColor} />
       <directionalLight
         position={[-8, 30, 8]}
-        intensity={1.4}
+        intensity={2.0}
         color="#b0c4de"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
       />
+      <directionalLight position={[0, -10, 15]} intensity={0.4} color="#1a2840" />
       <directionalLight position={[6, 10, 4]} intensity={0.15} color="#3a2810" />
 
       <Sky
@@ -95,6 +99,9 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <SummitLedge phase={phase} />
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
+      <GroundTerrain phase={phase} />
+      <ForestBase phase={phase} />
+      <BoulderField phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} />
       <CameraRig target={pos} phase={phase} />
