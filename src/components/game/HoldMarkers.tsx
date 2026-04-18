@@ -17,7 +17,7 @@ export const HOLDS: Hold[] = [
   { x: -1.5, y: 77, z: 0 }, { x:  0.0, y: 80, z: 0 },
 ];
 
-const COLOR_DEFAULT = new THREE.Color("#5a4232");
+const COLOR_DEFAULT = new THREE.Color("#8a6a4a");
 const COLOR_NEAR    = new THREE.Color("#C8860A");
 const NEAR_DIST     = 2.5;
 
