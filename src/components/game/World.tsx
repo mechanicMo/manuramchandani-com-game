@@ -3,12 +3,16 @@ import { Sky, Stars, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { Character }  from "./Character";
 import { CameraRig }  from "./CameraRig";
-import { useGamePhase } from "@/hooks/useGamePhase";
+import type { useGamePhase } from "@/hooks/useGamePhase";
 
-export const World = () => {
+type Props = {
+  gamePhase: ReturnType<typeof useGamePhase>;
+};
+
+export const World = ({ gamePhase }: Props) => {
   const charPos = useRef(new THREE.Vector3());
   const [pos, setPos] = useState(() => new THREE.Vector3());
-  const { phase, onCharacterY } = useGamePhase();
+  const { phase, onCharacterY } = gamePhase;
 
   const handlePositionChange = (p: THREE.Vector3) => {
     charPos.current.copy(p);
@@ -51,7 +55,6 @@ export const World = () => {
       />
 
       <Character onPositionChange={handlePositionChange} />
-
       <CameraRig target={pos} phase={phase} />
     </>
   );
