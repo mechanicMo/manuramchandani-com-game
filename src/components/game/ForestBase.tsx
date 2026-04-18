@@ -17,8 +17,13 @@ type TreeDef = {
   foliageColors: [string, string, string];
 };
 
-const TRUNK_COLORS  = ["#3d2810", "#4a3218", "#2d2008"];
-const FOLIAGE_TIERS = ["#142010", "#1c2e14", "#0e1a0a"];
+const TRUNK_COLORS  = ["#3d2810", "#4a3218", "#2d2008", "#3a2512", "#522e10"];
+const FOLIAGE_BASE  = [
+  ["#142010", "#1c2e14", "#0e1a0a"],
+  ["#1a2810", "#203818", "#0a1e08"],
+  ["#0e1c0c", "#162812", "#0c1808"],
+  ["#182610", "#1e3416", "#101c08"],
+];
 
 function makeTrees(count: number, seed = 123): TreeDef[] {
   let s = seed;
@@ -36,10 +41,11 @@ function makeTrees(count: number, seed = 123): TreeDef[] {
     const radius = 0.6 + rand() * 0.8; // 0.6 to 1.4
 
     const trunkColor    = TRUNK_COLORS[Math.floor(rand() * TRUNK_COLORS.length)];
+    const foliagePalette = FOLIAGE_BASE[Math.floor(rand() * FOLIAGE_BASE.length)];
     const foliageColors: [string, string, string] = [
-      FOLIAGE_TIERS[0],
-      FOLIAGE_TIERS[1],
-      FOLIAGE_TIERS[2],
+      foliagePalette[0],
+      foliagePalette[1],
+      foliagePalette[2],
     ];
 
     return { id: i, x, y, z, height, radius, trunkColor, foliageColors };
