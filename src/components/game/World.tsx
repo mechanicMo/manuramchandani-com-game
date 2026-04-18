@@ -14,6 +14,8 @@ import { DustParticles }       from "./DustParticles";
 import { SummitLedge }         from "./SummitLedge";
 import { SnowParticles }       from "./SnowParticles";
 import { GroundTerrain }       from "./GroundTerrain";
+import { ForestBase }          from "./ForestBase";
+import { BoulderField }        from "./BoulderField";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
@@ -92,6 +94,8 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
       <GroundTerrain phase={phase} />
+      <ForestBase phase={phase} />
+      <BoulderField phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} />
       <CameraRig target={pos} phase={phase} />
