@@ -59,19 +59,32 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
 
   return (
     <>
-      <fog attach="fog" args={[sky.fogColor, sky.fogNear, sky.fogFar]} />
+      <fogExp2 attach="fog" args={[sky.fogColor, sky.fogDensity]} />
 
+      {/* Ambient — night is deep blue-black, not grey */}
       <ambientLight ref={ambientLightRef} intensity={sky.ambientIntensity} color={sky.ambientColor} />
+
+      {/* Key light — warm, from lower-left (campfire direction) */}
       <directionalLight
-        position={[-8, 30, 8]}
-        intensity={2.0}
-        color="#b0c4de"
+        position={[-6, 8, 6]}
+        intensity={1.8}
+        color="#ffd4a0"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
+        shadow-camera-near={0.5}
+        shadow-camera-far={200}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={100}
+        shadow-camera-bottom={-5}
       />
-      <directionalLight position={[0, -10, 15]} intensity={0.4} color="#1a2840" />
-      <directionalLight position={[6, 10, 4]} intensity={0.15} color="#3a2810" />
+
+      {/* Sky fill — cool blue, opposite side */}
+      <directionalLight position={[8, 20, -4]} intensity={0.6} color="#a8c8f0" />
+
+      {/* Rim light — behind cliff, separates character from rock */}
+      <directionalLight position={[0, 5, -8]} intensity={0.8} color="#c0d8f8" />
 
       <Sky
         distance={450000}

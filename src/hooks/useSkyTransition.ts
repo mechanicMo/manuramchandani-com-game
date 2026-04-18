@@ -5,8 +5,7 @@ import type { GamePhase } from "@/hooks/useGamePhase";
 
 export type SkyParams = {
   fogColor: string;
-  fogNear: number;
-  fogFar: number;
+  fogDensity: number;
   sunPosition: [number, number, number];
   rayleigh: number;
   turbidity: number;
@@ -15,25 +14,23 @@ export type SkyParams = {
 };
 
 const NIGHT: SkyParams = {
-  fogColor: "#06091A",
-  fogNear: 40,
-  fogFar: 120,
+  fogColor: "#0a0d1a",
+  fogDensity: 0.022,
   sunPosition: [0, 0.02, -1],
   rayleigh: 8,
   turbidity: 12,
-  ambientIntensity: 0.75,
-  ambientColor: "#5d6f90",
+  ambientIntensity: 0.35,
+  ambientColor: "#1a2540",
 };
 
 const DAY: SkyParams = {
   fogColor: "#c8e8f8",
-  fogNear: 55,
-  fogFar: 160,
+  fogDensity: 0.012,
   sunPosition: [1, 0.8, 0],
   rayleigh: 2,
   turbidity: 4,
-  ambientIntensity: 0.7,
-  ambientColor: "#fffbe8",
+  ambientIntensity: 0.6,
+  ambientColor: "#fff4d0",
 };
 
 function lerpParams(a: SkyParams, b: SkyParams, t: number): SkyParams {
@@ -45,8 +42,7 @@ function lerpParams(a: SkyParams, b: SkyParams, t: number): SkyParams {
 
   return {
     fogColor:         lc(a.fogColor, b.fogColor),
-    fogNear:          ln(a.fogNear, b.fogNear),
-    fogFar:           ln(a.fogFar, b.fogFar),
+    fogDensity:       ln(a.fogDensity, b.fogDensity),
     sunPosition:      lv(a.sunPosition, b.sunPosition),
     rayleigh:         ln(a.rayleigh, b.rayleigh),
     turbidity:        ln(a.turbidity, b.turbidity),
@@ -65,10 +61,9 @@ export const useSkyTransition = (phase: GamePhase): SkyParams => {
     progressRef.current = THREE.MathUtils.lerp(progressRef.current, target, delta * 0.4);
     paramsRef.current = lerpParams(NIGHT, DAY, progressRef.current);
 
-    if (scene.fog instanceof THREE.Fog) {
+    if (scene.fog instanceof THREE.FogExp2) {
       scene.fog.color.setStyle(paramsRef.current.fogColor);
-      scene.fog.near = paramsRef.current.fogNear;
-      scene.fog.far = paramsRef.current.fogFar;
+      scene.fog.density = paramsRef.current.fogDensity;
     }
   });
 

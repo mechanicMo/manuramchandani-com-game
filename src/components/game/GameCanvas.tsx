@@ -3,6 +3,8 @@ import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { Canvas }            from "@react-three/fiber";
 import { KeyboardControls }  from "@react-three/drei";
 import * as THREE            from "three";
+import { EffectComposer, Bloom, Vignette, ToneMapping, SSAO } from "@react-three/postprocessing";
+import { ToneMappingMode }   from "postprocessing";
 import { World }             from "./World";
 import { LoadingScreen }     from "@/components/ui/LoadingScreen";
 import { KeyHints }          from "@/components/ui/KeyHints";
@@ -76,6 +78,17 @@ export const GameCanvas = () => {
           <Suspense fallback={null}>
             <World gamePhase={gamePhase} onLocationChange={handleLocationChange} />
           </Suspense>
+          <EffectComposer>
+            <SSAO
+              radius={0.05}
+              intensity={20}
+              luminanceInfluence={0.6}
+              color="black"
+            />
+            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+            <Bloom intensity={0.4} luminanceThreshold={0.6} luminanceSmoothing={0.9} />
+            <Vignette offset={0.4} darkness={0.5} />
+          </EffectComposer>
         </Canvas>
       </KeyboardControls>
 
