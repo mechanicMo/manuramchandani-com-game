@@ -75,6 +75,8 @@ const webProjects = [
   },
 ];
 
+type Screenshot = { src: string; caption: string };
+
 type MobileProject = {
   name: string;
   tag: string;
@@ -83,6 +85,7 @@ type MobileProject = {
   desc: string;
   fullDesc: string;
   platform: string;
+  screenshots?: Screenshot[];
 };
 
 const mobileProjects: MobileProject[] = [
@@ -91,26 +94,32 @@ const mobileProjects: MobileProject[] = [
     tag: "Beta",
     tagColor: "#2D6A4F",
     tagBg: "#D8F3DC",
-    desc: "Parental controls that give parents real granularity — app limits, content filtering, screen time schedules, and a child-safe mode built around how kids actually use phones.",
-    fullDesc: "Seedling is a parental controls app built for parents who want real control, not just time limits. Set per-app limits, build content filters that actually work, create screen time schedules that flex with your family's routine, and flip into a child-safe mode that locks everything down. Built in Flutter for iOS and Android. Designed by a parent, for parents.",
+    desc: "Neurodivergent-first learning app for young kids. Stories with word-by-word highlighting and ASL, teaching games with pedagogical hints, and AI parent guidance grounded in child development research.",
+    fullDesc: "Seedling is a learning app for preschool and early elementary kids, built neurodivergent-first — defaults, not add-ons. Kids get stories read aloud with word-by-word highlighting, seven teaching games that show how to find the answer rather than just the answer, and an ASL-signing octopus named Zee. Parents get a library of research-backed guides for the hard moments (tantrums, transitions, separation anxiety), an AI companion that answers real questions and cites its sources, and a session report after every use with concrete follow-up ideas you can try together. Built in Flutter and Firebase. Designed by a parent, for parents.",
     platform: "Flutter · iOS & Android",
+    screenshots: [
+      { src: "/seedling/home.jpeg", caption: "Parent home" },
+      { src: "/seedling/activities.jpeg", caption: "Kid's activities" },
+      { src: "/seedling/story-asl.jpeg", caption: "Stories with ASL" },
+      { src: "/seedling/report.jpeg", caption: "Session report" },
+    ],
   },
   {
     name: "Scout",
     tag: "Beta",
     tagColor: "#2D6A4F",
     tagBg: "#D8F3DC",
-    desc: "TV show and movie discovery with AI-powered recommendations, a smart watchlist, and a picks system for sharing what's worth watching.",
-    fullDesc: "Scout is a TV show and movie discovery app built around the idea that finding your next watch shouldn't be a chore. AI-powered recommendations learn what you actually like, not just what's trending. A smart watchlist lets you track what you want to watch, what you're watching, and what you've finished. The picks system lets you share recommendations with friends without the usual back-and-forth. Feature-complete and in beta.",
+    desc: "TV and movie discovery with AI-ranked picks, natural-language mood search, and a real watchlist. Swipe to triage, tap to track what you're watching.",
+    fullDesc: "Scout is a TV and movie discovery app for people who want something better than 'the algorithm.' Tell it what you're in the mood for — 'something weird and hopeful, under 90 minutes' — and it returns ranked picks from across the streaming landscape. The Picks feed learns from what you dismiss and what you keep. Swipe left to pass, right to add. A proper watchlist with sort, type and genre filters, and actual in-progress tracking (tap S1 · E1 to edit). Built in React Native with an AI pipeline running on Cloudflare Workers and a Groq-powered Llama 70B model doing the ranking.",
     platform: "React Native · iOS & Android",
   },
   {
-    name: "Community App",
+    name: "Community",
     tag: "In Development",
     tagColor: "#7B5E00",
     tagBg: "#FFF3CD",
-    desc: "Social volunteering platform connecting neighbors for local help requests. Built around real community dynamics, not the sanitized version.",
-    fullDesc: "Community App is a social volunteering platform built around the simple idea that neighbors help neighbors. Post a help request, browse what's nearby, respond with availability. No charity layer, no badges — just people in the same area doing things for each other. Built in React Native for iOS and Android.",
+    desc: "Map-first volunteering app for neighbors. Post a help request, find someone nearby who can do it. Real accountability through community scores and peer grading.",
+    fullDesc: "Community is a map-first volunteering app built on the idea that neighbors still help neighbors — you just need a way to find each other. Post a help request on the map (ride to the train, help moving a couch, painting a fence); anyone nearby can sign up. After the task, the poster rates the volunteer. Volunteers earn a community score: cumulative points plus a live A-F behavior grade, visible right on their map pin. Browse anonymously, sign up when you're ready to commit. Built in React Native with a PostGIS-backed Supabase for the location layer.",
     platform: "React Native · iOS & Android",
   },
 ];
@@ -752,23 +761,24 @@ const Index = () => {
             backgroundColor: "rgba(0,0,0,0.5)",
             zIndex: 50,
             display: "flex",
-            alignItems: isMobile ? "flex-end" : "center",
+            alignItems: isMobile ? "flex-end" : "stretch",
             justifyContent: "center",
-            padding: isMobile ? 0 : 24,
+            padding: isMobile ? 0 : "0 24px",
           }}
           onClick={() => setActiveModal(null)}
         >
           <div
             style={{
               backgroundColor: colors.bg,
-              borderRadius: isMobile ? "16px 16px 0 0" : 12,
-              maxWidth: isMobile ? "100%" : 560,
+              borderRadius: isMobile ? "16px 16px 0 0" : 14,
+              maxWidth: isMobile ? "100%" : 820,
               width: "100%",
-              padding: isMobile ? "28px 20px 32px" : "40px 40px 36px",
+              padding: isMobile ? "18px 22px 28px" : "20px 40px 40px",
               position: "relative",
               boxShadow: "0 -4px 40px rgba(0,0,0,0.15)",
-              maxHeight: isMobile ? "90vh" : undefined,
-              overflowY: isMobile ? "auto" : undefined,
+              height: isMobile ? "94vh" : "100vh",
+              maxHeight: isMobile ? "94vh" : "100vh",
+              overflowY: "auto",
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -788,31 +798,154 @@ const Index = () => {
               <X size={18} />
             </button>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <h3 style={{ fontFamily: serif, fontSize: "1.6rem", fontWeight: 700, color: colors.text }}>
-                {activeModal.name}
-              </h3>
-              <StatusTag label={activeModal.tag} color={activeModal.tagColor} bg={activeModal.tagBg} />
-            </div>
+            {/* Screenshot carousel */}
+            {activeModal.screenshots && activeModal.screenshots.length > 0 ? (
+              <div
+                className="ss-carousel"
+                style={{
+                  display: "flex",
+                  gap: 16,
+                  overflowX: "auto",
+                  scrollSnapType: "x mandatory",
+                  padding: "8px 4px 20px",
+                  marginBottom: 8,
+                  marginInline: isMobile ? -22 : -40,
+                  paddingInline: isMobile ? 22 : 40,
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {activeModal.screenshots.map(shot => (
+                  <figure
+                    key={shot.src}
+                    style={{
+                      flex: "0 0 auto",
+                      margin: 0,
+                      scrollSnapAlign: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: isMobile ? "70vh" : "76vh",
+                        aspectRatio: "9/19.5",
+                        backgroundColor: "#1A1A1A",
+                        borderRadius: 42,
+                        padding: 10,
+                        boxShadow: "0 14px 40px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04) inset",
+                        position: "relative",
+                      }}
+                    >
+                      <img
+                        src={shot.src}
+                        alt={shot.caption}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: 34,
+                          display: "block",
+                        }}
+                      />
+                      <span
+                        aria-hidden
+                        style={{
+                          position: "absolute",
+                          top: 16,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          width: isMobile ? 92 : 110,
+                          height: isMobile ? 22 : 26,
+                          backgroundColor: "#000",
+                          borderRadius: 14,
+                        }}
+                      />
+                    </div>
+                    <figcaption
+                      style={{
+                        fontFamily: mono,
+                        fontSize: "10px",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: colors.faint,
+                      }}
+                    >
+                      {shot.caption}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: "flex", justifyContent: "center", padding: "8px 0 20px" }}>
+                <div
+                  style={{
+                    height: isMobile ? "70vh" : "76vh",
+                    aspectRatio: "9/19.5",
+                    backgroundColor: "#1A1A1A",
+                    borderRadius: 42,
+                    padding: 10,
+                    boxShadow: "0 14px 40px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04) inset",
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: 34,
+                      backgroundColor: colors.amberLight,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: mono,
+                        fontSize: "10px",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: colors.faint,
+                      }}
+                    >
+                      Screenshots coming soon
+                    </span>
+                  </div>
+                  <span
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      top: 16,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: isMobile ? 92 : 110,
+                      height: isMobile ? 22 : 26,
+                      backgroundColor: "#000",
+                      borderRadius: 14,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
-            {/* Screenshot placeholder — swap src when ready */}
-            <div
-              style={{
-                width: "100%",
-                aspectRatio: "16/9",
-                backgroundColor: colors.amberLight,
-                borderRadius: 8,
-                marginBottom: 24,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: `1px dashed ${colors.rule}`,
-              }}
-            >
-              <span style={{ fontFamily: mono, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: colors.faint }}>
-                Screenshot coming soon
-              </span>
-            </div>
+            {activeModal.screenshots && activeModal.screenshots.length > 1 && (
+              <p
+                style={{
+                  fontFamily: sans,
+                  fontSize: "11px",
+                  color: colors.faint,
+                  margin: "0 0 20px",
+                  textAlign: "center",
+                }}
+              >
+                {isMobile ? "Swipe to see more" : "Scroll to see more"}
+              </p>
+            )}
 
             <p style={{ fontFamily: sans, fontSize: "0.925rem", lineHeight: 1.8, color: colors.muted, marginBottom: 20 }}>
               {activeModal.fullDesc}
@@ -839,6 +972,10 @@ const Index = () => {
             transform: scale(0.98) !important;
           }
         }
+        .ss-carousel::-webkit-scrollbar { height: 6px; }
+        .ss-carousel::-webkit-scrollbar-thumb { background: #E0DCD4; border-radius: 3px; }
+        .ss-carousel::-webkit-scrollbar-track { background: transparent; }
+        .ss-carousel { scrollbar-width: thin; scrollbar-color: #E0DCD4 transparent; }
       `}</style>
     </div>
   );
