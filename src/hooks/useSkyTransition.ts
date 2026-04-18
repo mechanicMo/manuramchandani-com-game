@@ -27,8 +27,8 @@ const NIGHT: SkyParams = {
 
 const DAY: SkyParams = {
   fogColor: "#c8e8f8",
-  fogNear: 40,
-  fogFar: 120,
+  fogNear: 55,
+  fogFar: 160,
   sunPosition: [1, 0.8, 0],
   rayleigh: 2,
   turbidity: 4,

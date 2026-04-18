@@ -77,7 +77,13 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
         rayleigh={sky.rayleigh}
         turbidity={sky.turbidity}
       />
-      {phase === "ascent" && <Stars radius={80} depth={50} count={4000} factor={4} saturation={0} fade />}
+      {phase === "ascent" && <Stars radius={80} depth={50} count={7000} factor={5.5} saturation={0} fade speed={0.5} />}
+      {phase === "ascent" && (
+        <mesh position={[-22, 88, -65]}>
+          <sphereGeometry args={[1.4, 12, 8]} />
+          <meshBasicMaterial color="#d8e8ff" />
+        </mesh>
+      )}
 
       <Physics gravity={[0, -9.81, 0]}>
         <CliffFace />

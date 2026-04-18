@@ -33,7 +33,7 @@ const LocationVisual = memo(({ y, visualType }: { y: number; visualType: string 
             <coneGeometry args={[0.2, 0.5, 5]} />
             <meshStandardMaterial color="#FF4500" emissive="#FF2200" emissiveIntensity={0.8} />
           </mesh>
-          <pointLight position={[0, 0.5, 0]} color="#FF6600" intensity={2} distance={6} />
+          <pointLight position={[0, 0.5, 0]} color="#FF6600" intensity={3} distance={9} />
         </group>
       );
 
