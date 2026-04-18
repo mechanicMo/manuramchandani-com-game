@@ -13,6 +13,7 @@ import { ChossSystem }         from "./ChossSystem";
 import { DustParticles }       from "./DustParticles";
 import { SummitLedge }         from "./SummitLedge";
 import { SnowParticles }       from "./SnowParticles";
+import { GroundTerrain }       from "./GroundTerrain";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
@@ -90,6 +91,7 @@ export const World = ({ gamePhase, onLocationChange }: Props) => {
       <SummitLedge phase={phase} />
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
+      <GroundTerrain phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} />
       <CameraRig target={pos} phase={phase} />
