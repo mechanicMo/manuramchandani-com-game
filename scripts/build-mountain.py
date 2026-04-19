@@ -5,7 +5,7 @@ Output: public/models/mountain.glb (same path the existing Mountain.tsx loads)
 """
 
 import bpy, bmesh, mathutils
-import os, sys, math
+import os, sys, math, random
 from mathutils import Vector
 
 # ============================================================================
@@ -33,9 +33,32 @@ BASE_PLATFORM_RADIUS    = 0.75
 BASE_PLATFORM_SEGMENTS  = 20
 BASE_PLATFORM_THICKNESS = 0.03
 
-# -- (Climb, ledge, summit, cave, snow constants declared here for completeness;
-#     subsequent tasks will add their own logic referencing them.) --
-# ... keep space here; I'll list values when dispatching Task 2+
+# -- CLIMB ROUTES (TASK 3) — values from plan; do NOT alter without spec update --
+CLIMB_BOTTOM_Y = 0.05           # y where climb faces begin (5 world units above base)
+CLIMB_SOLIDIFY_THICKNESS = 0.04 # wall thickness for climb faces
+
+# Route 1: Main Climb 1 (front region, faces -Z toward camera)
+CLIMB_1_ORIGIN_XZ = (0.0, -0.40)
+CLIMB_1_ANGLE_DEG = 10           # slight overhang
+CLIMB_1_WIDTH = 0.22
+CLIMB_1_HEIGHT = 0.75            # extends from y=0.05 to y=0.80 (summit)
+
+# Route 2: Main Climb 2 (side region, +X)
+CLIMB_2_ORIGIN_XZ = (0.35, -0.15)
+CLIMB_2_ANGLE_DEG = 8
+CLIMB_2_WIDTH = 0.20
+CLIMB_2_HEIGHT = 0.72
+
+# Route 3: Hidden Climb (back/side region, -X / +Z)
+CLIMB_HIDDEN_ORIGIN_XZ = (-0.25, 0.35)
+CLIMB_HIDDEN_ANGLE_DEG = 5       # near-vertical — steeper, less inviting
+CLIMB_HIDDEN_WIDTH = 0.14        # narrower
+CLIMB_HIDDEN_HEIGHT = 0.70
+
+# -- LEDGES & BOULDERS --
+N_LEDGES_PER_ROUTE    = 5
+LEDGE_HEIGHT_FRACTION = [0.18, 0.34, 0.50, 0.65, 0.78]  # 5 ledges per climb (spec)
+LEDGE_DEPTH           = 0.06                             # ledge protrusion from wall
 
 # -- SOLIDIFY DEFAULTS --
 SOLIDIFY_OFFSET = -1.0  # solidify toward interior
@@ -233,6 +256,137 @@ def build_collision_shell():
     return obj
 
 # ============================================================================
+# TASK 3 — Climb routes (faces, ledges, boulders)
+# ============================================================================
+
+def build_climb_face(name, origin_xz, angle_deg, width, height):
+    """Constructs an angled rectangular climbing wall.
+
+    Subdivided into 4 columns × 8 rows (5×9 vertex grid = 45 vertices, 32 quads).
+    Top edge tilted backward by angle_deg for overhang feel.
+    Interior vertices have small noise for irregularity.
+    """
+    random.seed(hash(name))
+    vertices = []
+    faces = []
+
+    # Build 5×9 vertex grid (col 0..4, row 0..8)
+    for row in range(9):
+        for col in range(5):
+            u = col / 4.0  # 0..1 left to right
+            v = row / 8.0  # 0..1 bottom to top
+
+            # Local coordinates centered at origin
+            x_local = (u - 0.5) * width
+            y_local = v * height
+            z_local = 0.0
+
+            # Tilt top backward: top moves toward -Z
+            z_local += y_local * math.tan(math.radians(angle_deg)) * 0.3
+
+            # Add noise to interior vertices only (col 1..3, row 1..7)
+            if 1 <= col <= 3 and 1 <= row <= 7:
+                x_local += random.uniform(-0.01, 0.01)
+                y_local += random.uniform(-0.005, 0.005)
+
+            # Transform to world coordinates
+            world_x = origin_xz[0] + x_local
+            world_y = CLIMB_BOTTOM_Y + y_local
+            world_z = origin_xz[1] + z_local
+
+            vertices.append((world_x, world_y, world_z))
+
+    # Build quad grid (4 cols × 8 rows = 32 quads)
+    for row in range(8):
+        for col in range(4):
+            i_bl = row * 5 + col         # bottom-left
+            i_br = row * 5 + col + 1     # bottom-right
+            i_tl = (row + 1) * 5 + col   # top-left
+            i_tr = (row + 1) * 5 + col + 1  # top-right
+            faces.append((i_bl, i_br, i_tr, i_tl))
+
+    obj = make_mesh_object(name, vertices, faces)
+    apply_solidify(obj, CLIMB_SOLIDIFY_THICKNESS)
+    apply_transforms(obj)
+    set_flat_shading(obj)
+
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL {name} (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"[T3] {name} OK — {len(obj.data.vertices)} verts, {len(obj.data.polygons)} faces, 0 boundary")
+    return obj
+
+def build_ledge(name, center_xyz, width, depth, height):
+    """A shallow box (cuboid). 8 vertices, 6 faces (already closed)."""
+    cx, cy, cz = center_xyz
+    hw, hd, hh = width / 2.0, depth / 2.0, height / 2.0
+
+    vertices = [
+        (cx - hw, cy - hh, cz - hd), (cx + hw, cy - hh, cz - hd),
+        (cx + hw, cy - hh, cz + hd), (cx - hw, cy - hh, cz + hd),
+        (cx - hw, cy + hh, cz - hd), (cx + hw, cy + hh, cz - hd),
+        (cx + hw, cy + hh, cz + hd), (cx - hw, cy + hh, cz + hd),
+    ]
+    faces = [
+        (0, 1, 2, 3),    # bottom
+        (7, 6, 5, 4),    # top (reversed for outward normal)
+        (0, 4, 5, 1),    # -Z
+        (1, 5, 6, 2),    # +X
+        (2, 6, 7, 3),    # +Z
+        (3, 7, 4, 0),    # -X
+    ]
+
+    obj = make_mesh_object(name, vertices, faces)
+    # NO solidify — box is already closed
+    apply_transforms(obj)
+    set_flat_shading(obj)
+
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL {name} (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+
+    return obj
+
+def build_boulder(name, center_xyz, size):
+    """Irregular boulder: 8-vertex cube with random jitter (±15% of size)."""
+    random.seed(hash(name))
+    cx, cy, cz = center_xyz
+    hs = size / 2.0
+
+    def j():
+        return random.uniform(-0.15, 0.15) * size
+
+    vertices = [
+        (cx - hs + j(), cy - hs + j(), cz - hs + j()),
+        (cx + hs + j(), cy - hs + j(), cz - hs + j()),
+        (cx + hs + j(), cy - hs + j(), cz + hs + j()),
+        (cx - hs + j(), cy - hs + j(), cz + hs + j()),
+        (cx - hs + j(), cy + hs + j(), cz - hs + j()),
+        (cx + hs + j(), cy + hs + j(), cz - hs + j()),
+        (cx + hs + j(), cy + hs + j(), cz + hs + j()),
+        (cx - hs + j(), cy + hs + j(), cz + hs + j()),
+    ]
+    faces = [
+        (0, 1, 2, 3), (7, 6, 5, 4),
+        (0, 4, 5, 1), (1, 5, 6, 2),
+        (2, 6, 7, 3), (3, 7, 4, 0),
+    ]
+
+    obj = make_mesh_object(name, vertices, faces)
+    apply_transforms(obj)
+    set_flat_shading(obj)
+
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL {name} (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+
+    return obj
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
@@ -245,6 +399,36 @@ if __name__ == "__main__":
     # Task 2
     collision_shell = build_collision_shell()
 
-    # (Later tasks add their builds here: climbs, cave, summit, snow slope, export)
+    # Task 3 — climb routes
+    # Route 1: Main Climb 1 (front region)
+    build_climb_face("climb_face_1", CLIMB_1_ORIGIN_XZ, CLIMB_1_ANGLE_DEG, CLIMB_1_WIDTH, CLIMB_1_HEIGHT)
+    for i, frac in enumerate(LEDGE_HEIGHT_FRACTION):
+        ledge_y = CLIMB_BOTTOM_Y + frac * CLIMB_1_HEIGHT
+        ledge_xz = CLIMB_1_ORIGIN_XZ
+        ledge_center = (ledge_xz[0], ledge_y, ledge_xz[1] + LEDGE_DEPTH * 0.5)  # protrude outward
+        build_ledge(f"walk_ledge_1_{i+1:02d}", ledge_center, CLIMB_1_WIDTH, LEDGE_DEPTH, 0.03)
 
-    print("\n=== Task 2 complete ===")
+    # Route 2: Main Climb 2 (side region)
+    build_climb_face("climb_face_2", CLIMB_2_ORIGIN_XZ, CLIMB_2_ANGLE_DEG, CLIMB_2_WIDTH, CLIMB_2_HEIGHT)
+    for i, frac in enumerate(LEDGE_HEIGHT_FRACTION):
+        ledge_y = CLIMB_BOTTOM_Y + frac * CLIMB_2_HEIGHT
+        ledge_xz = CLIMB_2_ORIGIN_XZ
+        # Climb 2 faces +X, so ledge protrudes on +X
+        ledge_center = (ledge_xz[0] + LEDGE_DEPTH * 0.5, ledge_y, ledge_xz[1])
+        build_ledge(f"walk_ledge_2_{i+1:02d}", ledge_center, LEDGE_DEPTH, CLIMB_2_WIDTH, 0.03)
+
+    # Route 3: Hidden Climb (back/side region)
+    build_climb_face("climb_face_hidden", CLIMB_HIDDEN_ORIGIN_XZ, CLIMB_HIDDEN_ANGLE_DEG, CLIMB_HIDDEN_WIDTH, CLIMB_HIDDEN_HEIGHT)
+    for i, frac in enumerate(LEDGE_HEIGHT_FRACTION):
+        ledge_y = CLIMB_BOTTOM_Y + frac * CLIMB_HIDDEN_HEIGHT
+        ledge_xz = CLIMB_HIDDEN_ORIGIN_XZ
+        # Hidden faces back/side (+Z, -X direction); protrude on -X
+        ledge_center = (ledge_xz[0] - LEDGE_DEPTH * 0.5, ledge_y, ledge_xz[1])
+        build_ledge(f"walk_ledge_hidden_{i+1:02d}", ledge_center, LEDGE_DEPTH, CLIMB_HIDDEN_WIDTH, 0.03)
+
+    # Boulder cluster obscuring the hidden climb entrance
+    hidden_x, hidden_z = CLIMB_HIDDEN_ORIGIN_XZ
+    build_boulder("boulder_entry_01", (hidden_x + 0.04, 0.03, hidden_z - 0.02), 0.06)
+    build_boulder("boulder_entry_02", (hidden_x - 0.03, 0.04, hidden_z + 0.01), 0.07)
+
+    print("\n=== Task 3 complete ===")
