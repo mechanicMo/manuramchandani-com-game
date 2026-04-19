@@ -135,6 +135,104 @@ def build_walk_base():
     return obj
 
 # ============================================================================
+# TASK 2 — Collision shell (main mountain body)
+# ============================================================================
+
+def build_collision_shell():
+    """Asymmetric cone-like closed mesh forming the structural mountain body.
+
+    5 vertex rings (y=0 to y=0.90):
+    1. Base ring (y=0, r=0.55) with silhouette noise
+    2. Low intermediate (y=0.30, r≈0.42) with vertical offsets
+    3. High intermediate (y=0.55, r≈0.26) with variation
+    4. Summit ring (y=0.80, r=0.08) forming flat plateau
+    5. Apex vertex (y=0.90) for mild peak
+
+    Quads between rings + triangle fan from apex.
+    """
+    vertices = []
+    faces = []
+    ring_starts = []  # Track where each ring starts in vertex list
+
+    # Ring 0: Base (y=0)
+    ring_starts.append(len(vertices))
+    for i in range(BASE_SEGMENTS):
+        angle = (i / BASE_SEGMENTS) * 2.0 * math.pi
+        # Apply silhouette noise to radius
+        radius = BASE_RADIUS + BASE_VERT_OFFSETS[i]
+        x = radius * math.cos(angle)
+        z = radius * math.sin(angle)
+        vertices.append((x, 0.0, z))
+
+    # Ring 1: Low intermediate (y=0.30, radius ≈ 0.42)
+    ring_starts.append(len(vertices))
+    low_radius = 0.42
+    for i in range(BASE_SEGMENTS):
+        angle = (i / BASE_SEGMENTS) * 2.0 * math.pi
+        x = low_radius * math.cos(angle)
+        z = low_radius * math.sin(angle)
+        y = 0.30 + MID_RING_Y_OFFSETS[i]  # Add vertical jitter
+        vertices.append((x, y, z))
+
+    # Ring 2: High intermediate (y=0.55, radius ≈ 0.26)
+    ring_starts.append(len(vertices))
+    high_radius = 0.26
+    for i in range(BASE_SEGMENTS):
+        angle = (i / BASE_SEGMENTS) * 2.0 * math.pi
+        x = high_radius * math.cos(angle)
+        z = high_radius * math.sin(angle)
+        # Use reversed sign of offsets for variation
+        y = 0.55 - MID_RING_Y_OFFSETS[i]
+        vertices.append((x, y, z))
+
+    # Ring 3: Summit (y=0.80, radius=0.08)
+    ring_starts.append(len(vertices))
+    for i in range(BASE_SEGMENTS):
+        angle = (i / BASE_SEGMENTS) * 2.0 * math.pi
+        x = SUMMIT_RADIUS * math.cos(angle)
+        z = SUMMIT_RADIUS * math.sin(angle)
+        vertices.append((x, SUMMIT_Y, z))
+
+    # Apex (single vertex at top)
+    apex_idx = len(vertices)
+    vertices.append((0.0, MOUNTAIN_HEIGHT, 0.0))
+
+    # Build quads between adjacent rings (4 ring pairs: 0->1, 1->2, 2->3, 3->4)
+    # We have 5 rings (indices 0-4 in ring_starts), so iterate through 4 pairs
+    for ring_pair_idx in range(len(ring_starts) - 1):
+        ring_a_start = ring_starts[ring_pair_idx]
+        ring_b_start = ring_starts[ring_pair_idx + 1]
+
+        for i in range(BASE_SEGMENTS):
+            v_a0 = ring_a_start + i
+            v_a1 = ring_a_start + ((i + 1) % BASE_SEGMENTS)
+            v_b0 = ring_b_start + i
+            v_b1 = ring_b_start + ((i + 1) % BASE_SEGMENTS)
+            # Quad: (a0, a1, b1, b0)
+            faces.append((v_a0, v_a1, v_b1, v_b0))
+
+    # Build triangle fan from apex to summit ring
+    summit_start = ring_starts[3]
+    for i in range(BASE_SEGMENTS):
+        v0 = apex_idx
+        v1 = summit_start + ((i + 1) % BASE_SEGMENTS)
+        v2 = summit_start + i
+        faces.append((v0, v1, v2))
+
+    obj = make_mesh_object("collision_shell", vertices, faces)
+    apply_solidify(obj, 0.05)
+    apply_transforms(obj)
+    set_flat_shading(obj)
+
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL collision_shell (boundary_edges={boundary})", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"[T2] collision_shell OK — {len(obj.data.vertices)} verts, {len(obj.data.polygons)} faces, 0 boundary edges")
+    return obj
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
@@ -144,6 +242,9 @@ if __name__ == "__main__":
     # Task 1
     walk_base = build_walk_base()
 
-    # (Later tasks add their builds here: mountain body, climbs, cave, summit, snow slope, export)
+    # Task 2
+    collision_shell = build_collision_shell()
 
-    print("\n=== Task 1 complete ===")
+    # (Later tasks add their builds here: climbs, cave, summit, snow slope, export)
+
+    print("\n=== Task 2 complete ===")
