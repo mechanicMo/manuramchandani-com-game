@@ -55,6 +55,18 @@ CLIMB_HIDDEN_ANGLE_DEG = 5       # near-vertical — steeper, less inviting
 CLIMB_HIDDEN_WIDTH = 0.14        # narrower
 CLIMB_HIDDEN_HEIGHT = 0.70
 
+# -- CAVE (TASK 4) — plan-specified values --
+CAVE_ENTRANCE_XZ        = (0.05, -0.30)  # on the Climb 1 face, mid-route
+CAVE_ENTRANCE_Y         = 0.35           # ~35 world units up
+CAVE_ENTRANCE_RADIUS    = 0.04
+CAVE_DEPTH              = 0.12           # how far into the mountain
+CAVE_INTERIOR_WIDTH     = 0.10
+CAVE_INTERIOR_HEIGHT    = 0.07
+CAVE_ENTRANCE_SEGMENTS  = 8
+# After cave boolean, collision_shell will have open boundary edges AT the entrance (expected).
+# Two edge loops around the opening (entrance hole + inner rim from solidify) ≈ 16 edges total.
+ALLOWED_SHELL_BOUNDARY_EDGES = CAVE_ENTRANCE_SEGMENTS * 2  # 16
+
 # -- LEDGES & BOULDERS --
 N_LEDGES_PER_ROUTE    = 5
 LEDGE_HEIGHT_FRACTION = [0.18, 0.34, 0.50, 0.65, 0.78]  # 5 ledges per climb (spec)
@@ -118,6 +130,21 @@ def count_boundary_edges(obj):
     boundary_count = sum(1 for e in bm.edges if e.is_boundary)
     bm.free()
     return boundary_count
+
+def boolean_subtract(target_obj, cutter_obj):
+    """Subtract cutter from target in-place using the EXACT solver.
+    Returns target. Cutter is hidden (not deleted) for debugging."""
+    mod = target_obj.modifiers.new(name="Bool_Cave", type='BOOLEAN')
+    mod.operation = 'DIFFERENCE'
+    mod.object = cutter_obj
+    mod.solver = 'EXACT'
+    bpy.context.view_layer.objects.active = target_obj
+    target_obj.select_set(True)
+    bpy.ops.object.modifier_apply(modifier="Bool_Cave")
+    target_obj.select_set(False)
+    cutter_obj.hide_viewport = True
+    cutter_obj.hide_render = True
+    return target_obj
 
 # ============================================================================
 # TASK 1 — Base platform (walk_base)
@@ -387,6 +414,96 @@ def build_boulder(name, center_xyz, size):
     return obj
 
 # ============================================================================
+# TASK 4 — Cave entrance + interior chamber
+# ============================================================================
+
+def build_cave(collision_shell_obj):
+    """Cut entrance into collision_shell + build cave_interior chamber."""
+    # 1. Cutter: a horizontal cylinder pointing INTO the mountain from the climb_1 face.
+    #    The face direction from climb_1 toward cave: climb_1 is at (0, -0.40), face normal is +Z
+    #    (camera direction). To cut INTO the mountain from that face, the cutter extends from
+    #    outside the shell (+Z) toward -Z into the mountain.
+    cx, cz = CAVE_ENTRANCE_XZ
+    cy = CAVE_ENTRANCE_Y
+    # Cylinder from (cx, cy, cz-0.02) outside the face, to (cx, cy, cz-CAVE_DEPTH) inside
+    cutter_verts = []
+    cutter_faces = []
+    # Two rings of vertices (front cap + back cap)
+    for z_offset in [+0.02, -(CAVE_DEPTH)]:  # front is slightly outside face, back is interior
+        for i in range(CAVE_ENTRANCE_SEGMENTS):
+            angle = (i / CAVE_ENTRANCE_SEGMENTS) * 2 * math.pi
+            x = cx + CAVE_ENTRANCE_RADIUS * math.cos(angle)
+            y = cy + CAVE_ENTRANCE_RADIUS * math.sin(angle)
+            z = cz + z_offset
+            cutter_verts.append((x, y, z))
+    # Side quads between rings
+    for i in range(CAVE_ENTRANCE_SEGMENTS):
+        a = i
+        b = (i + 1) % CAVE_ENTRANCE_SEGMENTS
+        c = CAVE_ENTRANCE_SEGMENTS + b
+        d = CAVE_ENTRANCE_SEGMENTS + a
+        cutter_faces.append((a, b, c, d))
+    # End caps (triangle fans)
+    front_center = len(cutter_verts)
+    cutter_verts.append((cx, cy, cz + 0.02))
+    for i in range(CAVE_ENTRANCE_SEGMENTS):
+        b = (i + 1) % CAVE_ENTRANCE_SEGMENTS
+        cutter_faces.append((front_center, b, i))  # outward normal
+    back_center = len(cutter_verts)
+    cutter_verts.append((cx, cy, cz - CAVE_DEPTH))
+    for i in range(CAVE_ENTRANCE_SEGMENTS):
+        b = (i + 1) % CAVE_ENTRANCE_SEGMENTS
+        cutter_faces.append((back_center, CAVE_ENTRANCE_SEGMENTS + i, CAVE_ENTRANCE_SEGMENTS + b))
+    cutter = make_mesh_object("__cave_cutter", cutter_verts, cutter_faces)
+
+    # 2. Boolean subtract from collision_shell
+    boolean_subtract(collision_shell_obj, cutter)
+
+    # 3. Check collision_shell boundary edges after boolean
+    boundary = count_boundary_edges(collision_shell_obj)
+    if boundary > ALLOWED_SHELL_BOUNDARY_EDGES:
+        # Tolerance exceeded. Log but don't exit — Task 7 validation flags for inspection.
+        print(f"CAVE_NONMANIFOLD_WARN collision_shell boundary={boundary} allowed={ALLOWED_SHELL_BOUNDARY_EDGES}", file=sys.stderr)
+    else:
+        print(f"[T4] boolean_subtract OK — collision_shell boundary={boundary} (allowed={ALLOWED_SHELL_BOUNDARY_EDGES})")
+
+    # 4. Build cave_interior chamber (a closed box positioned inside the mountain behind the entrance)
+    # Chamber XZ-aligned, centered on CAVE_ENTRANCE_XZ, extends inward from entrance Z.
+    chamber_cx = cx
+    chamber_cy = cy
+    chamber_cz_center = cz - CAVE_DEPTH * 0.5  # center of chamber in Z
+    w_half = CAVE_INTERIOR_WIDTH / 2
+    h_half = CAVE_INTERIOR_HEIGHT / 2
+    d_half = CAVE_DEPTH / 2
+    cave_verts = [
+        (chamber_cx - w_half, chamber_cy - h_half, chamber_cz_center - d_half),
+        (chamber_cx + w_half, chamber_cy - h_half, chamber_cz_center - d_half),
+        (chamber_cx + w_half, chamber_cy - h_half, chamber_cz_center + d_half),
+        (chamber_cx - w_half, chamber_cy - h_half, chamber_cz_center + d_half),
+        (chamber_cx - w_half, chamber_cy + h_half, chamber_cz_center - d_half),
+        (chamber_cx + w_half, chamber_cy + h_half, chamber_cz_center - d_half),
+        (chamber_cx + w_half, chamber_cy + h_half, chamber_cz_center + d_half),
+        (chamber_cx - w_half, chamber_cy + h_half, chamber_cz_center + d_half),
+    ]
+    cave_faces = [
+        (0, 1, 2, 3),
+        (7, 6, 5, 4),
+        (0, 4, 5, 1),
+        (1, 5, 6, 2),
+        (2, 6, 7, 3),
+        (3, 7, 4, 0),
+    ]
+    cave = make_mesh_object("cave_interior", cave_verts, cave_faces)
+    apply_transforms(cave)
+    set_flat_shading(cave)
+    cave_boundary = count_boundary_edges(cave)
+    if cave_boundary != 0:
+        print(f"WATERTIGHT_FAIL cave_interior (boundary={cave_boundary})", file=sys.stderr)
+        sys.exit(1)
+    print(f"[T4] cave_interior OK — {len(cave.data.vertices)} verts, {len(cave.data.polygons)} faces, 0 boundary")
+    return cave
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
@@ -431,4 +548,7 @@ if __name__ == "__main__":
     build_boulder("boulder_entry_01", (hidden_x + 0.04, 0.03, hidden_z - 0.02), 0.06)
     build_boulder("boulder_entry_02", (hidden_x - 0.03, 0.04, hidden_z + 0.01), 0.07)
 
-    print("\n=== Task 3 complete ===")
+    # Task 4 — cave entrance + cave_interior
+    build_cave(collision_shell)
+
+    print("\n=== Task 4 complete ===")
