@@ -85,6 +85,13 @@ MONOLITH_HEIGHT         = 0.06
 SNOWBOARD_CACHE_WIDTH   = 0.025
 SNOWBOARD_CACHE_HEIGHT  = 0.030
 
+# -- SNOW DESCENT SLOPE (TASK 6) — plan-exact --
+SNOW_SLOPE_START_Y   = 0.80            # from summit level
+SNOW_SLOPE_END_Y     = 0.02            # near base
+SNOW_SLOPE_WIDTH     = 0.30            # horizontal extent
+SNOW_SLOPE_ORIGIN_XZ = (0.0, 0.40)     # opposite region, +Z
+SNOW_SLOPE_ANGLE_DEG = 30              # slope angle (from vertical — so a "30° lean" sloping down and out)
+
 # -- LEDGES & BOULDERS --
 N_LEDGES_PER_ROUTE    = 5
 LEDGE_HEIGHT_FRACTION = [0.18, 0.34, 0.50, 0.65, 0.78]  # 5 ledges per climb (spec)
@@ -678,6 +685,61 @@ def build_snowboard_cache():
     return bar
 
 # ============================================================================
+# TASK 6 — Snow descent slope
+# ============================================================================
+
+def build_snow_descent():
+    """Angled snow slope on +Z side of mountain, sloping downward and outward.
+
+    Planar quad subdivided into 3 cols × 8 rows (4×9 vertex grid = 36 verts, 24 quads).
+    Top anchored at SNOW_SLOPE_ORIGIN_XZ, slopes down in Y and extends outward in +Z
+    as it descends, tilted by SNOW_SLOPE_ANGLE_DEG.
+    Interior vertices have small XZ noise for irregularity.
+    """
+    import random as _r
+    _r.seed(hash("snow_descent"))
+    slope_height = SNOW_SLOPE_START_Y - SNOW_SLOPE_END_Y
+    # Tilt: bottom of slope extends further out in +Z than top by slope_height * tan(angle)
+    z_extension = slope_height * math.tan(math.radians(SNOW_SLOPE_ANGLE_DEG))
+    ox, oz = SNOW_SLOPE_ORIGIN_XZ  # top-of-slope XZ anchor
+    cols = 3
+    rows = 8
+    vertices = []
+    for row in range(rows + 1):       # 9 vertex rows
+        v = row / rows                # 0 at top (y = SLOPE_START_Y), 1 at bottom (y = SLOPE_END_Y)
+        y = SNOW_SLOPE_START_Y - v * slope_height
+        z_offset_for_row = v * z_extension
+        for col in range(cols + 1):   # 4 columns
+            u = col / cols            # 0 left, 1 right
+            x = ox + (u - 0.5) * SNOW_SLOPE_WIDTH
+            z = oz + z_offset_for_row
+            # Noise on interior verts only (col 1-2, row 1-7)
+            if 0 < col < cols and 0 < row < rows:
+                x += _r.uniform(-0.01, 0.01)
+                z += _r.uniform(-0.01, 0.01)
+            vertices.append((x, y, z))
+    # Quad faces (row, col) → vertex index = row * (cols+1) + col
+    faces = []
+    for row in range(rows):
+        for col in range(cols):
+            i_tl = row * (cols + 1) + col           # top-left of quad
+            i_tr = row * (cols + 1) + col + 1
+            i_bl = (row + 1) * (cols + 1) + col
+            i_br = (row + 1) * (cols + 1) + col + 1
+            # Wind for outward (+Z) normal: TL, TR, BR, BL
+            faces.append((i_tl, i_tr, i_br, i_bl))
+    obj = make_mesh_object("snow_descent", vertices, faces)
+    apply_solidify(obj, 0.04)
+    apply_transforms(obj)
+    set_flat_shading(obj)
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL snow_descent (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+    print(f"[T6] snow_descent OK — {len(obj.data.vertices)} verts, {len(obj.data.polygons)} faces, 0 boundary")
+    return obj
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
@@ -731,4 +793,7 @@ if __name__ == "__main__":
     build_monolith()
     build_snowboard_cache()
 
-    print("\n=== Task 5 complete ===")
+    # Task 6 — snow descent slope
+    build_snow_descent()
+
+    print("\n=== Task 6 complete ===")
