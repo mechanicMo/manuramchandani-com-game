@@ -103,7 +103,7 @@ SOLIDIFY_OFFSET = -1.0  # solidify toward interior
 # -- OUTPUT --
 OUTPUT_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "..", "public", "models", "mountain.glb"
+    "..", "public", "models", "mountain.tagged.glb"
 )
 
 # ============================================================================
@@ -170,6 +170,62 @@ def boolean_subtract(target_obj, cutter_obj):
     cutter_obj.hide_viewport = True
     cutter_obj.hide_render = True
     return target_obj
+
+def export_glb(output_path):
+    """Export all visible mesh objects to GLB with named submeshes preserved."""
+    # Ensure output dir exists
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    # Deselect everything, then select all visible meshes
+    bpy.ops.object.select_all(action='DESELECT')
+    exported = []
+    for obj in bpy.data.objects:
+        if obj.type == 'MESH' and not obj.hide_viewport:
+            obj.select_set(True)
+            exported.append(obj.name)
+    try:
+        bpy.ops.export_scene.gltf(
+            filepath=output_path,
+            export_format='GLB',
+            export_apply=True,
+            export_materials='NONE',
+            export_selection=True,
+            check_existing=False,
+        )
+    except TypeError:
+        bpy.ops.export_scene.gltf(
+            filepath=output_path,
+            export_format='GLB',
+            export_apply=True,
+            export_materials='NONE',
+            use_selection=True,
+            check_existing=False,
+        )
+    return exported
+
+def print_summary(output_path, exported_names):
+    """Print object count per prefix + total file size."""
+    prefixes = {"walk_": 0, "climb_": 0, "snow_": 0, "cave_": 0, "summit_": 0, "boulder_": 0}
+    other = 0
+    for name in exported_names:
+        matched = False
+        for p in prefixes:
+            if name.startswith(p):
+                prefixes[p] += 1
+                matched = True
+                break
+        if not matched:
+            other += 1
+    size_bytes = os.path.getsize(output_path) if os.path.exists(output_path) else 0
+    size_mb = size_bytes / (1024 * 1024)
+    print("")
+    print("=" * 60)
+    print("EXPORT SUMMARY")
+    for p, c in prefixes.items():
+        print(f"  {p}*  {c}")
+    print(f"  other {other}")
+    print(f"  total objects: {len(exported_names)}")
+    print(f"  file size: {size_mb:.2f} MB  ({output_path})")
+    print("=" * 60)
 
 # ============================================================================
 # TASK 1 — Base platform (walk_base)
@@ -796,4 +852,8 @@ if __name__ == "__main__":
     # Task 6 — snow descent slope
     build_snow_descent()
 
-    print("\n=== Task 6 complete ===")
+    # Task 7 — export
+    exported = export_glb(OUTPUT_PATH)
+    print_summary(OUTPUT_PATH, exported)
+
+    print("\n=== Build complete ===")

@@ -59,13 +59,13 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
     const anchor = walkBase ?? overallBox;
     const anchorCenter = new THREE.Vector3();
     anchor.getCenter(anchorCenter);
-    const groundY = anchor.min.y;
+    const groundY = anchor.max.y;
 
     // Average unit-normal of climb_* faces in mesh-local coords
     const climbNormal = new THREE.Vector3();
     cloned.traverse((child) => {
       const mesh = child as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.name.startsWith("climb_")) return;
+      if (!mesh.isMesh || mesh.name !== "climb_face_1") return;
       const geom = mesh.geometry;
       const posAttr = geom.attributes.position;
       const idx = geom.index;
