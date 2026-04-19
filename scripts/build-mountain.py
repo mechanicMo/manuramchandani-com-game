@@ -67,6 +67,24 @@ CAVE_ENTRANCE_SEGMENTS  = 8
 # Two edge loops around the opening (entrance hole + inner rim from solidify) ≈ 16 edges total.
 ALLOWED_SHELL_BOUNDARY_EDGES = CAVE_ENTRANCE_SEGMENTS * 2  # 16
 
+# -- SUMMIT (TASK 5) — plan-exact values; do NOT change --
+SUMMIT_PLATEAU_HEIGHT     = 0.04
+SUMMIT_SOLIDIFY_THICKNESS = 0.03
+
+# Summit feature positions on plateau (XZ local to summit center at x=0, z=0)
+BEACON_PYRE_XZ     = (0.0, 0.0)    # center of summit
+MONOLITH_XZ        = (-0.05, 0.0)  # slightly toward Climb 1 side
+SNOWBOARD_CACHE_XZ = (0.04, 0.05)  # toward opposite region (descent side)
+
+# Summit feature dimensions
+BEACON_PYRE_BASE_RADIUS = 0.015
+BEACON_PYRE_HEIGHT      = 0.05
+MONOLITH_WIDTH          = 0.012
+MONOLITH_DEPTH          = 0.006
+MONOLITH_HEIGHT         = 0.06
+SNOWBOARD_CACHE_WIDTH   = 0.025
+SNOWBOARD_CACHE_HEIGHT  = 0.030
+
 # -- LEDGES & BOULDERS --
 N_LEDGES_PER_ROUTE    = 5
 LEDGE_HEIGHT_FRACTION = [0.18, 0.34, 0.50, 0.65, 0.78]  # 5 ledges per climb (spec)
@@ -504,6 +522,162 @@ def build_cave(collision_shell_obj):
     return cave
 
 # ============================================================================
+# TASK 5 — Summit plateau + features (walk_summit, beacon_pyre, monolith, snowboard_cache)
+# ============================================================================
+
+def build_walk_summit():
+    """Flat disc at summit height, slightly larger than the collision_shell cap."""
+    radius = SUMMIT_RADIUS + 0.02
+    segments = 12
+    vertices = [(0.0, SUMMIT_Y, 0.0)]  # center
+    for i in range(segments):
+        angle = (i / segments) * 2 * math.pi
+        vertices.append((radius * math.cos(angle), SUMMIT_Y, radius * math.sin(angle)))
+    faces = []
+    for i in range(segments):
+        v1 = 1 + i
+        v2 = 1 + ((i + 1) % segments)
+        faces.append((0, v1, v2))
+    obj = make_mesh_object("walk_summit", vertices, faces)
+    apply_solidify(obj, SUMMIT_SOLIDIFY_THICKNESS)
+    apply_transforms(obj)
+    set_flat_shading(obj)
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL walk_summit (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+    print(f"[T5] walk_summit OK — {len(obj.data.vertices)} verts, {len(obj.data.polygons)} faces, 0 boundary")
+    return obj
+
+def build_beacon_pyre():
+    """Cone sitting on summit surface (y = SUMMIT_Y + SUMMIT_SOLIDIFY_THICKNESS ≈ 0.83)."""
+    base_y = SUMMIT_Y + SUMMIT_SOLIDIFY_THICKNESS  # top of walk_summit
+    apex_y = base_y + BEACON_PYRE_HEIGHT
+    cx, cz = BEACON_PYRE_XZ
+    segments = 8
+    vertices = []
+    # Base ring
+    for i in range(segments):
+        angle = (i / segments) * 2 * math.pi
+        vertices.append((
+            cx + BEACON_PYRE_BASE_RADIUS * math.cos(angle),
+            base_y,
+            cz + BEACON_PYRE_BASE_RADIUS * math.sin(angle),
+        ))
+    apex_idx = len(vertices)
+    vertices.append((cx, apex_y, cz))
+    base_center_idx = len(vertices)
+    vertices.append((cx, base_y, cz))
+    faces = []
+    # Side tris (apex to ring)
+    for i in range(segments):
+        b = (i + 1) % segments
+        faces.append((apex_idx, b, i))
+    # Base tris (base_center to ring, reversed for downward normal)
+    for i in range(segments):
+        b = (i + 1) % segments
+        faces.append((base_center_idx, i, b))
+    obj = make_mesh_object("summit_beacon_pyre", vertices, faces)
+    # No solidify — closed cone is already watertight
+    apply_transforms(obj)
+    set_flat_shading(obj)
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL summit_beacon_pyre (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+    print(f"[T5] summit_beacon_pyre OK — {len(obj.data.vertices)} verts, {len(obj.data.polygons)} faces, 0 boundary")
+    return obj
+
+def build_monolith():
+    """Tall box standing on summit surface, leaning 5° along X for a "standing stone" feel."""
+    import math as _m
+    base_y = SUMMIT_Y + SUMMIT_SOLIDIFY_THICKNESS
+    cx, cz = MONOLITH_XZ
+    lean = _m.radians(5)  # lean along X
+    hw = MONOLITH_WIDTH / 2
+    hd = MONOLITH_DEPTH / 2
+    h = MONOLITH_HEIGHT
+    # Lean: top of the monolith shifts by h * sin(lean) in +X
+    top_shift_x = h * _m.sin(lean)
+    top_y = base_y + h * _m.cos(lean)
+    # 4 bottom verts (at base_y), 4 top verts (lean-adjusted)
+    vertices = [
+        (cx - hw, base_y, cz - hd),
+        (cx + hw, base_y, cz - hd),
+        (cx + hw, base_y, cz + hd),
+        (cx - hw, base_y, cz + hd),
+        (cx - hw + top_shift_x, top_y, cz - hd),
+        (cx + hw + top_shift_x, top_y, cz - hd),
+        (cx + hw + top_shift_x, top_y, cz + hd),
+        (cx - hw + top_shift_x, top_y, cz + hd),
+    ]
+    faces = [
+        (0, 1, 2, 3),   # bottom
+        (7, 6, 5, 4),   # top
+        (0, 4, 5, 1),
+        (1, 5, 6, 2),
+        (2, 6, 7, 3),
+        (3, 7, 4, 0),
+    ]
+    obj = make_mesh_object("summit_monolith", vertices, faces)
+    apply_transforms(obj)
+    set_flat_shading(obj)
+    boundary = count_boundary_edges(obj)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL summit_monolith (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+    print(f"[T5] summit_monolith OK — {len(obj.data.vertices)} verts, {len(obj.data.polygons)} faces, 0 boundary")
+    return obj
+
+def build_snowboard_cache():
+    """Three box objects then join into one with bpy.ops.object.join().
+    Shape: horizontal bar across two short upright posts, forming an upside-down U."""
+    base_y = SUMMIT_Y + SUMMIT_SOLIDIFY_THICKNESS
+    cx, cz = SNOWBOARD_CACHE_XZ
+    w = SNOWBOARD_CACHE_WIDTH
+    h = SNOWBOARD_CACHE_HEIGHT
+    post_thickness = 0.004
+    bar_thickness  = 0.004
+
+    def make_box(name, center_xyz, size_xyz):
+        bx, by, bz = center_xyz
+        sx, sy, sz = size_xyz
+        hx, hy, hz = sx / 2, sy / 2, sz / 2
+        verts = [
+            (bx - hx, by - hy, bz - hz), (bx + hx, by - hy, bz - hz),
+            (bx + hx, by - hy, bz + hz), (bx - hx, by - hy, bz + hz),
+            (bx - hx, by + hy, bz - hz), (bx + hx, by + hy, bz - hz),
+            (bx + hx, by + hy, bz + hz), (bx - hx, by + hy, bz + hz),
+        ]
+        faces = [(0, 1, 2, 3), (7, 6, 5, 4), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)]
+        return make_mesh_object(name, verts, faces)
+
+    # Two uprights
+    post_left  = make_box("__sb_post_L", (cx - w / 2 + post_thickness / 2, base_y + h / 2, cz), (post_thickness, h, post_thickness))
+    post_right = make_box("__sb_post_R", (cx + w / 2 - post_thickness / 2, base_y + h / 2, cz), (post_thickness, h, post_thickness))
+    # Horizontal bar
+    bar = make_box("__sb_bar", (cx, base_y + h - bar_thickness / 2, cz), (w, bar_thickness, post_thickness))
+
+    # Join the three parts into one object named summit_snowboard_cache
+    bpy.context.view_layer.objects.active = bar
+    post_left.select_set(True)
+    post_right.select_set(True)
+    bar.select_set(True)
+    bpy.ops.object.join()
+    bar.name = "summit_snowboard_cache"
+    bar.data.name = "summit_snowboard_cache"
+    bar.select_set(False)
+
+    apply_transforms(bar)
+    set_flat_shading(bar)
+    boundary = count_boundary_edges(bar)
+    if boundary != 0:
+        print(f"WATERTIGHT_FAIL summit_snowboard_cache (boundary={boundary})", file=sys.stderr)
+        sys.exit(1)
+    print(f"[T5] summit_snowboard_cache OK — {len(bar.data.vertices)} verts, {len(bar.data.polygons)} faces, 0 boundary")
+    return bar
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
@@ -551,4 +725,10 @@ if __name__ == "__main__":
     # Task 4 — cave entrance + cave_interior
     build_cave(collision_shell)
 
-    print("\n=== Task 4 complete ===")
+    # Task 5 — summit plateau + features
+    build_walk_summit()
+    build_beacon_pyre()
+    build_monolith()
+    build_snowboard_cache()
+
+    print("\n=== Task 5 complete ===")
