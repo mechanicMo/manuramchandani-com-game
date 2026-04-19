@@ -7,7 +7,7 @@ import { useKeyboardControls } from "@react-three/drei";
 import * as THREE from "three";
 import { Character }           from "./Character";
 import { CameraRig }           from "./CameraRig";
-import { CliffFace }           from "./CliffFace";
+import { Mountain }            from "./Mountain";
 import { HoldMarkers, HOLDS }  from "./HoldMarkers";
 import { ChossSystem }         from "./ChossSystem";
 import { DustParticles }       from "./DustParticles";
@@ -16,7 +16,6 @@ import { SnowParticles }       from "./SnowParticles";
 import { GroundTerrain }       from "./GroundTerrain";
 import { ForestBase }          from "./ForestBase";
 import { BoulderField }        from "./BoulderField";
-import { BackgroundMountains } from "./BackgroundMountains";
 import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
@@ -146,10 +145,8 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
         </mesh>
       )}
 
-      <CliffFace />
-      <BackgroundMountains />
-
       <Physics gravity={[0, -9.81, 0]}>
+        <Mountain />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
         <Character onPositionChange={handlePositionChange} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} />
