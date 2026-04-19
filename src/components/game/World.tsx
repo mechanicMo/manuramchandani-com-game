@@ -33,6 +33,8 @@ type Props = {
 
 export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
+  const [characterHeading, setCharacterHeading] = useState(0);
+  const mountainSceneRef                      = useRef<THREE.Object3D | null>(null);
   const velocityRef                          = useRef({ x: 0, y: 0 });
   const prevPosRef                           = useRef(new THREE.Vector3());
   const { phase, onCharacterY, beginDescent } = gamePhase;
@@ -146,10 +148,10 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
       )}
 
       <Physics gravity={[0, -9.81, 0]}>
-        <Mountain />
+        <Mountain onSceneReady={(s) => { mountainSceneRef.current = s; }} />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
-        <Character onPositionChange={handlePositionChange} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} />
+        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainSceneRef.current} />
       </Physics>
 
       <SummitLedge phase={phase} />
@@ -161,7 +163,7 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
       <ClimbingDetail phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} />
-      <CameraRig target={pos} phase={phase} />
+      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} />
     </>
   );
 };

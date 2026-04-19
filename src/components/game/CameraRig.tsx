@@ -2,9 +2,14 @@ import { useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+const tmpQuat = new THREE.Quaternion();
+const tmpVec  = new THREE.Vector3();
+
 type Props = {
   target: THREE.Vector3;
   phase?: "ascent" | "summit" | "descent";
+  characterHeading?: number;
 };
 
 const OFFSETS = {
@@ -13,15 +18,18 @@ const OFFSETS = {
   descent: new THREE.Vector3(0,   1, 5),
 };
 
-export const CameraRig = ({ target, phase = "ascent" }: Props) => {
+export const CameraRig = ({ target, phase = "ascent", characterHeading = 0 }: Props) => {
   const { camera } = useThree();
   const lookAtRef  = useRef(new THREE.Vector3());
   const offsetRef  = useRef(new THREE.Vector3());
 
   useFrame(() => {
-    const offset = OFFSETS[phase];
+    const base = OFFSETS[phase];
+    // Rotate base offset by characterHeading around Y so camera stays behind character
+    const headingQuat = tmpQuat.setFromAxisAngle(Y_AXIS, characterHeading);
+    const rotated = tmpVec.copy(base).applyQuaternion(headingQuat);
 
-    offsetRef.current.lerp(offset, 0.05);
+    offsetRef.current.lerp(rotated, 0.05);
 
     const desired = target.clone().add(offsetRef.current);
     camera.position.lerp(desired, 0.08);
