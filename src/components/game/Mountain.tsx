@@ -7,10 +7,12 @@
 // Blender's glTF exporter rewrites its Y as -Z (wrong axis).
 //
 // Placeholder materials by mesh-name prefix. G12 matcap pass will override later.
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
+
+type MountainProps = { onSceneReady?: (scene: THREE.Object3D) => void };
 
 const MOUNTAIN_URL = "/models/mountain.tagged.glb";
 const MOUNTAIN_SCALE = 100;
@@ -20,7 +22,7 @@ const CAVE_COLOR = "#2d3748";
 
 useGLTF.preload(MOUNTAIN_URL);
 
-const MountainInner = () => {
+const MountainInner = ({ onSceneReady }: MountainProps) => {
   const { scene } = useGLTF(MOUNTAIN_URL);
 
   const { clonedScene, meshLocalOffset, rotationY } = useMemo(() => {
@@ -31,11 +33,11 @@ const MountainInner = () => {
       const mesh = child as THREE.Mesh;
       if (!mesh.isMesh) return;
       if (mesh.name.startsWith("snow_")) {
-        mesh.material = new THREE.MeshStandardMaterial({ color: SNOW_COLOR, roughness: 0.9 });
+        mesh.material = new THREE.MeshStandardMaterial({ color: SNOW_COLOR, roughness: 0.9, side: THREE.DoubleSide });
       } else if (mesh.name.startsWith("cave_")) {
-        mesh.material = new THREE.MeshStandardMaterial({ color: CAVE_COLOR, roughness: 1.0 });
+        mesh.material = new THREE.MeshStandardMaterial({ color: CAVE_COLOR, roughness: 1.0, side: THREE.DoubleSide });
       } else {
-        mesh.material = new THREE.MeshStandardMaterial({ color: ROCK_COLOR, roughness: 0.85 });
+        mesh.material = new THREE.MeshStandardMaterial({ color: ROCK_COLOR, roughness: 0.85, side: THREE.DoubleSide });
       }
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -102,6 +104,10 @@ const MountainInner = () => {
     return { clonedScene: cloned, meshLocalOffset: meshOffset, rotationY: rotY };
   }, [scene]);
 
+  useEffect(() => {
+    onSceneReady?.(clonedScene);
+  }, [clonedScene, onSceneReady]);
+
   return (
     <RigidBody type="fixed" colliders="trimesh">
       <group scale={MOUNTAIN_SCALE} rotation={[0, rotationY, 0]}>
@@ -111,8 +117,8 @@ const MountainInner = () => {
   );
 };
 
-export const Mountain = () => (
+export const Mountain = ({ onSceneReady }: MountainProps) => (
   <Suspense fallback={null}>
-    <MountainInner />
+    <MountainInner onSceneReady={onSceneReady} />
   </Suspense>
 );

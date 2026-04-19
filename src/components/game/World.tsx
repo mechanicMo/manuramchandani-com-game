@@ -1,7 +1,7 @@
 // src/components/game/World.tsx
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Physics } from "@react-three/rapier";
+import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
 import { Sky, Stars } from "@react-three/drei";
 import { useKeyboardControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -148,6 +148,10 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
       )}
 
       <Physics gravity={[0, -9.81, 0]}>
+        {/* Big ground plane so character has walkable terrain around the mountain */}
+        <RigidBody type="fixed" colliders={false}>
+          <CuboidCollider args={[200, 0.5, 200]} position={[0, -0.5, 0]} />
+        </RigidBody>
         <Mountain onSceneReady={(s) => { mountainSceneRef.current = s; }} />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
@@ -163,7 +167,7 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
       <ClimbingDetail phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} />
-      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} />
+      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainSceneRef.current} />
     </>
   );
 };

@@ -18,7 +18,7 @@ useGLTF.preload("/character-animated.glb");
 // ============================================================================
 const CAPSULE_HALF_HEIGHT = 0.6;
 const CAPSULE_RADIUS = 0.4;
-const SPAWN_POS: [number, number, number] = [0, 10, 0]; // above walk_base top (~4.66 world-Y), gravity settles on landing
+const SPAWN_POS: [number, number, number] = [50, 5, 0]; // on the ground plane, east of the mountain; walk west to approach climb face
 const WALK_SPEED = 8.0;
 const GRAVITY = 30.0;
 const JUMP_IMPULSE = 12.0;
@@ -292,7 +292,10 @@ export const Character = ({
     if (Math.abs(intent.strafe) > 0.01)
       moveVec.addScaledVector(tmpVec3B, intent.strafe * WALK_SPEED * delta);
 
-    // Facing yaw for visual rotation only
+    // GLB default direction is +Z. To rotate it so the character faces the current
+    // movement direction, use atan2(mx, mz) — rotating (+Z, 0, 0) by this angle
+    // produces (mx, 0, mz) normalized. CameraRig adds π internally to sit BEHIND the
+    // character's back on the opposite side.
     if (moveVec.lengthSq() > 0.0001) {
       facingYawRef.current = Math.atan2(moveVec.x, moveVec.z);
     }
