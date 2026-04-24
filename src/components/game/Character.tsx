@@ -6,7 +6,6 @@ import { RigidBody, CapsuleCollider, useRapier } from "@react-three/rapier";
 import type { RigidBody as RapierRigidBody } from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
 import { useCharacterController } from "@/hooks/useCharacterController";
-import { useClimbDetector } from "@/hooks/useClimbDetector";
 import type { Hold } from "./HoldMarkers";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import type { useAudioManager } from "@/hooks/useAudioManager";
@@ -18,7 +17,7 @@ useGLTF.preload("/character-animated.glb");
 // ============================================================================
 const CAPSULE_HALF_HEIGHT = 0.6;
 const CAPSULE_RADIUS = 0.4;
-const SPAWN_POS: [number, number, number] = [50, 5, 0]; // on the ground plane, east of the mountain; walk west to approach climb face
+const SPAWN_POS: [number, number, number] = [0, 5, -65]; // directly in front of climb face at Z=-36; walk forward (+Z) to reach it
 const WALK_SPEED = 8.0;
 const GRAVITY = 30.0;
 const JUMP_IMPULSE = 12.0;
@@ -31,9 +30,13 @@ const CLIMB_SPEED_X         = 4.0;
 const HOLD_NEAR             = 2.5;
 const FORWARD_RAYCAST_RANGE = CAPSULE_RADIUS + 0.8;
 const CLIMB_ATTACH_FRAMES   = 3;
-const SIDE_RANGE            = { minX: -3, maxX: 3 };
+const SIDE_RANGE            = { minX: -11, maxX: 11 }; // climb_face_1 width = 22 units, centered at x=0
 const DESCEND_BASE          = 3.0;
 const DESCEND_TUCK          = 6.0;
+const SNOW_SLOPE_START_Z    = 42;   // world-space Z of snow slope top (opposite side from climb face)
+const SLOPE_Z_RATIO         = 0.65; // Z-forward per Y-unit descended (slope angle ~33° from vertical)
+// climb_face_1 world bounds after axis correction + grounding: X[-11,11] Y[3.5,78.7] Z[-44,-36]
+const CLIMB_FACE_BOUNDS     = { xMin: -13, xMax: 13, yMin: 0, yMax: 85, zMin: -50, zMax: -28 };
 
 // Scratch vectors — module level to avoid per-frame allocation
 const tmpVec3A = new THREE.Vector3(); // camera forward
@@ -61,6 +64,7 @@ const crossFade = (
 type Props = {
   onPositionChange?: (pos: THREE.Vector3) => void;
   onHeadingChange?: (yaw: number) => void;
+  onClimbChange?: (climbing: boolean) => void;
   holds?: Hold[];
   gamePhase?: GamePhase;
   audio?: ReturnType<typeof useAudioManager>;
@@ -71,11 +75,11 @@ type Props = {
 export const Character = ({
   onPositionChange,
   onHeadingChange,
+  onClimbChange,
   holds = [],
   gamePhase = "ascent",
   audio,
   muted = false,
-  mountainScene,
 }: Props) => {
   // ============================================================================
   // Refs
@@ -93,13 +97,14 @@ export const Character = ({
   const prevGamePhase = useRef<GamePhase>("ascent");
   const targetHold = useRef<Hold | null>(null);
   const jumpingToHold = useRef(false);
+  const descentStarted = useRef(false);
+  const climbingRef = useRef(false);
 
   // ============================================================================
   // Three.js and Rapier setup
   // ============================================================================
   const { camera } = useThree();
   const { world, rapier } = useRapier();
-  const { getMeshName } = useClimbDetector(mountainScene ?? null);
   const intent = useCharacterController();
 
   const { scene, animations } = useGLTF("/character-animated.glb");
@@ -137,9 +142,14 @@ export const Character = ({
   // Game phase watcher (descent entry/exit)
   // ============================================================================
   useEffect(() => {
+    if (climbingRef.current) {
+      climbingRef.current = false;
+      onClimbChange?.(false);
+    }
     if (gamePhase === "descent") {
       modeRef.current = "descent";
       vertVelRef.current = 0;
+      descentStarted.current = false; // triggers z-snap on next frame
     }
     // Descent → walk reset: fires when phase returns to "ascent" after having been "descent"
     if (gamePhase === "ascent" && prevGamePhase.current === "descent") {
@@ -165,6 +175,10 @@ export const Character = ({
 
     if (modeRef.current === "climb") {
       // --- CLIMB MODE ---
+      if (!climbingRef.current) {
+        climbingRef.current = true;
+        onClimbChange?.(true);
+      }
       facingYawRef.current = Math.PI;
 
       // Hold-jump (SPACE → nearest upper hold)
@@ -205,15 +219,14 @@ export const Character = ({
       body.setNextKinematicTranslation({ x: newX, y: newY, z: newZ });
       posRef.current.set(newX, newY, newZ);
 
-      // Exit climb → walk: down-ray hits walk_* surface
-      const downRay = new rapier.Ray({ x: newX, y: newY, z: newZ }, { x: 0, y: -1, z: 0 });
-      const groundHit = world.castRay(downRay, CAPSULE_HALF_HEIGHT * 2, true);
-      if (groundHit) {
-        const groundMesh = getMeshName(groundHit.collider.handle);
-        if (groundMesh?.startsWith("walk_")) {
-          modeRef.current = "walk";
-          vertVelRef.current = 0;
+      // Exit climb → walk: character descended to ground level
+      if (newY < 2.0) {
+        if (climbingRef.current) {
+          climbingRef.current = false;
+          onClimbChange?.(false);
         }
+        modeRef.current = "walk";
+        vertVelRef.current = 0;
       }
 
       // Face outward from cliff
@@ -242,12 +255,20 @@ export const Character = ({
     if (modeRef.current === "descent") {
       // --- DESCENT MODE ---
       facingYawRef.current = 0;
+
+      // First frame: snap to top of snow slope (+Z side of mountain)
+      if (!descentStarted.current) {
+        posRef.current.z = SNOW_SLOPE_START_Z;
+        body.setNextKinematicTranslation({ x: posRef.current.x, y: posRef.current.y, z: SNOW_SLOPE_START_Z });
+        descentStarted.current = true;
+      }
+
       const descentSpeed = intent.tuck ? DESCEND_TUCK : DESCEND_BASE;
       const p = posRef.current;
 
       p.y = THREE.MathUtils.clamp(p.y - descentSpeed * delta, 0, 90);
       p.x = THREE.MathUtils.clamp(p.x + intent.strafe * WALK_SPEED * delta, SIDE_RANGE.minX, SIDE_RANGE.maxX);
-      // z stays as-is (p.z unchanged — descent is constrained to vertical drop)
+      p.z += descentSpeed * SLOPE_Z_RATIO * delta; // slide outward down the snow slope
 
       body.setNextKinematicTranslation({ x: p.x, y: p.y, z: p.z });
       posRef.current.copy(p);
@@ -344,8 +365,12 @@ export const Character = ({
         climbFrames.current = 0;
         return;
       }
-      const meshName = getMeshName(hit.collider.handle);
-      const isClimb = meshName?.startsWith("climb_") ?? false;
+      const hitX = pos.x + dir.x * hit.timeOfImpact;
+      const hitY = pos.y + dir.y * hit.timeOfImpact;
+      const hitZ = pos.z + dir.z * hit.timeOfImpact;
+      const isClimb = hitX >= CLIMB_FACE_BOUNDS.xMin && hitX <= CLIMB_FACE_BOUNDS.xMax &&
+                      hitY >= CLIMB_FACE_BOUNDS.yMin && hitY <= CLIMB_FACE_BOUNDS.yMax &&
+                      hitZ >= CLIMB_FACE_BOUNDS.zMin && hitZ <= CLIMB_FACE_BOUNDS.zMax;
       const isMoving = Math.abs(intent.forward) + Math.abs(intent.strafe) > 0.2;
       if (isClimb && isMoving) {
         climbFrames.current++;

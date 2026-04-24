@@ -34,9 +34,10 @@ type Props = {
 export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const [characterHeading, setCharacterHeading] = useState(0);
-  const mountainSceneRef                      = useRef<THREE.Object3D | null>(null);
+  const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
+  const [isClimbing, setIsClimbing]          = useState(false);
   const velocityRef                          = useRef({ x: 0, y: 0 });
-  const prevPosRef                           = useRef(new THREE.Vector3());
+  const prevPosRef                            = useRef(new THREE.Vector3());
   const { phase, onCharacterY, beginDescent } = gamePhase;
   const sky                                  = useSkyTransition(phase);
   const spacePressed                         = useKeyboardControls((s: Record<string, boolean>) => s.jump);
@@ -109,27 +110,27 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
       {/* Ambient — night is deep blue-black, not grey */}
       <ambientLight ref={ambientLightRef} intensity={sky.ambientIntensity} color={sky.ambientColor} />
 
-      {/* Key light — warm, from lower-left (campfire direction) */}
+      {/* Key light — warm sun from upper-left; far enough to cover full mountain */}
       <directionalLight
-        position={[-6, 8, 6]}
+        position={[-80, 200, 80]}
         intensity={1.8}
         color="#ffd4a0"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-near={0.5}
-        shadow-camera-far={200}
-        shadow-camera-left={-15}
-        shadow-camera-right={15}
-        shadow-camera-top={100}
-        shadow-camera-bottom={-5}
+        shadow-camera-near={1}
+        shadow-camera-far={600}
+        shadow-camera-left={-150}
+        shadow-camera-right={150}
+        shadow-camera-top={200}
+        shadow-camera-bottom={-20}
       />
 
       {/* Sky fill — cool blue, opposite side */}
-      <directionalLight position={[8, 20, -4]} intensity={0.6} color="#a8c8f0" />
+      <directionalLight position={[80, 150, -40]} intensity={0.6} color="#a8c8f0" />
 
-      {/* Rim light — behind cliff, separates character from rock */}
-      <directionalLight position={[0, 5, -8]} intensity={0.8} color="#c0d8f8" />
+      {/* Rim light — separates character from rock face */}
+      <directionalLight position={[0, 50, -80]} intensity={0.5} color="#c0d8f8" />
 
       <Sky
         distance={450000}
@@ -152,22 +153,20 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
         <RigidBody type="fixed" colliders={false}>
           <CuboidCollider args={[200, 0.5, 200]} position={[0, -0.5, 0]} />
         </RigidBody>
-        <Mountain onSceneReady={(s) => { mountainSceneRef.current = s; }} />
+        <Mountain onSceneReady={setMountainScene} />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
-        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainSceneRef.current} />
+        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={setIsClimbing} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} />
       </Physics>
 
       <SummitLedge phase={phase} />
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
       <GroundTerrain phase={phase} />
-      <ForestBase phase={phase} />
-      <BoulderField phase={phase} />
-      <ClimbingDetail phase={phase} />
+      {/* BoulderField, ForestBase, ClimbingDetail disabled — G-series coordinates, wrong for 3D mountain */}
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} />
-      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainSceneRef.current} />
+      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
     </>
   );
 };

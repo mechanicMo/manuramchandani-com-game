@@ -3,8 +3,13 @@
 // Loads the tagged mountain GLB (public/models/mountain.tagged.glb) and places it
 // into the scene at 100x scale with Y-axis rotation to face the rock toward the
 // default camera. Grounding (placing base at y=0) is computed at load time from
-// the scene's bounding box — the tagger does NOT pre-ground the mesh because
-// Blender's glTF exporter rewrites its Y as -Z (wrong axis).
+// the scene's bounding box.
+//
+// Axis correction: the build script (build-mountain.py) uses Y as the vertical axis
+// in Blender's Python API, but Blender's GLTF exporter applies a Z-up→Y-up conversion
+// that rotates all vertex data 90° around X (Blender Y→GLTF -Z, Blender Z→GLTF Y).
+// We bake the inverse (+90° X rotation matrix) into every mesh geometry before any
+// grounding or normal calculations so all downstream code sees correct orientation.
 //
 // Placeholder materials by mesh-name prefix. G12 matcap pass will override later.
 import { Suspense, useMemo, useEffect } from "react";
@@ -16,9 +21,13 @@ type MountainProps = { onSceneReady?: (scene: THREE.Object3D) => void };
 
 const MOUNTAIN_URL = "/models/mountain.tagged.glb";
 const MOUNTAIN_SCALE = 100;
-const ROCK_COLOR = "#4a5568";
+const ROCK_COLOR = "#7a8c9e";
 const SNOW_COLOR = "#e8eef5";
 const CAVE_COLOR = "#2d3748";
+const CLIMB_COLOR = "#ff00cc"; // hot pink — temporary, to locate climb faces
+
+// +90° X rotation matrix: corrects build script Y-up → GLTF Z-up axis mismatch
+const AXIS_CORRECTION = new THREE.Matrix4().makeRotationX(Math.PI / 2);
 
 useGLTF.preload(MOUNTAIN_URL);
 
@@ -28,7 +37,20 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
   const { clonedScene, meshLocalOffset, rotationY } = useMemo(() => {
     const cloned = scene.clone(true);
 
-    // Apply placeholder materials by name prefix
+    // Step 1: Bake axis correction into every mesh geometry FIRST.
+    // This must happen before material assignment (which reads mesh.name) and
+    // before bounding-box / normal calculations.
+    cloned.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry) return;
+      const geom = mesh.geometry.clone();
+      geom.applyMatrix4(AXIS_CORRECTION);
+      geom.computeBoundingBox();
+      geom.computeVertexNormals();
+      mesh.geometry = geom;
+    });
+
+    // Step 2: Apply placeholder materials by name prefix
     cloned.traverse((child) => {
       const mesh = child as THREE.Mesh;
       if (!mesh.isMesh) return;
@@ -36,6 +58,8 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
         mesh.material = new THREE.MeshStandardMaterial({ color: SNOW_COLOR, roughness: 0.9, side: THREE.DoubleSide });
       } else if (mesh.name.startsWith("cave_")) {
         mesh.material = new THREE.MeshStandardMaterial({ color: CAVE_COLOR, roughness: 1.0, side: THREE.DoubleSide });
+      } else if (mesh.name.startsWith("climb_")) {
+        mesh.material = new THREE.MeshStandardMaterial({ color: CLIMB_COLOR, roughness: 0.6, side: THREE.DoubleSide });
       } else {
         mesh.material = new THREE.MeshStandardMaterial({ color: ROCK_COLOR, roughness: 0.85, side: THREE.DoubleSide });
       }
@@ -43,7 +67,7 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
       mesh.receiveShadow = true;
     });
 
-    // Collect per-submesh bounding boxes in mesh-local coords
+    // Step 3: Collect per-submesh bounding boxes (now in corrected local coords)
     const boxes: Record<string, THREE.Box3> = {};
     cloned.traverse((child) => {
       const mesh = child as THREE.Mesh;
@@ -61,7 +85,7 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
     anchor.getCenter(anchorCenter);
     const groundY = anchor.max.y;
 
-    // Average unit-normal of climb_* faces in mesh-local coords
+    // Step 4: Average unit-normal of climb_face_1 in corrected local coords
     const climbNormal = new THREE.Vector3();
     cloned.traverse((child) => {
       const mesh = child as THREE.Mesh;
