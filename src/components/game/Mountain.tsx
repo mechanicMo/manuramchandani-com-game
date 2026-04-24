@@ -125,6 +125,7 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
       -anchorCenter.z,
     ];
 
+    console.log("[Mountain] rotY =", rotY.toFixed(4), "rad =", (rotY * 180 / Math.PI).toFixed(1), "deg | meshOffset =", meshOffset);
     return { clonedScene: cloned, meshLocalOffset: meshOffset, rotationY: rotY };
   }, [scene]);
 

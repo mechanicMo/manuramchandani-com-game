@@ -35,14 +35,14 @@ const DESCEND_BASE          = 3.0;
 const DESCEND_TUCK          = 6.0;
 const SNOW_SLOPE_START_Z    = 42;   // world-space Z of snow slope top (opposite side from climb face)
 const SLOPE_Z_RATIO         = 0.65; // Z-forward per Y-unit descended (slope angle ~33° from vertical)
-// climb_face_1 world bounds after axis correction + grounding: X[-11,11] Y[3.5,78.7] Z[-44,-36]
-const CLIMB_FACE_BOUNDS     = { xMin: -13, xMax: 13, yMin: 0, yMax: 85, zMin: -50, zMax: -28 };
+const CLIMB_DETECT_RANGE    = 12; // THREE.js ray range — long enough to see climb face through the collision shell
 
 // Scratch vectors — module level to avoid per-frame allocation
 const tmpVec3A = new THREE.Vector3(); // camera forward
 const tmpVec3B = new THREE.Vector3(); // camera right
 const moveVec = new THREE.Vector3(); // frame movement delta
 const Y_UP = new THREE.Vector3(0, 1, 0);
+const climbRaycaster = new THREE.Raycaster(); // reused per frame for climb detection
 
 type CharacterMode = "walk" | "climb" | "summit" | "descent";
 type KCCType = ReturnType<typeof useRapier>["world"]["createCharacterController"];
@@ -80,6 +80,7 @@ export const Character = ({
   gamePhase = "ascent",
   audio,
   muted = false,
+  mountainScene,
 }: Props) => {
   // ============================================================================
   // Refs
@@ -354,33 +355,37 @@ export const Character = ({
       }
     }
 
-    // Climb attach check
+    // Climb attach check — uses THREE.js mesh raycasting to find climb_* faces by name.
+    // Rapier's single compound trimesh can't distinguish submeshes; THREE.js can.
     const checkClimbAttach = () => {
-      if (!body) return;
+      if (!body || !mountainScene) return;
       const pos = body.translation();
       const dir = { x: Math.sin(facingYawRef.current), y: 0, z: Math.cos(facingYawRef.current) };
-      const ray = new rapier.Ray({ x: pos.x, y: pos.y, z: pos.z }, dir);
-      const hit = world.castRay(ray, FORWARD_RAYCAST_RANGE, true);
-      if (!hit) {
-        climbFrames.current = 0;
-        return;
-      }
-      const hitX = pos.x + dir.x * hit.timeOfImpact;
-      const hitY = pos.y + dir.y * hit.timeOfImpact;
-      const hitZ = pos.z + dir.z * hit.timeOfImpact;
-      const isClimb = hitX >= CLIMB_FACE_BOUNDS.xMin && hitX <= CLIMB_FACE_BOUNDS.xMax &&
-                      hitY >= CLIMB_FACE_BOUNDS.yMin && hitY <= CLIMB_FACE_BOUNDS.yMax &&
-                      hitZ >= CLIMB_FACE_BOUNDS.zMin && hitZ <= CLIMB_FACE_BOUNDS.zMax;
+
+      climbRaycaster.set(
+        tmpVec3A.set(pos.x, pos.y, pos.z),
+        tmpVec3B.set(dir.x, dir.y, dir.z).normalize(),
+      );
+      climbRaycaster.near = 0;
+      climbRaycaster.far = CLIMB_DETECT_RANGE;
+
+      const intersections = climbRaycaster.intersectObject(mountainScene, true);
+      const climbHit = intersections.find(
+        (h) => (h.object as THREE.Mesh).name?.startsWith("climb_") && h.point.y > 0 && h.point.y < 85
+      );
+
       const isMoving = Math.abs(intent.forward) + Math.abs(intent.strafe) > 0.2;
-      if (isClimb && isMoving) {
+      if (climbHit && isMoving) {
         climbFrames.current++;
         if (climbFrames.current >= CLIMB_ATTACH_FRAMES) {
           modeRef.current = "climb";
           climbFrames.current = 0;
           vertVelRef.current = 0;
-          // Snap Z so character sits against the rock
-          const snapZ = pos.z + dir.z * Math.max(0, hit.timeOfImpact - CAPSULE_RADIUS);
-          body.setNextKinematicTranslation({ x: pos.x, y: pos.y, z: snapZ });
+          // Snap character to just in front of the face surface
+          const snapX = climbHit.point.x + climbHit.face!.normal.x * CAPSULE_RADIUS;
+          const snapZ = climbHit.point.z + climbHit.face!.normal.z * CAPSULE_RADIUS;
+          body.setNextKinematicTranslation({ x: snapX, y: pos.y, z: snapZ });
+          posRef.current.x = snapX;
           posRef.current.z = snapZ;
         }
       } else {
