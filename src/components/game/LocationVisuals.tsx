@@ -258,19 +258,93 @@ const CommunityApproach = ({ x, y, z }: { x: number; y: number; z: number }) => 
   );
 };
 
-const ContactLanding = ({ x, y, z }: { x: number; y: number; z: number }) => (
-  <group position={[x, y, z]}>
-    {([-4, -1.5, 1.5, 4] as number[]).map((ox, i) => (
-      <group key={i} position={[ox, 0.5, 1]}>
-        <mesh>
-          <boxGeometry args={[0.08, 0.6, 0.08]} />
-          <meshBasicMaterial color="#ffe8a0" />
-        </mesh>
-        <pointLight color="#fff8e0" intensity={2} distance={8} decay={2} />
-      </group>
-    ))}
-  </group>
-);
+const NewsletterKiosk = ({ x, y, z }: { x: number; y: number; z: number }) => {
+  const matcaps = useMatcaps();
+
+  const screenTex = useMemo(() => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = 512;
+    canvas.height = 320;
+    const ctx     = canvas.getContext("2d")!;
+
+    // Dark terminal background
+    ctx.fillStyle = "#060810";
+    ctx.fillRect(0, 0, 512, 320);
+
+    // Amber border lines
+    ctx.strokeStyle = "rgba(200,134,10,0.5)";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(10, 10, 492, 300);
+
+    // Header label
+    ctx.fillStyle = "rgba(200,134,10,0.55)";
+    ctx.font = "bold 13px monospace";
+    ctx.fillText("SLEEPING EMPLOYEES", 24, 42);
+
+    // Divider
+    ctx.strokeStyle = "rgba(200,134,10,0.3)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(24, 54); ctx.lineTo(488, 54); ctx.stroke();
+
+    // Main title
+    ctx.fillStyle = "rgba(250,248,244,0.92)";
+    ctx.font = "bold 26px sans-serif";
+    ctx.fillText("The weekly dispatch.", 24, 96);
+
+    // Description
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "rgba(250,248,244,0.6)";
+    ctx.fillText("One builder, shipping in public.", 24, 128);
+    ctx.fillText("Every week.", 24, 152);
+
+    // CTA divider
+    ctx.strokeStyle = "rgba(200,134,10,0.3)";
+    ctx.beginPath(); ctx.moveTo(24, 174); ctx.lineTo(488, 174); ctx.stroke();
+
+    // CTA
+    ctx.font = "bold 18px monospace";
+    ctx.fillStyle = "#C8860A";
+    ctx.fillText("sleepingemployees.com", 24, 212);
+
+    ctx.font = "13px monospace";
+    ctx.fillStyle = "rgba(200,134,10,0.5)";
+    ctx.fillText("[E] to open", 24, 244);
+
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  return (
+    <group position={[x, y, z]}>
+      {/* Post */}
+      <mesh position={[0, 0.9, 0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.12, 1.8, 8]} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
+      </mesh>
+      {/* Post base */}
+      <mesh position={[0, 0.06, 0]} receiveShadow>
+        <cylinderGeometry args={[0.28, 0.32, 0.12, 10]} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
+      </mesh>
+      {/* Monitor housing */}
+      <mesh position={[0, 1.98, 0.06]} castShadow>
+        <boxGeometry args={[1.9, 1.25, 0.18]} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
+      </mesh>
+      {/* Screen bezel — inner dark frame */}
+      <mesh position={[0, 1.98, 0.16]}>
+        <boxGeometry args={[1.72, 1.08, 0.04]} />
+        <meshBasicMaterial color="#060810" />
+      </mesh>
+      {/* Screen surface */}
+      <mesh position={[0, 1.98, 0.19]}>
+        <planeGeometry args={[1.6, 1.0]} />
+        <meshBasicMaterial map={screenTex} transparent opacity={0.95} />
+      </mesh>
+      {/* Screen glow */}
+      <pointLight position={[0, 2, 0.6]} color="#C8860A" intensity={1.2} distance={10} decay={2} />
+    </group>
+  );
+};
 
 // ── Summit Monolith ────────────────────────────────────────────────────────────
 
@@ -426,7 +500,7 @@ const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z:
     case "phone-scout":    return <ScoutPerch x={x} y={y} z={z} />;
     case "phone-seedling": return <SeedlingOutcrop x={x} y={y} z={z} />;
     case "map-pins":       return <CommunityApproach x={x} y={y} z={z} />;
-    case "lit-ground":     return <ContactLanding x={x} y={y} z={z} />;
+    case "kiosk":          return <NewsletterKiosk x={x} y={y} z={z} />;
     case "plaque":         return <EngravingPlaque x={x} y={y} z={z} />;
     case "monolith":       return <MonolithVisual x={x} y={y} z={z} />;
     case "snowboard-rack": return <SnowboardRackVisual x={x} y={y} z={z} />;

@@ -194,9 +194,11 @@ const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss
                 {content.linkLabel ?? "Learn more"}
               </a>
             )}
-            {content.type === "contact" && content.email && (
+            {content.type === "contact" && content.link && (
               <a
-                href={`mailto:${content.email}`}
+                href={content.link}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   display: "inline-block",
                   fontFamily: "Inter, sans-serif",
@@ -210,7 +212,27 @@ const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss
                   textAlign: "center",
                 }}
               >
-                {content.linkLabel ?? "Get in touch"}
+                {content.linkLabel ?? "Subscribe"}
+              </a>
+            )}
+            {content.type === "contact" && content.email && (
+              <a
+                href={`mailto:${content.email}`}
+                style={{
+                  display: "inline-block",
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "rgba(200,134,10,0.85)",
+                  background: "rgba(200,134,10,0.1)",
+                  border: "1px solid rgba(200,134,10,0.3)",
+                  padding: "8px 16px",
+                  borderRadius: "4px",
+                  textDecoration: "none",
+                  textAlign: "center",
+                }}
+              >
+                {content.link ? "Or send an email" : (content.linkLabel ?? "Get in touch")}
               </a>
             )}
             <button

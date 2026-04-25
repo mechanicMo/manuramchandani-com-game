@@ -9,7 +9,7 @@ export type VisualType =
   | "phone-scout"
   | "phone-seedling"
   | "map-pins"
-  | "lit-ground"
+  | "kiosk"
   | "plaque"
   | "monolith"
   | "snowboard-rack"
@@ -28,6 +28,7 @@ export type ContactContent = {
   title: string;
   description: string;
   email: string;
+  link?: string;
   linkLabel?: string;
 };
 
@@ -258,20 +259,21 @@ export const LOCATIONS: Location[] = [
   // ── DESCENT ───────────────────────────────────────────────────────────────
   {
     id: "contact-landing",
-    name: "Contact Landing",
+    name: "Newsletter Kiosk",
     x: 0,
     y: 2,
     z: -83,
     phase: "descent",
-    visualType: "lit-ground",
+    visualType: "kiosk",
     interactionType: "contact",
     proximityRadius: 14,
     content: {
       type: "contact",
-      title: "Working on something?",
-      description: "Let's build it together.",
+      title: "Sleeping Employees",
+      description: "The weekly dispatch. One builder, shipping in public — every week.",
       email: "manu@manuramchandani.com",
-      linkLabel: "Send me a message",
+      link: "https://sleepingemployees.com",
+      linkLabel: "Subscribe",
     },
   },
 
