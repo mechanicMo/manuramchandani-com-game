@@ -157,7 +157,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       const pct = Math.min(p.y / 80, 1) * 100;
       altBarRef.current.style.height = `${pct}%`;
       if (altTextRef?.current) {
-        const m = Math.round((1500 + (p.y / 80) * 2100) / 100) * 100;
+        const m = Math.round((1800 + (p.y / 80) * 2500) / 100) * 100;
         altTextRef.current.textContent = `~${m.toLocaleString()}m`;
       }
     }

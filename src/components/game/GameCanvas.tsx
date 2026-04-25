@@ -164,7 +164,7 @@ export const GameCanvas = () => {
               userSelect: "none",
             }}
           >
-            ~1,500m
+            ~1,800m
           </div>
           {/* Bar track */}
           <div
