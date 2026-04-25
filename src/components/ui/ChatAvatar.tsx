@@ -26,7 +26,7 @@ About Manu:
 - LinkedIn: linkedin.com/in/manuramchandani
 - GitHub: github.com/mechanicMo
 
-About this site: a playable WebGL game — climb the rock face, summit at y=80, snowboard down. Built with React Three Fiber + Rapier physics. The climb is a metaphor for his career.`;
+About this site: a playable WebGL game — climb a real mountain, summit at 4,300m, snowboard down. Built with React Three Fiber + Rapier physics. The mountain is Mo's literal world: rock climbing, snowboarding, and digital tech coexist here — not a metaphor, just how he lives.`;
 
 const BEACON_GREETING =
   "Hey! I'm Beacon — Manu's trail guide up this wall. I can answer anything about him, his work, or this climb. What do you want to know?";

@@ -1,3 +1,4 @@
+import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import { useMatcaps } from "@/hooks/useMatcaps";
 
@@ -10,6 +11,10 @@ export const SummitLedge = ({ phase }: { phase: GamePhase }) => {
 
   return (
     <group>
+      {/* Physical ground for the summit plateau — character walks on this */}
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={[11, 1, 9]} position={[0, SUMMIT_Y - 1, 0]} />
+      </RigidBody>
       {/* Main plateau — wide stone base the character stands on */}
       <mesh position={[0, SUMMIT_Y - 1, 0]}>
         <boxGeometry args={[22, 2, 18]} />
