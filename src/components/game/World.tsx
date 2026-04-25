@@ -176,7 +176,8 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, audio, 
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
       <GroundTerrain phase={phase} />
-      {/* BoulderField, ForestBase, ClimbingDetail disabled — G-series coordinates, wrong for 3D mountain */}
+      {/* BoulderField, ClimbingDetail still disabled — G-series coordinates */}
+      <ForestBase phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} isClimbing={isClimbing} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />

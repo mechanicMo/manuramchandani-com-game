@@ -19,10 +19,10 @@ type Props = {
 };
 
 const OFFSETS = {
-  ascent:  new THREE.Vector3(0, 3, 8),  // 3rd-person behind character; collision avoidance pulls in when clipping
-  summit:  new THREE.Vector3(0, 3, 8),
-  descent: new THREE.Vector3(0, 1, 5),
-  climb:   new THREE.Vector3(0, 8, 22), // pulled back in front of face so player can see holds above them
+  ascent:  new THREE.Vector3(0, 3, 8),   // 3rd-person behind character
+  summit:  new THREE.Vector3(0, 10, 18), // pulled back for panoramic summit view
+  descent: new THREE.Vector3(0, 4, 9),   // slightly high to show the slope ahead
+  climb:   new THREE.Vector3(0, 8, 22),  // pulled back in front of face so player can see holds above them
 };
 
 export const CameraRig = ({ target, phase = "ascent", characterHeading = 0, mountainScene = null, climbing = false }: Props) => {

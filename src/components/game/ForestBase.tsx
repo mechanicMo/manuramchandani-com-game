@@ -1,15 +1,15 @@
 // src/components/game/ForestBase.tsx
+// Low-poly trees around the mountain base.
+// Three clusters: front (Z 50-78 near spawn), left flank (X -18 to -28), right flank (X 18-28).
+// All trees at Y=0 (ground plane).
 import { useMemo } from "react";
 import type { GamePhase } from "@/hooks/useGamePhase";
 
-type Props = {
-  phase: GamePhase;
-};
+type Props = { phase: GamePhase };
 
 type TreeDef = {
   id: number;
   x: number;
-  y: number;
   z: number;
   height: number;
   radius: number;
@@ -17,29 +17,38 @@ type TreeDef = {
   foliageColors: [string, string, string];
 };
 
-const TRUNK_COLORS  = ["#3d2810", "#4a3218", "#2d2008", "#3a2512", "#522e10"];
-const FOLIAGE_BASE  = [
+const TRUNK_COLORS = ["#3d2810", "#4a3218", "#2d2008", "#3a2512", "#522e10"];
+const FOLIAGE_BASE = [
   ["#142010", "#1c2e14", "#0e1a0a"],
   ["#1a2810", "#203818", "#0a1e08"],
   ["#0e1c0c", "#162812", "#0c1808"],
   ["#182610", "#1e3416", "#101c08"],
-];
+] as const;
 
-function makeTrees(count: number, seed = 123): TreeDef[] {
+function makeTrees(count: number, seed = 42): TreeDef[] {
   let s = seed;
   const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
 
   return Array.from({ length: count }, (_, i) => {
-    const leftCluster = rand() < 0.5;
-    const x = leftCluster
-      ? -18 + rand() * 10   // left: [-18, -8]
-      :   8 + rand() * 10;  // right: [8, 18]
-    const y = -0.5 + rand() * 55.5; // [-0.5, 55]
-    const z = -4 + rand() * 5;      // [-4, 1]
+    const cluster = Math.floor(rand() * 3);
+    let x: number, z: number;
 
-    const height = 2.0 + rand() * 2.5; // 2.0 to 4.5
-    const radius = 0.6 + rand() * 0.8; // 0.6 to 1.4
+    if (cluster === 0) {
+      // Front area — near spawn, Z 50-80, X scattered wide
+      x = (rand() - 0.5) * 50;   // [-25, 25]
+      z = 52 + rand() * 26;       // [52, 78]
+    } else if (cluster === 1) {
+      // Left flank
+      x = -18 - rand() * 12;      // [-18, -30]
+      z = -10 + rand() * 50;      // [-10, 40]
+    } else {
+      // Right flank
+      x = 18 + rand() * 12;       // [18, 30]
+      z = -10 + rand() * 50;      // [-10, 40]
+    }
 
+    const height = 2.5 + rand() * 3.0;
+    const radius = 0.7 + rand() * 0.9;
     const trunkColor    = TRUNK_COLORS[Math.floor(rand() * TRUNK_COLORS.length)];
     const foliagePalette = FOLIAGE_BASE[Math.floor(rand() * FOLIAGE_BASE.length)];
     const foliageColors: [string, string, string] = [
@@ -48,42 +57,33 @@ function makeTrees(count: number, seed = 123): TreeDef[] {
       foliagePalette[2],
     ];
 
-    return { id: i, x, y, z, height, radius, trunkColor, foliageColors };
+    return { id: i, x, z, height, radius, trunkColor, foliageColors };
   });
 }
 
-export const ForestBase = ({ phase }: Props) => {
-  const trees = useMemo(() => makeTrees(24), []);
+const TREES = makeTrees(32);
 
+export const ForestBase = ({ phase }: Props) => {
   if (phase !== "ascent") return null;
 
   return (
     <group>
-      {trees.map((tree) => (
-        <group key={tree.id} position={[tree.x, tree.y, tree.z]}>
-          {/* Trunk: tapered cylinder */}
-          <mesh position={[0, tree.height * 0.35 * 0.5, 0]} castShadow>
-            <cylinderGeometry
-              args={[tree.radius * 0.4, tree.radius * 0.7, tree.height * 0.35, 6]}
-            />
+      {TREES.map(tree => (
+        <group key={tree.id} position={[tree.x, 0, tree.z]}>
+          {/* Trunk */}
+          <mesh position={[0, tree.height * 0.18, 0]} castShadow>
+            <cylinderGeometry args={[tree.radius * 0.35, tree.radius * 0.6, tree.height * 0.35, 6]} />
             <meshStandardMaterial color={tree.trunkColor} roughness={1} />
           </mesh>
-
           {/* 3 foliage tiers */}
-          {([0, 1, 2] as const).map((tier) => (
+          {([0, 1, 2] as const).map(tier => (
             <mesh
               key={tier}
-              position={[
-                0,
-                tree.height * 0.25 + tier * tree.height * 0.22,
-                0,
-              ]}
+              position={[0, tree.height * 0.28 + tier * tree.height * 0.2, 0]}
               castShadow
               receiveShadow
             >
-              <coneGeometry
-                args={[tree.radius * (1.2 - tier * 0.3), tree.height * 0.4, 7]}
-              />
+              <coneGeometry args={[tree.radius * (1.2 - tier * 0.32), tree.height * 0.38, 7]} />
               <meshStandardMaterial color={tree.foliageColors[tier]} roughness={1} />
             </mesh>
           ))}
