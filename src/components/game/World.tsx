@@ -28,6 +28,10 @@ import { AgentCaveNook }       from "./AgentCaveNook";
 import { BouncyBoulder }       from "./BouncyBoulder";
 import { LizHeart }            from "./LizHeart";
 import { SnowSlope }           from "./SnowSlope";
+import { SpeedLines }          from "./SpeedLines";
+import { DataMotes }           from "./DataMotes";
+import { CarveTrail }          from "./CarveTrail";
+import { CircuitRunes }        from "./CircuitRunes";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
@@ -199,6 +203,10 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
       <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
       <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
+      <SpeedLines characterPos={pos} phase={phase} />
+      <DataMotes phase={phase} />
+      <CarveTrail characterPos={pos} phase={phase} />
+      <CircuitRunes phase={phase} />
       <GroundTerrain phase={phase} />
       <SnowSlope phase={phase} />
       <BackgroundMountains quality={quality} />

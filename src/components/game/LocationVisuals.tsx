@@ -1,5 +1,6 @@
 // src/components/game/LocationVisuals.tsx
 import { useRef, useMemo, memo, Suspense } from "react";
+import type { ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { LOCATIONS } from "@/data/locations";
@@ -28,6 +29,21 @@ export const LocationVisuals = ({ phase }: Props) => {
       })}
     </>
   );
+};
+
+// ── Gentle float animation wrapper ─────────────────────────────────────────────
+
+const FloatGroup = ({ children, amplitude = 0.06, freq = 0.7, phaseOff = 0 }: {
+  children: ReactNode;
+  amplitude?: number;
+  freq?: number;
+  phaseOff?: number;
+}) => {
+  const ref = useRef<THREE.Group>(null);
+  useFrame(s => {
+    if (ref.current) ref.current.position.y = Math.sin(s.clock.elapsedTime * freq + phaseOff) * amplitude;
+  });
+  return <group ref={ref}>{children}</group>;
 };
 
 // ── Terminal canvas texture for Agent Cave ─────────────────────────────────────
@@ -89,26 +105,28 @@ const PrismLedge = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const matcaps = useMatcaps();
   return (
     <group position={[x, y, z]}>
-      <mesh>
-        <boxGeometry args={[0.7, 0.05, 0.5]} />
-        <meshMatcapMaterial matcap={matcaps.plasticDark} />
-      </mesh>
-      <group position={[0, 0.025, -0.23]} rotation={[-(Math.PI * 110) / 180, 0, 0]}>
+      <FloatGroup amplitude={0.035} freq={0.55} phaseOff={0.3}>
         <mesh>
-          <boxGeometry args={[0.7, 0.45, 0.03]} />
+          <boxGeometry args={[0.7, 0.05, 0.5]} />
           <meshMatcapMaterial matcap={matcaps.plasticDark} />
         </mesh>
-        <group position={[0, 0, 0.016]}>
-          <Suspense fallback={null}>
-            <ScreenMesh
-              imagePath="/screenshots/prism.png"
-              width={0.65}
-              height={0.42}
-              glowColor="#b0d8ff"
-            />
-          </Suspense>
+        <group position={[0, 0.025, -0.23]} rotation={[-(Math.PI * 110) / 180, 0, 0]}>
+          <mesh>
+            <boxGeometry args={[0.7, 0.45, 0.03]} />
+            <meshMatcapMaterial matcap={matcaps.plasticDark} />
+          </mesh>
+          <group position={[0, 0, 0.016]}>
+            <Suspense fallback={null}>
+              <ScreenMesh
+                imagePath="/screenshots/prism.png"
+                width={0.65}
+                height={0.42}
+                glowColor="#b0d8ff"
+              />
+            </Suspense>
+          </group>
         </group>
-      </group>
+      </FloatGroup>
     </group>
   );
 };
@@ -116,51 +134,157 @@ const PrismLedge = ({ x, y, z }: { x: number; y: number; z: number }) => {
 const AgentCave = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const matcaps = useMatcaps();
   const termTex = useMemo(() => makeTerminalTexture(), []);
+  const glowRef = useRef<THREE.PointLight>(null);
+
+  useFrame(s => {
+    if (glowRef.current) {
+      glowRef.current.intensity = 0.7 + Math.sin(s.clock.elapsedTime * 2.8) * 0.3;
+    }
+  });
 
   return (
     <group position={[x, y, z]}>
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.32, 0.04, 0.32]} />
-        <meshMatcapMaterial matcap={matcaps.metalSoft} />
-      </mesh>
-      <group position={[0.5, 0.3, -0.1]} rotation={[0, -0.2, 0]}>
-        <mesh>
-          <boxGeometry args={[0.22, 0.16, 0.02]} />
-          <meshMatcapMaterial matcap={matcaps.plasticDark} />
+      <FloatGroup amplitude={0.04} freq={0.9} phaseOff={0.7}>
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[0.32, 0.04, 0.32]} />
+          <meshMatcapMaterial matcap={matcaps.metalSoft} />
         </mesh>
-        <mesh position={[0, 0, 0.011]}>
-          <planeGeometry args={[0.2, 0.14]} />
-          <meshBasicMaterial map={termTex} color="#00cc44" />
-        </mesh>
-        <pointLight position={[0, 0, 0.2]} color="#00cc44" intensity={1} distance={4} decay={2} />
-      </group>
-      {[0, 1, 2].map(i => (
-        <mesh key={i} position={[-0.5, 0.02 + i * 0.013, 0.1 + i * 0.005]}>
-          <boxGeometry args={[0.26, 0.01, 0.2]} />
-          <meshMatcapMaterial matcap={matcaps.fabric} />
-        </mesh>
-      ))}
+        <group position={[0.5, 0.3, -0.1]} rotation={[0, -0.2, 0]}>
+          <mesh>
+            <boxGeometry args={[0.22, 0.16, 0.02]} />
+            <meshMatcapMaterial matcap={matcaps.plasticDark} />
+          </mesh>
+          <mesh position={[0, 0, 0.011]}>
+            <planeGeometry args={[0.2, 0.14]} />
+            <meshBasicMaterial map={termTex} color="#00cc44" />
+          </mesh>
+          <pointLight ref={glowRef} position={[0, 0, 0.2]} color="#00cc44" intensity={1} distance={4} decay={2} />
+        </group>
+        {[0, 1, 2].map(i => (
+          <mesh key={i} position={[-0.5, 0.02 + i * 0.013, 0.1 + i * 0.005]}>
+            <boxGeometry args={[0.26, 0.01, 0.2]} />
+            <meshMatcapMaterial matcap={matcaps.fabric} />
+          </mesh>
+        ))}
+      </FloatGroup>
     </group>
   );
 };
 
-const LeagueLadsCrag = ({ x, y, z }: { x: number; y: number; z: number }) => (
-  <group position={[x, y, z]}>
-    {([-0.7, 0, 0.7] as number[]).map((ox, i) => (
-      <group key={i} position={[ox, 0.6 + i * 0.1, 0]}>
-        <mesh>
-          <capsuleGeometry args={[0.14, 0.6 + i * 0.05, 4, 8]} />
-          <meshBasicMaterial color="#8a6a10" />
+const LeagueLadsCrag = ({ x, y, z }: { x: number; y: number; z: number }) => {
+  const matcaps = useMatcaps();
+
+  const screenTex = useMemo(() => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = 512;
+    canvas.height = 320;
+    const ctx     = canvas.getContext("2d")!;
+
+    ctx.fillStyle = "#05060e";
+    ctx.fillRect(0, 0, 512, 320);
+
+    // Header bar
+    ctx.fillStyle = "rgba(138,106,16,0.2)";
+    ctx.fillRect(0, 0, 512, 48);
+    ctx.fillStyle = "#c8a020";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText("CHAMPION SELECT", 20, 28);
+    ctx.fillStyle = "rgba(138,106,16,0.5)";
+    ctx.font = "11px monospace";
+    ctx.fillText("vs ", 460, 28);
+
+    ctx.strokeStyle = "rgba(138,106,16,0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(12, 55); ctx.lineTo(500, 55); ctx.stroke();
+
+    // Three champion card slots
+    const champions = [
+      { name: "GAREN",    role: "TOP",     color: "#3050c0", win: 62 },
+      { name: "SEJUANI",  role: "JUNGLE",  color: "#5098d8", win: 57 },
+      { name: "ORIANNA",  role: "MID",     color: "#8058c8", win: 71 },
+    ];
+
+    champions.forEach(({ name, role, color, win }, i) => {
+      const cx = 24 + i * 164;
+      const cy = 68;
+
+      ctx.fillStyle = `${color}22`;
+      ctx.strokeStyle = `${color}55`;
+      ctx.lineWidth = 1;
+      ctx.fillRect(cx, cy, 148, 180);
+      ctx.strokeRect(cx, cy, 148, 180);
+
+      // Champion art placeholder (gradient)
+      const grad = ctx.createLinearGradient(cx, cy, cx, cy + 140);
+      grad.addColorStop(0, `${color}44`);
+      grad.addColorStop(1, `${color}11`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(cx + 4, cy + 4, 140, 130);
+
+      // Name
+      ctx.fillStyle = "rgba(250,248,244,0.85)";
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(name, cx + 74, cy + 160);
+
+      // Role tag
+      ctx.fillStyle = `${color}99`;
+      ctx.font = "10px monospace";
+      ctx.fillText(role, cx + 74, cy + 176);
+
+      // Win rate indicator
+      ctx.fillStyle = "rgba(80,80,80,0.6)";
+      ctx.fillRect(cx + 20, cy + 148, 108, 6);
+      ctx.fillStyle = color;
+      ctx.fillRect(cx + 20, cy + 148, 108 * (win / 100), 6);
+
+      ctx.textAlign = "left";
+    });
+
+    // Bottom footer
+    ctx.strokeStyle = "rgba(138,106,16,0.25)";
+    ctx.beginPath(); ctx.moveTo(12, 258); ctx.lineTo(500, 258); ctx.stroke();
+    ctx.fillStyle = "rgba(138,106,16,0.5)";
+    ctx.font = "11px monospace";
+    ctx.fillText("LIVE TEAM COMP ANALYSIS", 20, 280);
+    ctx.fillStyle = "rgba(250,248,244,0.3)";
+    ctx.fillText("riot api  ·  cloudflare pages  ·  react", 20, 298);
+
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  return (
+    <group position={[x, y, z]}>
+      <FloatGroup amplitude={0.04} freq={0.62} phaseOff={1.8}>
+        {/* Screen housing */}
+        <mesh position={[0, 0.02, -0.05]} castShadow>
+          <boxGeometry args={[1.05, 0.72, 0.06]} />
+          <meshMatcapMaterial matcap={matcaps.plasticDark} />
         </mesh>
-        <mesh position={[0, 0.55 + i * 0.025, 0]}>
-          <sphereGeometry args={[0.12, 8, 6]} />
-          <meshBasicMaterial color="#8a6a10" />
+        {/* Screen bezel */}
+        <mesh position={[0, 0.02, -0.02]}>
+          <boxGeometry args={[0.96, 0.63, 0.03]} />
+          <meshBasicMaterial color="#08080e" />
         </mesh>
-      </group>
-    ))}
-    <pointLight position={[0, 1.5, 0.5]} color="#c8960a" intensity={1.2} distance={6} decay={2} />
-  </group>
-);
+        {/* Screen surface */}
+        <mesh position={[0, 0.02, 0]}>
+          <planeGeometry args={[0.88, 0.58]} />
+          <meshBasicMaterial map={screenTex} transparent opacity={0.95} />
+        </mesh>
+        {/* Small stand */}
+        <mesh position={[0, -0.37, -0.02]} castShadow>
+          <boxGeometry args={[0.28, 0.05, 0.18]} />
+          <meshMatcapMaterial matcap={matcaps.metalSoft} />
+        </mesh>
+        <mesh position={[0, -0.39, 0.06]}>
+          <boxGeometry args={[0.44, 0.04, 0.08]} />
+          <meshMatcapMaterial matcap={matcaps.metalSoft} />
+        </mesh>
+        <pointLight position={[0, 0.3, 0.5]} color="#c8a020" intensity={1.4} distance={6} decay={2} />
+      </FloatGroup>
+    </group>
+  );
+};
 
 const BJJLedge = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const matcaps = useMatcaps();
@@ -204,15 +328,17 @@ const ScoutPerch = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const matcaps = useMatcaps();
   return (
     <group position={[x, y, z]}>
-      <mesh>
-        <boxGeometry args={[0.45, 0.92, 0.055]} />
-        <meshMatcapMaterial matcap={matcaps.plasticDark} />
-      </mesh>
-      <group position={[0, 0, 0.028]}>
-        <Suspense fallback={null}>
-          <ScreenMesh imagePath="/screenshots/scout.png" width={0.39} height={0.82} glowColor="#4080ff" />
-        </Suspense>
-      </group>
+      <FloatGroup amplitude={0.055} freq={0.65} phaseOff={1.1}>
+        <mesh>
+          <boxGeometry args={[0.45, 0.92, 0.055]} />
+          <meshMatcapMaterial matcap={matcaps.plasticDark} />
+        </mesh>
+        <group position={[0, 0, 0.028]}>
+          <Suspense fallback={null}>
+            <ScreenMesh imagePath="/screenshots/scout.png" width={0.39} height={0.82} glowColor="#4080ff" />
+          </Suspense>
+        </group>
+      </FloatGroup>
     </group>
   );
 };
@@ -221,15 +347,17 @@ const SeedlingOutcrop = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const matcaps = useMatcaps();
   return (
     <group position={[x, y, z]}>
-      <mesh>
-        <boxGeometry args={[0.45, 0.92, 0.055]} />
-        <meshMatcapMaterial matcap={matcaps.plasticDark} />
-      </mesh>
-      <group position={[0, 0, 0.028]}>
-        <Suspense fallback={null}>
-          <ScreenMesh imagePath="/screenshots/seedling.png" width={0.39} height={0.82} glowColor="#40b060" />
-        </Suspense>
-      </group>
+      <FloatGroup amplitude={0.05} freq={0.75} phaseOff={2.4}>
+        <mesh>
+          <boxGeometry args={[0.45, 0.92, 0.055]} />
+          <meshMatcapMaterial matcap={matcaps.plasticDark} />
+        </mesh>
+        <group position={[0, 0, 0.028]}>
+          <Suspense fallback={null}>
+            <ScreenMesh imagePath="/screenshots/seedling.png" width={0.39} height={0.82} glowColor="#40b060" />
+          </Suspense>
+        </group>
+      </FloatGroup>
     </group>
   );
 };
@@ -238,27 +366,29 @@ const CommunityApproach = ({ x, y, z }: { x: number; y: number; z: number }) => 
   const matcaps = useMatcaps();
   return (
     <group position={[x, y, z]}>
-      <mesh>
-        <boxGeometry args={[0.45, 0.92, 0.055]} />
-        <meshMatcapMaterial matcap={matcaps.plasticDark} />
-      </mesh>
-      <group position={[0, 0, 0.028]}>
-        <Suspense fallback={null}>
-          <ScreenMesh imagePath="/screenshots/community.png" width={0.39} height={0.82} glowColor="#8040e0" />
-        </Suspense>
-      </group>
-      {([-0.9, -0.6, -0.3] as number[]).map((ox, i) => (
-        <group key={i} position={[ox, 0.6 + i * 0.15, 0.1]}>
-          <mesh position={[0, 0.3, 0]}>
-            <sphereGeometry args={[0.1, 8, 6]} />
-            <meshBasicMaterial color="#9040d0" />
-          </mesh>
-          <mesh>
-            <coneGeometry args={[0.04, 0.35, 6]} />
-            <meshBasicMaterial color="#7030b0" />
-          </mesh>
+      <FloatGroup amplitude={0.05} freq={0.6} phaseOff={3.7}>
+        <mesh>
+          <boxGeometry args={[0.45, 0.92, 0.055]} />
+          <meshMatcapMaterial matcap={matcaps.plasticDark} />
+        </mesh>
+        <group position={[0, 0, 0.028]}>
+          <Suspense fallback={null}>
+            <ScreenMesh imagePath="/screenshots/community.png" width={0.39} height={0.82} glowColor="#8040e0" />
+          </Suspense>
         </group>
-      ))}
+        {([-0.9, -0.6, -0.3] as number[]).map((ox, i) => (
+          <group key={i} position={[ox, 0.6 + i * 0.15, 0.1]}>
+            <mesh position={[0, 0.3, 0]}>
+              <sphereGeometry args={[0.1, 8, 6]} />
+              <meshBasicMaterial color="#9040d0" />
+            </mesh>
+            <mesh>
+              <coneGeometry args={[0.04, 0.35, 6]} />
+              <meshBasicMaterial color="#7030b0" />
+            </mesh>
+          </group>
+        ))}
+      </FloatGroup>
     </group>
   );
 };
@@ -657,17 +787,19 @@ const MealPlannerLedge = ({ x, y, z }: { x: number; y: number; z: number }) => {
 
   return (
     <group position={[x, y, z]}>
-      <mesh>
-        <boxGeometry args={[0.45, 0.92, 0.055]} />
-        <meshMatcapMaterial matcap={matcaps.plasticDark} />
-      </mesh>
-      <group position={[0, 0, 0.028]}>
+      <FloatGroup amplitude={0.05} freq={0.8} phaseOff={5.1}>
         <mesh>
-          <planeGeometry args={[0.39, 0.82]} />
-          <meshBasicMaterial map={screenTex} transparent opacity={0.95} />
+          <boxGeometry args={[0.45, 0.92, 0.055]} />
+          <meshMatcapMaterial matcap={matcaps.plasticDark} />
         </mesh>
-      </group>
-      <pointLight position={[0, 0, 0.4]} color="#50a03c" intensity={0.8} distance={5} decay={2} />
+        <group position={[0, 0, 0.028]}>
+          <mesh>
+            <planeGeometry args={[0.39, 0.82]} />
+            <meshBasicMaterial map={screenTex} transparent opacity={0.95} />
+          </mesh>
+        </group>
+        <pointLight position={[0, 0, 0.4]} color="#50a03c" intensity={0.8} distance={5} decay={2} />
+      </FloatGroup>
     </group>
   );
 };
@@ -733,23 +865,25 @@ const WorkshopsShelf = ({ x, y, z }: { x: number; y: number; z: number }) => {
 
   return (
     <group position={[x, y, z]}>
-      {/* Laptop base */}
-      <mesh position={[0, -0.02, 0.15]} receiveShadow>
-        <boxGeometry args={[0.75, 0.03, 0.52]} />
-        <meshMatcapMaterial matcap={matcaps.plasticDark} />
-      </mesh>
-      {/* Screen + hinge */}
-      <group position={[0, 0.02, -0.08]} rotation={[-(Math.PI * 105) / 180, 0, 0]}>
-        <mesh>
-          <boxGeometry args={[0.75, 0.50, 0.03]} />
+      <FloatGroup amplitude={0.035} freq={0.6} phaseOff={4.2}>
+        {/* Laptop base */}
+        <mesh position={[0, -0.02, 0.15]} receiveShadow>
+          <boxGeometry args={[0.75, 0.03, 0.52]} />
           <meshMatcapMaterial matcap={matcaps.plasticDark} />
         </mesh>
-        <mesh position={[0, 0, 0.016]}>
-          <planeGeometry args={[0.68, 0.44]} />
-          <meshBasicMaterial map={screenTex} transparent opacity={0.92} />
-        </mesh>
-      </group>
-      <pointLight position={[0, 0.3, 0.4]} color="#6090e0" intensity={1.0} distance={6} decay={2} />
+        {/* Screen + hinge */}
+        <group position={[0, 0.02, -0.08]} rotation={[-(Math.PI * 105) / 180, 0, 0]}>
+          <mesh>
+            <boxGeometry args={[0.75, 0.50, 0.03]} />
+            <meshMatcapMaterial matcap={matcaps.plasticDark} />
+          </mesh>
+          <mesh position={[0, 0, 0.016]}>
+            <planeGeometry args={[0.68, 0.44]} />
+            <meshBasicMaterial map={screenTex} transparent opacity={0.92} />
+          </mesh>
+        </group>
+        <pointLight position={[0, 0.3, 0.4]} color="#6090e0" intensity={1.0} distance={6} decay={2} />
+      </FloatGroup>
     </group>
   );
 };
