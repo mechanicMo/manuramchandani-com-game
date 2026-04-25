@@ -24,6 +24,8 @@ import { ChalkParticles }      from "./ChalkParticles";
 import { BeaconSprite }        from "./BeaconSprite";
 import { BackgroundMountains } from "./BackgroundMountains";
 import { BJJBelts }            from "./BJJBelts";
+import { AgentCaveNook }       from "./AgentCaveNook";
+import { BouncyBoulder }       from "./BouncyBoulder";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
@@ -48,6 +50,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const [holdGrabTick, setHoldGrabTick]      = useState(0);
   const holdGrabPosRef                       = useRef<THREE.Vector3 | null>(null);
   const velocityRef                          = useRef({ x: 0, y: 0 });
+  const boulderLaunchRef                     = useRef(false);
   const prevPosRef                            = useRef(new THREE.Vector3());
   const { phase, onCharacterY, beginDescent } = gamePhase;
   const sky                                  = useSkyTransition(phase);
@@ -165,7 +168,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
         <Mountain onSceneReady={setMountainScene} />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
-        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={handleClimbChange} onHoldGrab={handleHoldGrab} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} />
+        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={handleClimbChange} onHoldGrab={handleHoldGrab} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} boulderLaunchRef={boulderLaunchRef} />
       </Physics>
 
       <SummitLedge phase={phase} />
@@ -181,6 +184,8 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} isClimbing={isClimbing} />
       <BJJBelts characterPos={pos} phase={phase} />
+      <AgentCaveNook characterPos={pos} phase={phase} />
+      <BouncyBoulder characterPos={pos} phase={phase} launchRef={boulderLaunchRef} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
       <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} quality={quality} />
     </>

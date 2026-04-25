@@ -1,5 +1,6 @@
 // src/components/game/Character.tsx
 import { useRef, useEffect } from "react";
+import type React from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import { RigidBody, CapsuleCollider, useRapier } from "@react-three/rapier";
@@ -71,6 +72,7 @@ type Props = {
   audio?: ReturnType<typeof useAudioManager>;
   muted?: boolean;
   mountainScene?: THREE.Object3D | null;
+  boulderLaunchRef?: React.MutableRefObject<boolean>;
 };
 
 export const Character = ({
@@ -83,6 +85,7 @@ export const Character = ({
   audio,
   muted = false,
   mountainScene,
+  boulderLaunchRef,
 }: Props) => {
   // ============================================================================
   // Refs
@@ -311,6 +314,11 @@ export const Character = ({
     if (grounded) {
       if (vertVelRef.current < 0) vertVelRef.current = 0;
       if (intent.jump) vertVelRef.current = JUMP_IMPULSE;
+      // Bouncy boulder super-launch
+      if (boulderLaunchRef?.current) {
+        boulderLaunchRef.current = false;
+        vertVelRef.current = JUMP_IMPULSE * 3.8;
+      }
     } else {
       vertVelRef.current -= GRAVITY * delta;
     }
