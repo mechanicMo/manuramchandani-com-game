@@ -172,9 +172,8 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
         <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={handleClimbChange} onHoldGrab={handleHoldGrab} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} boulderLaunchRef={boulderLaunchRef} />
+        <SummitLedge phase={phase} />
       </Physics>
-
-      <SummitLedge phase={phase} />
       <SummitObjects phase={phase} characterPos={pos} onBeaconLit={() => setBeaconLit(true)} />
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
       <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
