@@ -37,7 +37,7 @@ export const ChossSystem = ({ characterPos, velocityRef }: Props) => {
         ...prev.slice(-(MAX_FRAGS - 1)),
         {
           id: now,
-          pos: [characterPos.x + (r() - 0.5) * 0.5, characterPos.y + (r() - 0.5) * 0.4, 0.15 + r() * 0.1],
+          pos: [characterPos.x + (r() - 0.5) * 0.5, characterPos.y + (r() - 0.5) * 0.4, characterPos.z + 0.15 + r() * 0.1],
           vel: [(r() - 0.5) * 5, r() * 3 + 0.5, r() * 4 + 1.5],
           size: 0.04 + r() * 0.07,
           spawnTime: now,

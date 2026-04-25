@@ -19,6 +19,7 @@ import { BoulderField }        from "./BoulderField";
 import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
+import { ChalkParticles }      from "./ChalkParticles";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import type { useGamePhase }   from "@/hooks/useGamePhase";
@@ -36,6 +37,8 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
   const [characterHeading, setCharacterHeading] = useState(0);
   const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
   const [isClimbing, setIsClimbing]          = useState(false);
+  const [holdGrabTick, setHoldGrabTick]      = useState(0);
+  const holdGrabPosRef                       = useRef<THREE.Vector3 | null>(null);
   const velocityRef                          = useRef({ x: 0, y: 0 });
   const prevPosRef                            = useRef(new THREE.Vector3());
   const { phase, onCharacterY, beginDescent } = gamePhase;
@@ -95,6 +98,11 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
       }
     }
   });
+
+  const handleHoldGrab = (p: THREE.Vector3) => {
+    holdGrabPosRef.current = p.clone();
+    setHoldGrabTick(t => t + 1);
+  };
 
   const handlePositionChange = (p: THREE.Vector3) => {
     velocityRef.current = { x: p.x - prevPosRef.current.x, y: p.y - prevPosRef.current.y };
@@ -156,16 +164,17 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
         <Mountain onSceneReady={setMountainScene} />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
-        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={setIsClimbing} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} />
+        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={setIsClimbing} onHoldGrab={handleHoldGrab} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} />
       </Physics>
 
       <SummitLedge phase={phase} />
+      <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
       <GroundTerrain phase={phase} />
       {/* BoulderField, ForestBase, ClimbingDetail disabled — G-series coordinates, wrong for 3D mountain */}
       <LocationVisuals phase={phase} />
-      <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} />
+      <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} isClimbing={isClimbing} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
     </>
   );

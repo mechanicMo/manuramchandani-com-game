@@ -24,7 +24,7 @@ const MOUNTAIN_SCALE = 100;
 const ROCK_COLOR = "#7a8c9e";
 const SNOW_COLOR = "#e8eef5";
 const CAVE_COLOR = "#2d3748";
-const CLIMB_COLOR = "#ff00cc"; // hot pink — temporary, to locate climb faces
+const CLIMB_COLOR = ROCK_COLOR; // same as rock — climb faces blend in; hold markers show the route
 
 // +90° X rotation matrix: corrects build script Y-up → GLTF Z-up axis mismatch
 const AXIS_CORRECTION = new THREE.Matrix4().makeRotationX(Math.PI / 2);
@@ -125,7 +125,6 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
       -anchorCenter.z,
     ];
 
-    console.log("[Mountain] rotY =", rotY.toFixed(4), "rad =", (rotY * 180 / Math.PI).toFixed(1), "deg | meshOffset =", meshOffset);
     return { clonedScene: cloned, meshLocalOffset: meshOffset, rotationY: rotY };
   }, [scene]);
 

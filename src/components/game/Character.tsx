@@ -65,6 +65,7 @@ type Props = {
   onPositionChange?: (pos: THREE.Vector3) => void;
   onHeadingChange?: (yaw: number) => void;
   onClimbChange?: (climbing: boolean) => void;
+  onHoldGrab?: (pos: THREE.Vector3) => void;
   holds?: Hold[];
   gamePhase?: GamePhase;
   audio?: ReturnType<typeof useAudioManager>;
@@ -76,6 +77,7 @@ export const Character = ({
   onPositionChange,
   onHeadingChange,
   onClimbChange,
+  onHoldGrab,
   holds = [],
   gamePhase = "ascent",
   audio,
@@ -207,6 +209,7 @@ export const Character = ({
         newX = THREE.MathUtils.lerp(posRef.current.x, targetHold.current.x, 0.1);
         newY = THREE.MathUtils.lerp(posRef.current.y, targetHold.current.y, 0.1);
         if (Math.hypot(newX - targetHold.current.x, newY - targetHold.current.y) < 0.12) {
+          onHoldGrab?.(posRef.current.clone());
           jumpingToHold.current = false;
           targetHold.current = null;
         }
@@ -348,10 +351,13 @@ export const Character = ({
 
     // Animation
     if (actions) {
-      const idle = actions["idle"];
-      if (idle && !idle.isRunning()) {
-        Object.values(actions).forEach((a) => a?.fadeOut(0.25));
-        idle.reset().fadeIn(0.25).play();
+      const airborne = !controller.computedGrounded();
+      if (airborne && vertVelRef.current > 2) {
+        crossFade(actions, "jump");
+      } else if (airborne && vertVelRef.current < -2) {
+        crossFade(actions, "fall");
+      } else {
+        crossFade(actions, "idle");
       }
     }
 

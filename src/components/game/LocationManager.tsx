@@ -12,6 +12,7 @@ type Props = {
   onLocationChange: (loc: Location | null) => void;
   audio: ReturnType<typeof useAudioManager>;
   muted: boolean;
+  isClimbing?: boolean;
 };
 
 // Location-specific ambient sound keys
@@ -20,12 +21,24 @@ const LOCATION_SOUNDS: Record<string, { key: string; volume: number }> = {
   "agent-cave":  { key: "keyboard",     volume: 0.25 },
 };
 
-export const LocationManager = ({ characterPos, phase, onLocationChange, audio, muted }: Props) => {
+export const LocationManager = ({ characterPos, phase, onLocationChange, audio, muted, isClimbing = false }: Props) => {
   const activeIdRef    = useRef<string | null>(null);
   const activeSoundRef = useRef<string | null>(null);
 
   useFrame(() => {
     if (!characterPos) return;
+    // Suppress location detection while on the climb face — avoids triggering walk-path
+    // locations when character happens to be at the matching Y while climbing
+    if (isClimbing) {
+      if (activeIdRef.current !== null) {
+        const prev = LOCATION_SOUNDS[activeIdRef.current ?? ""];
+        if (prev) audio.setLoopVolume(prev.key, 0);
+        activeIdRef.current = null;
+        activeSoundRef.current = null;
+        onLocationChange(null);
+      }
+      return;
+    }
     // Only check locations matching current phase
     const candidates = LOCATIONS.filter(loc => loc.phase === phase);
 
