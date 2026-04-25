@@ -38,7 +38,9 @@ export type LocationContent = PanelContent | GateContent | VignetteContent | Vie
 export type Location = {
   id: string;
   name: string;
+  x: number;
   y: number;
+  z: number;
   phase: "ascent" | "descent";
   visualType: VisualType;
   interactionType: InteractionType;
@@ -51,7 +53,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "base-camp",
     name: "Base Camp",
+    x: 8,
     y: 2,
+    z: 52,
     phase: "ascent",
     visualType: "campfire",
     interactionType: "view",
@@ -61,7 +65,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "prism-ledge",
     name: "Prism Ledge",
+    x: 12,
     y: 14,
+    z: 38,
     phase: "ascent",
     visualType: "laptop",
     interactionType: "panel",
@@ -78,7 +84,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "agent-cave",
     name: "Agent Cave",
+    x: -12,
     y: 24,
+    z: 38,
     phase: "ascent",
     visualType: "mac-mini",
     interactionType: "panel",
@@ -95,7 +103,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "leaguelads-crag",
     name: "LeagueLads Crag",
+    x: 12,
     y: 32,
+    z: 38,
     phase: "ascent",
     visualType: "champion-slabs",
     interactionType: "panel",
@@ -112,7 +122,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "bjj-ledge",
     name: "BJJ Training Ledge",
+    x: -12,
     y: 40,
+    z: 38,
     phase: "ascent",
     visualType: "bjj-gear",
     interactionType: "vignette",
@@ -125,7 +137,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "scout-perch",
     name: "Scout Perch",
+    x: 12,
     y: 50,
+    z: 38,
     phase: "ascent",
     visualType: "phone-scout",
     interactionType: "panel",
@@ -142,7 +156,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "seedling-outcrop",
     name: "Seedling Outcrop",
+    x: -12,
     y: 62,
+    z: 38,
     phase: "ascent",
     visualType: "phone-seedling",
     interactionType: "panel",
@@ -159,7 +175,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "community-approach",
     name: "Community Approach",
+    x: 12,
     y: 74,
+    z: 38,
     phase: "ascent",
     visualType: "map-pins",
     interactionType: "panel",
@@ -178,7 +196,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "gate-001",
     name: "Issue Gate 001",
+    x: 8,
     y: 68,
+    z: -14,
     phase: "descent",
     visualType: "slalom-gate",
     interactionType: "gate",
@@ -192,7 +212,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "gate-002",
     name: "Issue Gate 002",
+    x: -8,
     y: 50,
+    z: -34,
     phase: "descent",
     visualType: "slalom-gate",
     interactionType: "gate",
@@ -206,7 +228,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "about-slope",
     name: "About Slope",
+    x: 0,
     y: 30,
+    z: -55,
     phase: "descent",
     visualType: "snow-text",
     interactionType: "view",
@@ -223,7 +247,9 @@ export const LOCATIONS: Location[] = [
   {
     id: "contact-landing",
     name: "Contact Landing",
+    x: 0,
     y: 2,
+    z: -83,
     phase: "descent",
     visualType: "lit-ground",
     interactionType: "contact",

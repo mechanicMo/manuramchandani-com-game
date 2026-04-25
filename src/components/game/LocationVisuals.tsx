@@ -19,7 +19,7 @@ export const LocationVisuals = ({ phase }: Props) => {
   return (
     <>
       {locations.map(loc => (
-        <LocationVisual key={loc.id} y={loc.y} visualType={loc.visualType} />
+        <LocationVisual key={loc.id} x={loc.x} y={loc.y} z={loc.z} visualType={loc.visualType} />
       ))}
     </>
   );
@@ -51,20 +51,19 @@ function makeTerminalTexture(): THREE.CanvasTexture {
 
 // ── IssueGateVisual: proximity flash ──────────────────────────────────────────
 
-const IssueGateVisual = ({ y }: { y: number }) => {
+const IssueGateVisual = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const lightRef = useRef<THREE.PointLight>(null);
 
   useFrame(({ clock }) => {
     if (!lightRef.current) return;
     const t         = clock.getElapsedTime();
-    // Flash: triangle wave with period 1s, peaks at 0, 1, 2…
     const phase     = (t % 1.0);
     const triangle  = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
     lightRef.current.intensity = triangle * 3;
   });
 
   return (
-    <group position={[0, y, 0]}>
+    <group position={[x, y, z]}>
       {/* Left pole */}
       <mesh position={[-1.5, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.06, 4, 6]} />
@@ -105,8 +104,8 @@ const IssueGateVisual = ({ y }: { y: number }) => {
 
 // ── Per-location renderers ─────────────────────────────────────────────────────
 
-const BaseCamp = ({ y }: { y: number }) => (
-  <group position={[-4, y, 0]}>
+const BaseCamp = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {/* Campfire flame shader */}
     <CampfireFlame />
 
@@ -140,8 +139,8 @@ const BaseCamp = ({ y }: { y: number }) => (
   </group>
 );
 
-const PrismLedge = ({ y }: { y: number }) => (
-  <group position={[-4, y, 0]}>
+const PrismLedge = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {/* Laptop base */}
     <mesh>
       <boxGeometry args={[0.7, 0.05, 0.5]} />
@@ -168,11 +167,11 @@ const PrismLedge = ({ y }: { y: number }) => (
   </group>
 );
 
-const AgentCave = ({ y }: { y: number }) => {
+const AgentCave = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const termTex = useMemo(() => makeTerminalTexture(), []);
 
   return (
-    <group position={[-4, y, 0]}>
+    <group position={[x, y, z]}>
       {/* Mac Mini body */}
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[0.32, 0.04, 0.32]} />
@@ -208,8 +207,8 @@ const AgentCave = ({ y }: { y: number }) => {
   );
 };
 
-const LeagueLadsCrag = ({ y }: { y: number }) => (
-  <group position={[-4, y, 0]}>
+const LeagueLadsCrag = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {/* 3 champion silhouettes using CapsuleGeometry */}
     {([-0.7, 0, 0.7] as number[]).map((x, i) => (
       <group key={i} position={[x, 0.6 + i * 0.1, 0]}>
@@ -229,8 +228,8 @@ const LeagueLadsCrag = ({ y }: { y: number }) => (
   </group>
 );
 
-const BJJLedge = ({ y }: { y: number }) => (
-  <group position={[-4, y, 0]}>
+const BJJLedge = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {/* Gi jacket — two flat panels */}
     <mesh position={[-0.15, 0.3, 0]} rotation={[0, 0, 0.1]}>
       <boxGeometry args={[0.5, 1.1, 0.05]} />
@@ -269,8 +268,8 @@ const BJJLedge = ({ y }: { y: number }) => (
   </group>
 );
 
-const ScoutPerch = ({ y }: { y: number }) => (
-  <group position={[-4, y, 0]}>
+const ScoutPerch = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {/* Phone body */}
     <mesh>
       <boxGeometry args={[0.45, 0.92, 0.055]} />
@@ -290,8 +289,8 @@ const ScoutPerch = ({ y }: { y: number }) => (
   </group>
 );
 
-const SeedlingOutcrop = ({ y }: { y: number }) => (
-  <group position={[-4, y, 0]}>
+const SeedlingOutcrop = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {/* Phone body */}
     <mesh>
       <boxGeometry args={[0.45, 0.92, 0.055]} />
@@ -311,8 +310,8 @@ const SeedlingOutcrop = ({ y }: { y: number }) => (
   </group>
 );
 
-const CommunityApproach = ({ y }: { y: number }) => (
-  <group position={[-4, y, 0]}>
+const CommunityApproach = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {/* Phone body */}
     <mesh>
       <boxGeometry args={[0.45, 0.92, 0.055]} />
@@ -345,13 +344,11 @@ const CommunityApproach = ({ y }: { y: number }) => (
   </group>
 );
 
-// Slalom gate — reused for Issue Gates with amber flash
-const SlalomGate = ({ y }: { y: number }) => (
-  <IssueGateVisual y={y} />
+const SlalomGate = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <IssueGateVisual x={x} y={y} z={z} />
 );
 
-// About Slope — canvas-textured plane with stats
-const AboutSlope = ({ y }: { y: number }) => {
+const AboutSlope = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const statsTex = useMemo(() => {
     const canvas  = document.createElement("canvas");
     canvas.width  = 512;
@@ -379,7 +376,7 @@ const AboutSlope = ({ y }: { y: number }) => {
   }, []);
 
   return (
-    <group position={[0, y, -0.2]}>
+    <group position={[x, y, z]}>
       <mesh>
         <planeGeometry args={[5, 2.5]} />
         <meshStandardMaterial
@@ -394,9 +391,8 @@ const AboutSlope = ({ y }: { y: number }) => {
   );
 };
 
-// Contact Landing — 4 runway lights
-const ContactLanding = ({ y }: { y: number }) => (
-  <group position={[0, y, 0]}>
+const ContactLanding = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
     {([-4, -1.5, 1.5, 4] as number[]).map((x, i) => (
       <group key={i} position={[x, 0.5, 1]}>
         <mesh>
@@ -411,31 +407,19 @@ const ContactLanding = ({ y }: { y: number }) => (
 
 // ── Dispatcher ─────────────────────────────────────────────────────────────────
 
-const LocationVisual = memo(({ y, visualType }: { y: number; visualType: string }) => {
+const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z: number; visualType: string }) => {
   switch (visualType) {
-    case "campfire":
-      return <BaseCamp y={y} />;
-    case "laptop":
-      return <PrismLedge y={y} />;
-    case "mac-mini":
-      return <AgentCave y={y} />;
-    case "champion-slabs":
-      return <LeagueLadsCrag y={y} />;
-    case "bjj-gear":
-      return <BJJLedge y={y} />;
-    case "phone-scout":
-      return <ScoutPerch y={y} />;
-    case "phone-seedling":
-      return <SeedlingOutcrop y={y} />;
-    case "map-pins":
-      return <CommunityApproach y={y} />;
-    case "slalom-gate":
-      return <SlalomGate y={y} />;
-    case "snow-text":
-      return <AboutSlope y={y} />;
-    case "lit-ground":
-      return <ContactLanding y={y} />;
-    default:
-      return null;
+    case "campfire":       return <BaseCamp x={x} y={y} z={z} />;
+    case "laptop":         return <PrismLedge x={x} y={y} z={z} />;
+    case "mac-mini":       return <AgentCave x={x} y={y} z={z} />;
+    case "champion-slabs": return <LeagueLadsCrag x={x} y={y} z={z} />;
+    case "bjj-gear":       return <BJJLedge x={x} y={y} z={z} />;
+    case "phone-scout":    return <ScoutPerch x={x} y={y} z={z} />;
+    case "phone-seedling": return <SeedlingOutcrop x={x} y={y} z={z} />;
+    case "map-pins":       return <CommunityApproach x={x} y={y} z={z} />;
+    case "slalom-gate":    return <SlalomGate x={x} y={y} z={z} />;
+    case "snow-text":      return <AboutSlope x={x} y={y} z={z} />;
+    case "lit-ground":     return <ContactLanding x={x} y={y} z={z} />;
+    default:               return null;
   }
 });
