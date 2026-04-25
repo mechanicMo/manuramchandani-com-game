@@ -27,12 +27,15 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: P
         audio.play("panel-open");
       }
 
-      // Auto-dismiss vignette and view after 3 seconds; marker after 4 seconds
+      // Auto-dismiss non-interactive overlays
       if (interactionType === "vignette") {
         timerRef.current = setTimeout(onDismiss, 3000);
       }
       if (interactionType === "marker") {
         timerRef.current = setTimeout(onDismiss, 4000);
+      }
+      if (interactionType === "view") {
+        timerRef.current = setTimeout(onDismiss, 4500);
       }
     } else if (prevLoc) {
       // Play panel-close when a panel/contact overlay is dismissed

@@ -19,31 +19,50 @@ export const HOLDS: Hold[] = [
 
 const COLOR_DEFAULT = new THREE.Color("#7a5e3a");
 const COLOR_NEAR    = new THREE.Color("#C8860A");
+const COLOR_FIRST   = new THREE.Color("#a06820"); // slightly brightened first hold for onboarding
 const NEAR_DIST     = 2.5;
 
 export const HoldMarkers = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
   const mesh  = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (!mesh.current) return;
+    const t = clock.getElapsedTime();
+
     HOLDS.forEach((h, i) => {
-      dummy.position.set(h.x, h.y, h.z + 0.08);
-      dummy.rotation.set(0.3, i * 0.7, 0.2);
+      // Gentle float: each hold bobs at a slightly different phase
+      const floatY = Math.sin(t * 1.4 + i * 0.65) * 0.10;
+      const scale  = 1.0 + Math.sin(t * 1.8 + i * 0.5) * 0.06;
+
+      dummy.position.set(h.x, h.y + floatY, h.z + 0.1);
+      dummy.rotation.set(0.3, i * 0.7 + t * 0.25, 0.2);
+      dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       mesh.current!.setMatrixAt(i, dummy.matrix);
 
       const d = Math.hypot(characterPos.x - h.x, characterPos.y - h.y);
-      mesh.current!.setColorAt(i, d < NEAR_DIST ? COLOR_NEAR : COLOR_DEFAULT);
+      const col = d < NEAR_DIST ? COLOR_NEAR : (i === 0 ? COLOR_FIRST : COLOR_DEFAULT);
+      mesh.current!.setColorAt(i, col);
     });
     mesh.current.instanceMatrix.needsUpdate = true;
     if (mesh.current.instanceColor) mesh.current.instanceColor.needsUpdate = true;
   });
 
   return (
-    <instancedMesh ref={mesh} args={[undefined, undefined, HOLDS.length]}>
-      <dodecahedronGeometry args={[0.2, 0]} />
-      <meshBasicMaterial vertexColors />
-    </instancedMesh>
+    <>
+      <instancedMesh ref={mesh} args={[undefined, undefined, HOLDS.length]}>
+        <dodecahedronGeometry args={[0.2, 0]} />
+        <meshBasicMaterial vertexColors />
+      </instancedMesh>
+      {/* Persistent amber glow on hold #0 — visible from spawn, draws the eye to the climb */}
+      <pointLight
+        position={[HOLDS[0].x, HOLDS[0].y, HOLDS[0].z + 0.5]}
+        color="#C8860A"
+        intensity={1.2}
+        distance={12}
+        decay={2}
+      />
+    </>
   );
 };

@@ -217,6 +217,9 @@ export const SnowSlope = ({ phase }: Props) => {
 
 // Low-poly snow-covered pine — 3 cone tiers + trunk + snow caps
 const SnowTree = memo(({ x, z, height, radius, matcaps }: SnowTreeDef & { matcaps: ReturnType<typeof useMatcaps> }) => {
+  // Place tree at the slope surface height, or at y=0 in the flat landing zone
+  const groundY = z >= SLOPE_Z_END ? yForZ(z) : 0;
+
   const tiers = [
     { yBase: height * 0.08, r: radius,        h: height * 0.45 },
     { yBase: height * 0.35, r: radius * 0.70, h: height * 0.38 },
@@ -224,7 +227,7 @@ const SnowTree = memo(({ x, z, height, radius, matcaps }: SnowTreeDef & { matcap
   ];
 
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, groundY, z]}>
       {/* Trunk */}
       <mesh position={[0, height * 0.06, 0]} castShadow>
         <cylinderGeometry args={[radius * 0.08, radius * 0.10, height * 0.14, 6]} />
