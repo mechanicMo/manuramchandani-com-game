@@ -17,7 +17,7 @@ useGLTF.preload("/character-animated.glb");
 // ============================================================================
 const CAPSULE_HALF_HEIGHT = 0.6;
 const CAPSULE_RADIUS = 0.4;
-const SPAWN_POS: [number, number, number] = [0, 5, -65]; // directly in front of climb face at Z=-36; walk forward (+Z) to reach it
+const SPAWN_POS: [number, number, number] = [0, 5, 65]; // in front of climb face (world Z≈36); character faces -Z toward mountain
 const WALK_SPEED = 8.0;
 const GRAVITY = 30.0;
 const JUMP_IMPULSE = 12.0;
@@ -33,8 +33,8 @@ const CLIMB_ATTACH_FRAMES   = 3;
 const SIDE_RANGE            = { minX: -11, maxX: 11 }; // climb_face_1 width = 22 units, centered at x=0
 const DESCEND_BASE          = 3.0;
 const DESCEND_TUCK          = 6.0;
-const SNOW_SLOPE_START_Z    = 42;   // world-space Z of snow slope top (opposite side from climb face)
-const SLOPE_Z_RATIO         = 0.65; // Z-forward per Y-unit descended (slope angle ~33° from vertical)
+const SNOW_SLOPE_START_Z    = -42;  // world-space Z of snow slope top (−Z side, opposite from climb face at +Z)
+const SLOPE_Z_RATIO         = 0.65; // Z outward per Y-unit descended (slope angle ~33° from vertical)
 const CLIMB_DETECT_RANGE    = 12; // THREE.js ray range — long enough to see climb face through the collision shell
 
 // Scratch vectors — module level to avoid per-frame allocation
@@ -94,7 +94,7 @@ export const Character = ({
   const controllerRef = useRef<KCCType | null>(null);
   const vertVelRef = useRef(0);
   const modeRef = useRef<CharacterMode>("walk");
-  const facingYawRef = useRef(0);
+  const facingYawRef = useRef(Math.PI); // face -Z at spawn (toward climb face at +36Z)
   const climbFrames = useRef(0);
   const jumpWasDown = useRef(false);
   const prevGamePhase = useRef<GamePhase>("ascent");
@@ -162,8 +162,8 @@ export const Character = ({
       rigidBodyRef.current?.setNextKinematicTranslation({
         x: SPAWN_POS[0], y: SPAWN_POS[1], z: SPAWN_POS[2],
       });
-      if (modelGroupRef.current) modelGroupRef.current.rotation.y = 0;
-      facingYawRef.current = 0;
+      if (modelGroupRef.current) modelGroupRef.current.rotation.y = Math.PI;
+      facingYawRef.current = Math.PI;
     }
     prevGamePhase.current = gamePhase ?? "ascent";
   }, [gamePhase]);
@@ -272,7 +272,7 @@ export const Character = ({
 
       p.y = THREE.MathUtils.clamp(p.y - descentSpeed * delta, 0, 90);
       p.x = THREE.MathUtils.clamp(p.x + intent.strafe * WALK_SPEED * delta, SIDE_RANGE.minX, SIDE_RANGE.maxX);
-      p.z += descentSpeed * SLOPE_Z_RATIO * delta; // slide outward down the snow slope
+      p.z -= descentSpeed * SLOPE_Z_RATIO * delta; // slide outward toward −Z (snow slope side)
 
       body.setNextKinematicTranslation({ x: p.x, y: p.y, z: p.z });
       posRef.current.copy(p);
@@ -416,7 +416,7 @@ export const Character = ({
       enabledRotations={[false, false, false]}
     >
       <CapsuleCollider args={[CAPSULE_HALF_HEIGHT, CAPSULE_RADIUS]} />
-      <group ref={modelGroupRef}>
+      <group ref={modelGroupRef} rotation={[0, Math.PI, 0]}>
         <primitive object={scene} scale={1} />
       </group>
     </RigidBody>
