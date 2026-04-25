@@ -28,15 +28,17 @@ import type { Location }       from "@/data/locations";
 type Props = {
   gamePhase: ReturnType<typeof useGamePhase>;
   onLocationChange: (loc: Location | null) => void;
+  onClimbStateChange?: (climbing: boolean) => void;
   audio: ReturnType<typeof useAudioManager>;
   muted: boolean;
 };
 
-export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
+export const World = ({ gamePhase, onLocationChange, onClimbStateChange, audio, muted }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const [characterHeading, setCharacterHeading] = useState(0);
   const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
   const [isClimbing, setIsClimbing]          = useState(false);
+  const handleClimbChange = (c: boolean) => { setIsClimbing(c); onClimbStateChange?.(c); };
   const [holdGrabTick, setHoldGrabTick]      = useState(0);
   const holdGrabPosRef                       = useRef<THREE.Vector3 | null>(null);
   const velocityRef                          = useRef({ x: 0, y: 0 });
@@ -164,7 +166,7 @@ export const World = ({ gamePhase, onLocationChange, audio, muted }: Props) => {
         <Mountain onSceneReady={setMountainScene} />
         <HoldMarkers characterPos={pos} />
         <ChossSystem characterPos={pos} velocityRef={velocityRef} />
-        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={setIsClimbing} onHoldGrab={handleHoldGrab} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} />
+        <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={handleClimbChange} onHoldGrab={handleHoldGrab} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} />
       </Physics>
 
       <SummitLedge phase={phase} />

@@ -28,6 +28,7 @@ export const GameCanvas = () => {
   const [activeLocation, setActiveLocation] = useState<Location | null>(null);
   const [nearbyName, setNearbyName]         = useState<string | null>(null);
   const [muted, setMuted]                   = useState(false);
+  const [climbing, setClimbing]             = useState(false);
   const gamePhase                           = useGamePhase();
   const nearbyRef                           = useRef<Location | null>(null);
   const audio                               = useAudioManager();
@@ -74,7 +75,7 @@ export const GameCanvas = () => {
   return (
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <LoadingScreen loading={loading} />
-      <KeyHints phase={gamePhase.phase} nearbyName={nearbyName} />
+      <KeyHints phase={gamePhase.phase} nearbyName={nearbyName} climbing={climbing} />
       <LocationOverlay location={activeLocation} onDismiss={() => setActiveLocation(null)} audio={audio} muted={muted} />
       <ChatAvatar phase={gamePhase.phase} />
       <AudioLoader audio={audio} />
@@ -122,9 +123,9 @@ export const GameCanvas = () => {
           onCreated={() => setLoading(false)}
         >
           <Suspense fallback={null}>
-            <World gamePhase={gamePhase} onLocationChange={handleLocationChange} audio={audio} muted={muted} />
+            <World gamePhase={gamePhase} onLocationChange={handleLocationChange} onClimbStateChange={setClimbing} audio={audio} muted={muted} />
           </Suspense>
-          <EffectComposer>
+          <EffectComposer enableNormalPass>
             <SSAO
               radius={0.05}
               intensity={20}

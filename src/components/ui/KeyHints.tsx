@@ -5,9 +5,8 @@ type Hint = { key: string; label: string };
 
 const HINTS: Record<GamePhase, Hint[]> = {
   ascent: [
-    { key: "↑ ↓", label: "Climb" },
-    { key: "← →", label: "Move across" },
-    { key: "SPACE", label: "Jump to next hold" },
+    { key: "WASD / ↑↓←→", label: "Move" },
+    { key: "SPACE", label: "Jump" },
   ],
   summit: [
     { key: "SPACE", label: "Begin descent" },
@@ -19,16 +18,23 @@ const HINTS: Record<GamePhase, Hint[]> = {
   ],
 };
 
+const CLIMB_HINTS: Hint[] = [
+  { key: "↑ ↓", label: "Climb" },
+  { key: "← →", label: "Move across" },
+  { key: "SPACE", label: "Jump to next hold" },
+];
+
 const sans = "'Inter', system-ui, sans-serif";
 
 type Props = {
   phase: GamePhase;
   nearbyName: string | null;
+  climbing?: boolean;
   extraHint?: string;
 };
 
-export const KeyHints = ({ phase, extraHint, nearbyName }: Props) => {
-  const hints = HINTS[phase];
+export const KeyHints = ({ phase, extraHint, nearbyName, climbing = false }: Props) => {
+  const hints = (phase === "ascent" && climbing) ? CLIMB_HINTS : HINTS[phase];
 
   return (
     <div
@@ -46,7 +52,7 @@ export const KeyHints = ({ phase, extraHint, nearbyName }: Props) => {
     >
       <AnimatePresence mode="wait">
         <motion.div
-          key={phase + (extraHint ?? "") + (nearbyName ?? "")}
+          key={phase + String(climbing) + (extraHint ?? "") + (nearbyName ?? "")}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}

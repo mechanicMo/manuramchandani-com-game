@@ -149,6 +149,16 @@ export const Character = ({
       climbingRef.current = false;
       onClimbChange?.(false);
     }
+    // Summit reached while climbing — exit climb and snap to summit plateau center
+    if (gamePhase === "summit" && modeRef.current === "climb") {
+      modeRef.current = "walk";
+      vertVelRef.current = 0;
+      const snap = { x: 0, y: 82, z: 0 };
+      posRef.current.set(snap.x, snap.y, snap.z);
+      rigidBodyRef.current?.setNextKinematicTranslation(snap);
+      facingYawRef.current = 0; // face +Z to look out from summit
+      if (modelGroupRef.current) modelGroupRef.current.rotation.y = 0;
+    }
     if (gamePhase === "descent") {
       modeRef.current = "descent";
       vertVelRef.current = 0;
