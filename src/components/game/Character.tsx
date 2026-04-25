@@ -31,7 +31,7 @@ const CLIMB_SPEED_X         = 4.0;
 const HOLD_NEAR             = 2.5;
 const FORWARD_RAYCAST_RANGE = CAPSULE_RADIUS + 0.8;
 const CLIMB_ATTACH_FRAMES   = 3;
-const SIDE_RANGE            = { minX: -11, maxX: 11 }; // climb_face_1 width = 22 units, centered at x=0
+const SIDE_RANGE            = { minX: -11, maxX: 11 }; // descent snowboard lateral bounds
 const DESCEND_BASE          = 3.0;
 const DESCEND_TUCK          = 6.0;
 const SNOW_SLOPE_START_Z    = -42;  // world-space Z of snow slope top (−Z side, opposite from climb face at +Z)
@@ -104,7 +104,14 @@ export const Character = ({
   const targetHold = useRef<Hold | null>(null);
   const jumpingToHold = useRef(false);
   const descentStarted = useRef(false);
-  const climbingRef = useRef(false);
+  const climbingRef     = useRef(false);
+  // Per-face climb geometry — derived at attach time from world-space mesh data
+  const climbNormalRef  = useRef(new THREE.Vector3(0, 0, 1));  // outward world normal
+  const climbTangentRef = useRef(new THREE.Vector3(1, 0, 0));  // horizontal strafe direction
+  const climbNAnchorRef = useRef(36);   // normal component of contact point
+  const climbTMinRef    = useRef(-11);  // tangent-axis strafe min
+  const climbTMaxRef    = useRef(11);   // tangent-axis strafe max
+  const climbYawRef     = useRef(Math.PI); // character facing into rock
 
   // ============================================================================
   // Three.js and Rapier setup
@@ -195,7 +202,12 @@ export const Character = ({
         climbingRef.current = true;
         onClimbChange?.(true);
       }
-      facingYawRef.current = Math.PI;
+      facingYawRef.current = climbYawRef.current;
+
+      const n = climbNormalRef.current;
+      const t = climbTangentRef.current;
+      // Fixed distance from rock surface along outward normal
+      const nFixed = climbNAnchorRef.current + CAPSULE_RADIUS;
 
       // Hold-jump (SPACE → nearest upper hold)
       if (intent.jump && !jumpingToHold.current && holds.length) {
@@ -215,22 +227,29 @@ export const Character = ({
         }
       }
 
-      let newX: number, newY: number;
-      const newZ = posRef.current.z; // Z-lock during climb
+      let newX: number, newY: number, newZ: number;
 
       if (jumpingToHold.current && targetHold.current) {
-        newX = THREE.MathUtils.lerp(posRef.current.x, targetHold.current.x, 0.1);
+        // Lerp along face tangent + Y toward hold (works for any face orientation)
+        const tCurr   = posRef.current.x * t.x + posRef.current.z * t.z;
+        const tTarget = targetHold.current.x * t.x + targetHold.current.z * t.z;
+        const tNew    = THREE.MathUtils.lerp(tCurr, tTarget, 0.1);
         newY = THREE.MathUtils.lerp(posRef.current.y, targetHold.current.y, 0.1);
-        if (Math.hypot(newX - targetHold.current.x, newY - targetHold.current.y) < 0.12) {
+        newX = t.x * tNew + n.x * nFixed;
+        newZ = t.z * tNew + n.z * nFixed;
+        if (Math.hypot(tNew - tTarget, newY - targetHold.current.y) < 0.12) {
           onHoldGrab?.(posRef.current.clone());
           jumpingToHold.current = false;
           targetHold.current = null;
         }
       } else {
         const dY = intent.climbUp * CLIMB_SPEED_Y * delta;
-        const dX = intent.climbStrafe * CLIMB_SPEED_X * delta;
-        newX = THREE.MathUtils.clamp(posRef.current.x + dX, SIDE_RANGE.minX, SIDE_RANGE.maxX);
+        const dT = intent.climbStrafe * CLIMB_SPEED_X * delta;
+        const tCurr = posRef.current.x * t.x + posRef.current.z * t.z;
+        const tNew  = THREE.MathUtils.clamp(tCurr + dT, climbTMinRef.current, climbTMaxRef.current);
         newY = THREE.MathUtils.clamp(posRef.current.y + dY, 0, 90);
+        newX = t.x * tNew + n.x * nFixed;
+        newZ = t.z * tNew + n.z * nFixed;
       }
 
       body.setNextKinematicTranslation({ x: newX, y: newY, z: newZ });
@@ -246,9 +265,9 @@ export const Character = ({
         vertVelRef.current = 0;
       }
 
-      // Face outward from cliff
+      // Face into rock surface
       if (modelGroupRef.current) {
-        modelGroupRef.current.rotation.y = Math.PI;
+        modelGroupRef.current.rotation.y = climbYawRef.current;
       }
 
       // Animation
@@ -405,9 +424,40 @@ export const Character = ({
           modeRef.current = "climb";
           climbFrames.current = 0;
           vertVelRef.current = 0;
-          // Snap character to just in front of the face surface
-          const snapX = climbHit.point.x + climbHit.face!.normal.x * CAPSULE_RADIUS;
-          const snapZ = climbHit.point.z + climbHit.face!.normal.z * CAPSULE_RADIUS;
+
+          const mesh = climbHit.object as THREE.Mesh;
+
+          // World-space outward normal (object-space face normal transformed by full world matrix)
+          const worldNormal = climbHit.face!.normal.clone()
+            .transformDirection(mesh.matrixWorld).normalize();
+
+          // Character faces INTO the rock
+          climbYawRef.current = Math.atan2(-worldNormal.x, -worldNormal.z);
+          climbNormalRef.current.copy(worldNormal);
+
+          // Horizontal strafe direction: perpendicular to normal in XZ plane
+          climbTangentRef.current.set(worldNormal.z, 0, -worldNormal.x).normalize();
+
+          // Normal component of the contact point (fixed throughout this climb)
+          climbNAnchorRef.current =
+            climbHit.point.x * worldNormal.x + climbHit.point.z * worldNormal.z;
+
+          // World-space bbox projected onto tangent → derive strafe clamping range
+          mesh.geometry.computeBoundingBox();
+          const bbox = mesh.geometry.boundingBox!.clone().applyMatrix4(mesh.matrixWorld);
+          const t = climbTangentRef.current;
+          const projs = [
+            bbox.min.x * t.x + bbox.min.z * t.z,
+            bbox.max.x * t.x + bbox.min.z * t.z,
+            bbox.min.x * t.x + bbox.max.z * t.z,
+            bbox.max.x * t.x + bbox.max.z * t.z,
+          ];
+          climbTMinRef.current = Math.min(...projs);
+          climbTMaxRef.current = Math.max(...projs);
+
+          // Snap character in front of surface using world-space normal
+          const snapX = climbHit.point.x + worldNormal.x * CAPSULE_RADIUS;
+          const snapZ = climbHit.point.z + worldNormal.z * CAPSULE_RADIUS;
           body.setNextKinematicTranslation({ x: snapX, y: pos.y, z: snapZ });
           posRef.current.x = snapX;
           posRef.current.z = snapZ;
