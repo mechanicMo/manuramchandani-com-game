@@ -36,10 +36,16 @@ export type ContactContent = {
   linkLabel?: string;
 };
 
+export type NewsletterContent = {
+  type: "newsletter";
+  title: string;
+  description: string;
+};
+
 export type VignetteContent = { type: "vignette"; text: string };
 export type ViewContent    = { type: "view";    lines: string[] };
 
-export type LocationContent = PanelContent | VignetteContent | ViewContent | ContactContent;
+export type LocationContent = PanelContent | VignetteContent | ViewContent | ContactContent | NewsletterContent;
 
 export type Location = {
   id: string;
@@ -312,12 +318,9 @@ export const LOCATIONS: Location[] = [
     interactionType: "contact",
     proximityRadius: 14,
     content: {
-      type: "contact",
+      type: "newsletter",
       title: "Sleeping Employees",
-      description: "The weekly dispatch. One builder, shipping in public — every week.",
-      email: "manu@manuramchandani.com",
-      link: "https://sleepingemployees.com",
-      linkLabel: "Subscribe",
+      description: "One builder. Shipping in public. Every week.",
     },
   },
 

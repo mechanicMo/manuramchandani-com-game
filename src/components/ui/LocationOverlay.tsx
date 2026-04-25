@@ -1,5 +1,5 @@
 // src/components/ui/LocationOverlay.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Location } from "@/data/locations";
 import type { useAudioManager } from "@/hooks/useAudioManager";
@@ -255,6 +255,45 @@ const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss
     );
   }
 
+  // Newsletter kiosk — inline email signup form
+  if (interactionType === "contact" && content.type === "newsletter") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -30 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "5%",
+          transform: "translateY(-50%)",
+          width: "320px",
+          zIndex: 200,
+        }}
+      >
+        <div style={{
+          background: "rgba(10,10,20,0.88)",
+          border: "1px solid rgba(200,134,10,0.35)",
+          borderRadius: "8px",
+          padding: "24px",
+          backdropFilter: "blur(12px)",
+        }}>
+          <p style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "#C8860A", margin: "0 0 8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            {name}
+          </p>
+          <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "22px", color: "#FAF8F4", margin: "0 0 10px", lineHeight: 1.2 }}>
+            {content.title}
+          </h2>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: "14px", color: "rgba(250,248,244,0.75)", margin: "0 0 20px", lineHeight: 1.6 }}>
+            {content.description}
+          </p>
+          <NewsletterForm onDismiss={onDismiss} />
+        </div>
+      </motion.div>
+    );
+  }
+
   // Panel + Contact — side panel with project info
   if ((interactionType === "panel" || interactionType === "contact") &&
       (content.type === "panel" || content.type === "contact")) {
@@ -363,4 +402,92 @@ const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss
   }
 
   return null;
+};
+
+const NewsletterForm = ({ onDismiss }: { onDismiss: () => void }) => {
+  const [email,   setEmail]   = useState("");
+  const [status,  setStatus]  = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  const submit = useCallback(async () => {
+    const trimmed = email.trim();
+    if (!trimmed || status === "sending") return;
+    setStatus("sending");
+    try {
+      const res = await fetch("/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      setStatus(res.ok ? "done" : "error");
+    } catch {
+      setStatus("error");
+    }
+  }, [email, status]);
+
+  if (status === "done") {
+    return (
+      <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
+        <p style={{ fontFamily: "Playfair Display, serif", fontSize: "20px", color: "#FAF8F4", margin: "0 0 6px" }}>
+          You're in.
+        </p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", color: "rgba(250,248,244,0.55)", margin: "0 0 16px" }}>
+          Welcome to Sleeping Employees.
+        </p>
+        <button onClick={onDismiss} style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "rgba(250,248,244,0.4)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+          [Enter] dismiss
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.stopPropagation(); submit(); } }}
+          placeholder="your@email.com"
+          style={{
+            flex: 1,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(200,134,10,0.3)",
+            borderRadius: "4px",
+            padding: "8px 12px",
+            fontFamily: "Inter, sans-serif",
+            fontSize: "13px",
+            color: "#FAF8F4",
+            outline: "none",
+          }}
+        />
+        <button
+          onClick={submit}
+          disabled={status === "sending" || !email.trim()}
+          style={{
+            background: "#C8860A",
+            border: "none",
+            borderRadius: "4px",
+            padding: "8px 14px",
+            fontFamily: "DM Mono, monospace",
+            fontSize: "12px",
+            color: "#FAF8F4",
+            cursor: status === "sending" ? "wait" : "pointer",
+            opacity: !email.trim() ? 0.5 : 1,
+            flexShrink: 0,
+          }}
+        >
+          {status === "sending" ? "..." : "->"}
+        </button>
+      </div>
+      {status === "error" && (
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "rgba(200,80,80,0.8)", margin: "0 0 8px" }}>
+          Something went wrong. Try again.
+        </p>
+      )}
+      <button onClick={onDismiss} style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "rgba(250,248,244,0.4)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+        [Enter] dismiss
+      </button>
+    </div>
+  );
 };

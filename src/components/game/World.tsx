@@ -32,6 +32,7 @@ import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
 import type { useGamePhase }   from "@/hooks/useGamePhase";
+import { isMobileJumpDown }    from "@/hooks/useTouchControls";
 import type { Location }       from "@/data/locations";
 
 type Props = {
@@ -59,6 +60,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const sky                                  = useSkyTransition(phase);
   const quality                              = useDeviceQuality();
   const spacePressed                         = useKeyboardControls((s: Record<string, boolean>) => s.jump);
+  const spaceRef                             = useRef(false);
   const spaceWasDown                         = useRef(false);
   const ambientLightRef                      = useRef<THREE.Light>(null);
 
@@ -85,13 +87,17 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, muted]);
 
-  // Summit -> descent trigger: SPACE while in summit phase
-  if (spacePressed && !spaceWasDown.current && phase === "summit") {
-    beginDescent();
-  }
-  spaceWasDown.current = spacePressed;
+  // Keep a ref in sync with keyboard state so useFrame can read it
+  spaceRef.current = spacePressed;
 
   useFrame(() => {
+    // Summit → descent: Space (keyboard) or mobile jump button
+    const anyJump = spaceRef.current || isMobileJumpDown();
+    if (anyJump && !spaceWasDown.current && phase === "summit") {
+      beginDescent();
+    }
+    spaceWasDown.current = anyJump;
+
     if (ambientLightRef.current) {
       ambientLightRef.current.intensity = sky.ambientIntensity;
       (ambientLightRef.current as THREE.Light).color.setStyle(sky.ambientColor);
