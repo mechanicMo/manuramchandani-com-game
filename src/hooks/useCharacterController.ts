@@ -22,12 +22,14 @@ export const useCharacterController = (): MovementIntent => {
 
   const prevJumpRef = useRef(false);
 
+  const jumpInput = jumpKey || touch.jumpDown;
+
   // Jump edge detection: true only on frame where jump goes false → true
   let jumpEdgeDetected = false;
-  if (jumpKey && !prevJumpRef.current) {
+  if (jumpInput && !prevJumpRef.current) {
     jumpEdgeDetected = true;
   }
-  prevJumpRef.current = jumpKey;
+  prevJumpRef.current = jumpInput;
 
   const forward = (up ? 1 : down ? -1 : 0) - touch.y;
   const strafe = (right ? 1 : left ? -1 : 0) + touch.x;

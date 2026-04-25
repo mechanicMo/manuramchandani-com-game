@@ -13,6 +13,7 @@ import { SummitOverlay }     from "@/components/ui/SummitOverlay";
 import { DescentOverlay }    from "@/components/ui/DescentOverlay";
 import { ChatAvatar }        from "@/components/ui/ChatAvatar";
 import { ShortcutsHelp }     from "@/components/ui/ShortcutsHelp";
+import { VirtualJoystick }   from "@/components/ui/VirtualJoystick";
 import { useGamePhase }      from "@/hooks/useGamePhase";
 import { useAudioManager }   from "@/hooks/useAudioManager";
 import { useDeviceQuality }  from "@/hooks/useDeviceQuality";
@@ -125,6 +126,11 @@ export const GameCanvas = () => {
         openedByBeacon={openedByBeacon}
       />
       <ShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <VirtualJoystick
+        nearbyName={nearbyName}
+        onInteract={handleInteractKey}
+        onOpenChat={handleRequestOpenChat}
+      />
       <AudioLoader audio={audio} />
 
       {/* Help button — top-left */}
