@@ -129,7 +129,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
     velocityRef.current = { x: p.x - prevPosRef.current.x, y: p.y - prevPosRef.current.y };
     prevPosRef.current.copy(p);
     setPos(p.clone());
-    onCharacterY(p.y);
+    onCharacterY(p.y, p.z);
   };
 
   return (
