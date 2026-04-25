@@ -11,7 +11,7 @@ const SUMMIT_Y = 82;
 const SnowSparkle = ({ quality = "high" }: { quality?: QualityLevel }) => {
   const count   = quality === "medium" ? 40 : 80;
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy   = useMemo(() => new THREE.Object3D(), []);
+  const dummy   = useMemo(() => { const o = new THREE.Object3D(); o.matrixAutoUpdate = false; return o; }, []);
 
   const sparkles = useMemo(() => Array.from({ length: count }, () => ({
     x:   (Math.random() - 0.5) * 19,

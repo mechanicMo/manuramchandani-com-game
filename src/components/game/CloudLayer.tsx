@@ -1,7 +1,7 @@
 // src/components/game/CloudLayer.tsx
 // Wispy cloud band at y=38-50, giving a "breaking through clouds" moment mid-climb.
-// During descent the clouds are replaced by the SnowSlope.
-import { useRef, useMemo } from "react";
+// InstancedMesh: 18 transparent puffs → 1 draw call.
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { GamePhase } from "@/hooks/useGamePhase";
@@ -48,46 +48,62 @@ function makePuffs(seed: number): CloudPuff[] {
   return puffs;
 }
 
+const ALL_PUFFS = makePuffs(314);
+
+// Unit sphere geometry — scaled per instance via matrix
+const PUFF_GEO = new THREE.SphereGeometry(1, 7, 5);
+
 type Props = { phase: GamePhase; quality?: QualityLevel };
 
 export const CloudLayer = ({ phase, quality = "high" }: Props) => {
   const puffCount = quality === "low" ? 0 : quality === "medium" ? 9 : 18;
-  const groupRef = useRef<THREE.Group>(null);
-  const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
-  const puffs = useMemo(() => makePuffs(314).slice(0, puffCount), [puffCount]);
+  const puffs     = useMemo(() => ALL_PUFFS.slice(0, puffCount), [puffCount]);
+  const meshRef   = useRef<THREE.InstancedMesh>(null!);
+  const dummy     = useMemo(() => { const o = new THREE.Object3D(); o.matrixAutoUpdate = false; return o; }, []);
 
-  useFrame(s => {
-    const t = s.clock.elapsedTime;
+  // Stamp initial scale+rotation once (only changes position per frame)
+  useEffect(() => {
+    const m = meshRef.current;
+    if (!m) return;
     puffs.forEach((p, i) => {
-      const m = meshRefs.current[i];
-      if (!m) return;
-      m.position.x = p.x + Math.sin(t * p.driftSpeed + p.driftPhase) * 1.2;
-      m.position.y = p.y + Math.sin(t * p.driftSpeed * 0.7 + p.driftPhase + 1.0) * 0.4;
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.rotation.set(p.rx, p.ry, p.rz);
+      dummy.scale.set(p.sx, p.sy, p.sz);
+      dummy.updateMatrix();
+      m.setMatrixAt(i, dummy.matrix);
     });
+    m.instanceMatrix.needsUpdate = true;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puffs]);
+
+  // Per-frame: update only position X/Y — bake full matrix each frame since scale and rotation stay constant
+  useFrame(({ clock }) => {
+    const m = meshRef.current;
+    if (!m || puffCount === 0) return;
+    const t = clock.elapsedTime;
+    puffs.forEach((p, i) => {
+      dummy.position.x = p.x + Math.sin(t * p.driftSpeed + p.driftPhase) * 1.2;
+      dummy.position.y = p.y + Math.sin(t * p.driftSpeed * 0.7 + p.driftPhase + 1.0) * 0.4;
+      dummy.position.z = p.z;
+      dummy.rotation.set(p.rx, p.ry, p.rz);
+      dummy.scale.set(p.sx, p.sy, p.sz);
+      dummy.updateMatrix();
+      m.setMatrixAt(i, dummy.matrix);
+    });
+    m.instanceMatrix.needsUpdate = true;
   });
 
   if (puffCount === 0 || phase !== "ascent") return null;
 
   return (
-    <group ref={groupRef}>
-      {puffs.map((p, i) => (
-        <mesh
-          key={p.id}
-          ref={el => { meshRefs.current[i] = el; }}
-          position={[p.x, p.y, p.z]}
-          rotation={[p.rx, p.ry, p.rz]}
-          scale={[p.sx, p.sy, p.sz]}
-        >
-          <sphereGeometry args={[1, 7, 5]} />
-          <meshBasicMaterial
-            color="#e8eef8"
-            transparent
-            opacity={0.13}
-            depthWrite={false}
-            side={THREE.FrontSide}
-          />
-        </mesh>
-      ))}
-    </group>
+    <instancedMesh ref={meshRef} args={[PUFF_GEO, undefined, puffCount]}>
+      <meshBasicMaterial
+        color="#e8eef8"
+        transparent
+        opacity={0.13}
+        depthWrite={false}
+        side={THREE.FrontSide}
+      />
+    </instancedMesh>
   );
 };

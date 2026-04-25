@@ -27,6 +27,7 @@ type Mote = {
 };
 
 const dummy = new THREE.Object3D();
+dummy.matrixAutoUpdate = false;
 
 type Props = { phase: GamePhase };
 

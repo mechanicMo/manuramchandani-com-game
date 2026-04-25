@@ -87,13 +87,13 @@ const EmberParticles = () => {
     []
   );
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     if (!pts.current) return;
     const t   = clock.getElapsedTime();
     const arr = pts.current.geometry.attributes.position.array as Float32Array;
 
     for (let i = 0; i < EMBER_COUNT; i++) {
-      arr[i * 3 + 1] += speeds[i] * 0.016; // ~60fps tick
+      arr[i * 3 + 1] += speeds[i] * delta;
       // Horizontal flicker
       arr[i * 3]      = Math.sin(t * 3.0 + phases[i]) * 0.08;
 

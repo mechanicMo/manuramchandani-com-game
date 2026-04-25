@@ -233,6 +233,10 @@ export const GameCanvas = () => {
 const KeyboardInterceptor = ({ onEnter }: { onEnter: () => void }) => {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement
+      ) return;
       if (e.code === "Enter" || e.code === "KeyE") onEnter();
     };
     window.addEventListener("keydown", handler);

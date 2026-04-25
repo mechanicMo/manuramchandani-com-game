@@ -39,7 +39,7 @@ const NEAR_DIST     = 2.5;
 
 export const HoldMarkers = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
   const mesh  = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const dummy = useMemo(() => { const o = new THREE.Object3D(); o.matrixAutoUpdate = false; return o; }, []);
 
   useFrame(({ clock }) => {
     if (!mesh.current) return;
