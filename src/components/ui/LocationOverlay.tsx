@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Location } from "@/data/locations";
 import type { useAudioManager } from "@/hooks/useAudioManager";
 
+const DISMISS_LABEL = ("ontouchstart" in window || navigator.maxTouchPoints > 0) ? "dismiss" : "[Enter] dismiss";
+
 type Props = {
   location: Location | null;
   onDismiss: () => void;
@@ -311,7 +313,7 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
               onClick={onDismiss}
               style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "rgba(250,248,244,0.4)", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
             >
-              [Enter] dismiss
+              {DISMISS_LABEL}
             </button>
           </div>
         </div>
@@ -457,7 +459,7 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
                 textAlign: "left",
               }}
             >
-              [Enter] dismiss
+              {DISMISS_LABEL}
             </button>
           </div>
         </div>
@@ -498,7 +500,7 @@ const NewsletterForm = ({ onDismiss }: { onDismiss: () => void }) => {
           Welcome to Sleeping Employees.
         </p>
         <button onClick={onDismiss} style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "rgba(250,248,244,0.4)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-          [Enter] dismiss
+          {DISMISS_LABEL}
         </button>
       </div>
     );
@@ -550,7 +552,7 @@ const NewsletterForm = ({ onDismiss }: { onDismiss: () => void }) => {
         </p>
       )}
       <button onClick={onDismiss} style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "rgba(250,248,244,0.4)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-        [Enter] dismiss
+        {DISMISS_LABEL}
       </button>
     </div>
   );
