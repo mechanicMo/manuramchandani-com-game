@@ -1,5 +1,5 @@
 // src/data/locations.ts
-export type InteractionType = "panel" | "gate" | "vignette" | "view" | "contact";
+export type InteractionType = "panel" | "vignette" | "view" | "contact";
 export type VisualType =
   | "campfire"
   | "laptop"
@@ -31,11 +31,10 @@ export type ContactContent = {
   linkLabel?: string;
 };
 
-export type GateContent    = { type: "gate";    headline: string; link?: string };
 export type VignetteContent = { type: "vignette"; text: string };
 export type ViewContent    = { type: "view";    lines: string[] };
 
-export type LocationContent = PanelContent | GateContent | VignetteContent | ViewContent | ContactContent;
+export type LocationContent = PanelContent | VignetteContent | ViewContent | ContactContent;
 
 export type Location = {
   id: string;

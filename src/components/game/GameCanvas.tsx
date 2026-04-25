@@ -80,8 +80,8 @@ export const GameCanvas = () => {
   const handleLocationChange = useCallback((loc: Location | null) => {
     nearbyRef.current = loc;
 
-    // Gate, vignette, view: auto-display on proximity
-    if (loc && (loc.interactionType === "gate" || loc.interactionType === "vignette" || loc.interactionType === "view")) {
+    // Vignette, view: auto-display on proximity
+    if (loc && (loc.interactionType === "vignette" || loc.interactionType === "view")) {
       setActiveLocation(loc);
     }
     // When leaving proximity, close any open panel for this location

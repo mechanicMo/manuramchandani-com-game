@@ -173,7 +173,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
       <GroundTerrain phase={phase} />
       <BackgroundMountains quality={quality} />
-      {/* ClimbingDetail still disabled — G-series coordinates */}
+      <ClimbingDetail phase={phase} />
       <ForestBase phase={phase} quality={quality} />
       <BoulderField phase={phase} quality={quality} />
       <LocationVisuals phase={phase} />

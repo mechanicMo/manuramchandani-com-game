@@ -27,8 +27,8 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: P
         audio.play("panel-open");
       }
 
-      // Auto-dismiss gate and vignette after 3 seconds
-      if (interactionType === "gate" || interactionType === "vignette") {
+      // Auto-dismiss vignette and view after 3 seconds
+      if (interactionType === "vignette") {
         timerRef.current = setTimeout(onDismiss, 3000);
       }
     } else if (prevLoc) {
@@ -64,42 +64,6 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: P
 
 const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss: () => void }) => {
   const { interactionType, content, name } = location;
-
-  // Gate flash — centered brief headline
-  if (interactionType === "gate" && content.type === "gate") {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          position: "fixed",
-          top: "20%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          textAlign: "center",
-          pointerEvents: "none",
-          zIndex: 200,
-        }}
-      >
-        <div style={{
-          background: "rgba(255,102,0,0.12)",
-          border: "1px solid rgba(255,102,0,0.4)",
-          borderRadius: "4px",
-          padding: "12px 24px",
-          backdropFilter: "blur(4px)",
-        }}>
-          <p style={{ fontFamily: "DM Mono, monospace", fontSize: "13px", color: "#ff9900", margin: 0, letterSpacing: "0.05em" }}>
-            SLEEPING EMPLOYEES
-          </p>
-          <p style={{ fontFamily: "Playfair Display, serif", fontSize: "20px", color: "#FAF8F4", margin: "4px 0 0", lineHeight: 1.3 }}>
-            {content.headline}
-          </p>
-        </div>
-      </motion.div>
-    );
-  }
 
   // Vignette — small text center-left
   if (interactionType === "vignette" && content.type === "vignette") {
