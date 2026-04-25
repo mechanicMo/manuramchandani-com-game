@@ -13,27 +13,46 @@ export type SkyParams = {
   ambientColor: string;
 };
 
-// Spec: always bright daytime, +25% baseline brightness vs old visual spec's night arc.
-// MORNING → MIDDAY transition as player climbs and summits.
-
 const MORNING: SkyParams = {
-  fogColor: "#b8d8f0",
-  fogDensity: 0.010,
+  fogColor: "#c0ddf4",
+  fogDensity: 0.0018,
   sunPosition: [0.6, 0.55, 0.5],
-  rayleigh: 3.5,
-  turbidity: 5.5,
-  ambientIntensity: 0.75,
+  rayleigh: 3.0,
+  turbidity: 4.5,
+  ambientIntensity: 0.90,
   ambientColor: "#ddeeff",
 };
 
 const MIDDAY: SkyParams = {
-  fogColor: "#d4ecf8",
-  fogDensity: 0.007,
+  fogColor: "#d8f0ff",
+  fogDensity: 0.0012,
   sunPosition: [1, 1.1, 0.2],
-  rayleigh: 1.8,
-  turbidity: 3,
-  ambientIntensity: 0.92,
+  rayleigh: 1.4,
+  turbidity: 2.5,
+  ambientIntensity: 1.05,
   ambientColor: "#fff8e4",
+};
+
+// Dusk — summit at altitude, stars appearing, low sun near horizon
+const DUSK: SkyParams = {
+  fogColor: "#1a1032",
+  fogDensity: 0.0015,
+  sunPosition: [0.4, 0.05, 0.9],
+  rayleigh: 5.0,
+  turbidity: 1.8,
+  ambientIntensity: 0.45,
+  ambientColor: "#3a2860",
+};
+
+// Dawn / cold descent — early morning light, crisp blue-white
+const DAWN: SkyParams = {
+  fogColor: "#b8d0ec",
+  fogDensity: 0.0016,
+  sunPosition: [0.5, 0.4, 0.6],
+  rayleigh: 3.5,
+  turbidity: 4.0,
+  ambientIntensity: 0.82,
+  ambientColor: "#cce0ff",
 };
 
 function lerpParams(a: SkyParams, b: SkyParams, t: number): SkyParams {
@@ -56,13 +75,34 @@ function lerpParams(a: SkyParams, b: SkyParams, t: number): SkyParams {
 
 export const useSkyTransition = (phase: GamePhase): SkyParams => {
   const progressRef = useRef(0);
-  const paramsRef = useRef<SkyParams>(MORNING);
-  const { scene } = useThree();
+  const paramsRef   = useRef<SkyParams>(MORNING);
+  const { scene }   = useThree();
 
   useFrame((_, delta) => {
-    const target = phase === "ascent" ? 0 : 1;
-    progressRef.current = THREE.MathUtils.lerp(progressRef.current, target, delta * 0.3);
-    paramsRef.current = lerpParams(MORNING, MIDDAY, progressRef.current);
+    // Three-phase sky arc: ascent MORNING→MIDDAY, summit MIDDAY→DUSK, descent DUSK→DAWN→MORNING
+    let target: number;
+    if (phase === "ascent")  target = 0.0;
+    else if (phase === "summit") target = 1.0;
+    else target = 0.0; // descent fades back to morning
+
+    progressRef.current = THREE.MathUtils.lerp(progressRef.current, target, delta * 0.25);
+    const t = progressRef.current;
+
+    // 0=MORNING, 0..0.5=lerp MORNING→MIDDAY, 0.5..1=lerp MIDDAY→DUSK
+    let params: SkyParams;
+    if (t < 0.5) {
+      params = lerpParams(MORNING, MIDDAY, t * 2);
+    } else {
+      params = lerpParams(MIDDAY, DUSK, (t - 0.5) * 2);
+    }
+
+    // Descent: blend toward DAWN
+    if (phase === "descent") {
+      const dawnT = THREE.MathUtils.lerp(0, 1, Math.min(1, (1 - progressRef.current) * 2));
+      params = lerpParams(params, DAWN, dawnT * 0.5);
+    }
+
+    paramsRef.current = params;
 
     if (scene.fog instanceof THREE.FogExp2) {
       scene.fog.color.setStyle(paramsRef.current.fogColor);

@@ -10,8 +10,6 @@ export const useGamePhase = () => {
   const [summitArriving, setSummitArriving] = useState(false);
   const summitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // z > 0 guard: only reset to ascent when the player is back at the front of the mountain,
-  // not while they're still at the descent base near the newsletter kiosk (z ≈ -83)
   const onCharacterY = (y: number, z = 0) => {
     if (phase === "ascent" && y >= SUMMIT_Y) {
       setPhase("summit");
@@ -19,7 +17,11 @@ export const useGamePhase = () => {
       if (summitTimerRef.current) clearTimeout(summitTimerRef.current);
       summitTimerRef.current = setTimeout(() => setSummitArriving(false), 2500);
     }
-    if (phase === "descent" && y <= 2 && z > 0) setPhase("ascent");
+    // During descent, z moves negative (slope runs from z=-42 toward z=-94+).
+    // The kiosk is at z=-83 with 14-unit proximity. We must NOT reset while the player
+    // is still inside that radius — otherwise the newsletter form closes mid-type.
+    // At z < -98, y is near 0 and the kiosk is just outside proximity (dist ≈ 15).
+    if (phase === "descent" && y <= 0.5 && z < -98) setPhase("ascent");
   };
 
   const beginDescent = () => {

@@ -29,6 +29,7 @@ export const SummitObjects = ({ phase, characterPos, onBeaconLit }: Props) => {
         phase={phase}
       />
       <SheraniSnowman characterPos={characterPos} />
+      <SummitJournal characterPos={characterPos} />
       {pyreLit && <DistantBeacons />}
     </group>
   );
@@ -374,6 +375,90 @@ const SheraniSnowman = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
         <meshBasicMaterial color={SNOW_SHADOW} transparent opacity={0.35} depthWrite={false} />
       </mesh>
     </group>
+    </group>
+  );
+};
+
+// ── Summit Journal — cairn with a personal note ────────────────────────────────
+// A small stack of stones on the plateau. Approached within 3 units → shows
+// a brief personal message from Mo. Suppressed after first read.
+
+const JOURNAL_POS: [number, number, number] = [-7, SUMMIT_Y, 5];
+const JOURNAL_RADIUS = 3.0;
+
+const SummitJournal = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
+  const matcaps  = useMatcaps();
+  const [open, setOpen] = useState(false);
+  const seenRef  = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useFrame(() => {
+    if (seenRef.current) return;
+    const dx = characterPos.x - JOURNAL_POS[0];
+    const dy = characterPos.y - JOURNAL_POS[1];
+    const dz = characterPos.z - JOURNAL_POS[2];
+    if (Math.sqrt(dx * dx + dy * dy + dz * dz) < JOURNAL_RADIUS) {
+      seenRef.current = true;
+      setOpen(true);
+      timerRef.current = setTimeout(() => setOpen(false), 8000);
+    }
+  });
+
+  return (
+    <group position={JOURNAL_POS}>
+      {/* Cairn — 4 stacked stones, slightly irregular */}
+      <mesh position={[0, 0.18, 0]} castShadow>
+        <dodecahedronGeometry args={[0.35, 0]} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
+      </mesh>
+      <mesh position={[0.06, 0.55, 0.03]} castShadow>
+        <dodecahedronGeometry args={[0.26, 0]} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
+      </mesh>
+      <mesh position={[-0.04, 0.84, -0.02]} castShadow>
+        <dodecahedronGeometry args={[0.19, 0]} />
+        <meshMatcapMaterial matcap={matcaps.stoneLight} />
+      </mesh>
+      <mesh position={[0.05, 1.08, 0.04]} castShadow>
+        <dodecahedronGeometry args={[0.12, 0]} />
+        <meshMatcapMaterial matcap={matcaps.stoneLight} />
+      </mesh>
+      {/* Very faint amber warmth — barely visible, suggests something lived-in */}
+      <pointLight position={[0, 0.8, 0.4]} color="#C8860A" intensity={0.35} distance={5} decay={2} />
+
+      {/* Journal note — appears on approach */}
+      {open && (
+        <Html
+          position={[0, 2.0, 0]}
+          center
+          distanceFactor={9}
+          style={{ pointerEvents: "none" }}
+        >
+          <div style={{
+            background: "rgba(6,6,14,0.92)",
+            border: "1px solid rgba(200,134,10,0.3)",
+            borderRadius: "10px",
+            padding: "12px 16px",
+            fontFamily: "'Inter', system-ui, sans-serif",
+            fontSize: "12px",
+            color: "rgba(250,248,244,0.85)",
+            lineHeight: 1.65,
+            backdropFilter: "blur(12px)",
+            maxWidth: "220px",
+            textAlign: "center",
+            animation: "beaconFadeIn 0.5s ease both",
+          }}>
+            If you made it here,<br />
+            you climbed.<br />
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "10px", color: "#C8860A", display: "block", marginTop: "8px" }}>
+              So did I.
+            </span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: "rgba(250,248,244,0.38)", display: "block", marginTop: "4px" }}>
+              — Manu
+            </span>
+          </div>
+        </Html>
+      )}
     </group>
   );
 };

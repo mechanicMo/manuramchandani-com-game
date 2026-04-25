@@ -32,6 +32,12 @@ import { SpeedLines }          from "./SpeedLines";
 import { DataMotes }           from "./DataMotes";
 import { CarveTrail }          from "./CarveTrail";
 import { CircuitRunes }        from "./CircuitRunes";
+import { StarField }           from "./StarField";
+import { SlalomGates }         from "./SlalomGates";
+import { CloudLayer }          from "./CloudLayer";
+import { Aurora }              from "./Aurora";
+import { MineralVeins }        from "./MineralVeins";
+import { LandingFlare }        from "./LandingFlare";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
@@ -195,9 +201,9 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
         </RigidBody>
         <Mountain onSceneReady={setMountainScene} />
         <HoldMarkers characterPos={pos} />
-        <ChossSystem characterPos={pos} velocityRef={velocityRef} />
+        <ChossSystem characterPos={pos} velocityRef={velocityRef} phase={phase} />
         <Character onPositionChange={handlePositionChange} onHeadingChange={setCharacterHeading} onClimbChange={handleClimbChange} onHoldGrab={handleHoldGrab} holds={HOLDS} gamePhase={phase} audio={audio} muted={muted} mountainScene={mountainScene} boulderLaunchRef={boulderLaunchRef} />
-        <SummitLedge phase={phase} />
+        <SummitLedge phase={phase} quality={quality} />
       </Physics>
       <SummitObjects phase={phase} characterPos={pos} onBeaconLit={() => setBeaconLit(true)} />
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
@@ -207,6 +213,12 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <DataMotes phase={phase} />
       <CarveTrail characterPos={pos} phase={phase} />
       <CircuitRunes phase={phase} />
+      <StarField phase={phase} characterY={pos.y} quality={quality} />
+      <SlalomGates phase={phase} />
+      <CloudLayer phase={phase} quality={quality} />
+      <Aurora phase={phase} visible={beaconLit} quality={quality} />
+      <MineralVeins phase={phase} quality={quality} />
+      <LandingFlare phase={phase} characterPos={pos} quality={quality} />
       <GroundTerrain phase={phase} />
       <SnowSlope phase={phase} />
       <BackgroundMountains quality={quality} />

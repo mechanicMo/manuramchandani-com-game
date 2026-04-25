@@ -123,6 +123,13 @@ export const BeaconSprite = ({
       return;
     }
 
+    // During descent: park beacon at character so it's ready when game resets to ascent
+    if (phase === "descent") {
+      beaconPos.current.copy(characterPos).add(HOVER_OFFSET);
+      velocity.current.set(0, 0, 0);
+      return;
+    }
+
     // Spring movement with gentle bob
     bobPhase.current += delta * 0.8;
     const bobY = Math.sin(bobPhase.current) * 0.2;
@@ -182,6 +189,9 @@ export const BeaconSprite = ({
     }
     prevY.current = currentY;
   });
+
+  // Hidden during descent — a snowboarder doesn't need a floating AI companion
+  if (phase === "descent") return null;
 
   return (
     <group ref={groupRef}>

@@ -3,6 +3,61 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
+// ── Smoke Particles ────────────────────────────────────────────────────────────
+
+const SMOKE_COUNT = 14;
+const SMOKE_MAX_LIFE = 2.8;
+
+const SmokeParticles = () => {
+  const pts = useRef<THREE.Points>(null);
+
+  const state = useMemo(() => {
+    const lifetimes = Float32Array.from({ length: SMOKE_COUNT }, (_, i) => (i / SMOKE_COUNT) * SMOKE_MAX_LIFE);
+    const vx = Float32Array.from({ length: SMOKE_COUNT }, () => (Math.random() - 0.5) * 0.28);
+    const vz = Float32Array.from({ length: SMOKE_COUNT }, () => (Math.random() - 0.5) * 0.28);
+    const speed = Float32Array.from({ length: SMOKE_COUNT }, () => 0.26 + Math.random() * 0.18);
+    const positions = new Float32Array(SMOKE_COUNT * 3);
+    for (let i = 0; i < SMOKE_COUNT; i++) {
+      const lt = lifetimes[i];
+      positions[i * 3]     = vx[i] * lt;
+      positions[i * 3 + 1] = 1.1 + speed[i] * lt;
+      positions[i * 3 + 2] = vz[i] * lt;
+    }
+    return { lifetimes, vx, vz, speed, positions };
+  }, []);
+
+  useFrame((_, delta) => {
+    if (!pts.current) return;
+    const arr = pts.current.geometry.attributes.position.array as Float32Array;
+    for (let i = 0; i < SMOKE_COUNT; i++) {
+      state.lifetimes[i] += delta;
+      if (state.lifetimes[i] >= SMOKE_MAX_LIFE) {
+        state.lifetimes[i] -= SMOKE_MAX_LIFE;
+        state.vx[i] = (Math.random() - 0.5) * 0.28;
+        state.vz[i] = (Math.random() - 0.5) * 0.28;
+        state.speed[i] = 0.26 + Math.random() * 0.18;
+        arr[i * 3]     = (Math.random() - 0.5) * 0.18;
+        arr[i * 3 + 1] = 1.1;
+        arr[i * 3 + 2] = (Math.random() - 0.5) * 0.18;
+      } else {
+        arr[i * 3]     += state.vx[i] * delta;
+        arr[i * 3 + 1] += state.speed[i] * delta;
+        arr[i * 3 + 2] += state.vz[i] * delta;
+      }
+    }
+    pts.current.geometry.attributes.position.needsUpdate = true;
+  });
+
+  return (
+    <points ref={pts}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" array={state.positions} count={SMOKE_COUNT} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.32} color="#9090a4" transparent opacity={0.16} sizeAttenuation depthWrite={false} />
+    </points>
+  );
+};
+
 // ── Ember Particles ────────────────────────────────────────────────────────────
 
 const EMBER_COUNT = 20;
@@ -167,6 +222,9 @@ export const CampfireFlame = () => {
 
       {/* Ember particles */}
       <EmberParticles />
+
+      {/* Rising smoke wisps */}
+      <SmokeParticles />
     </group>
   );
 };

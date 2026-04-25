@@ -215,9 +215,9 @@ export const GameCanvas = () => {
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
             {quality !== "low" && (
               <Bloom
-                intensity={0.25}
-                luminanceThreshold={0.6}
-                luminanceSmoothing={0.9}
+                intensity={0.35}
+                luminanceThreshold={0.55}
+                luminanceSmoothing={0.85}
               />
             )}
             {quality !== "low" && <Vignette offset={0.4} darkness={0.5} />}

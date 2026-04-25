@@ -90,14 +90,14 @@ export const ShortcutsHelp = ({ open, onClose }: Props) => {
                 style={{
                   background: "none",
                   border: "none",
-                  color: "rgba(250,248,244,0.4)",
+                  color: "rgba(250,248,244,0.35)",
                   cursor: "pointer",
-                  fontSize: "18px",
+                  fontSize: "14px",
                   lineHeight: 1,
-                  padding: "0 4px",
+                  padding: "2px 4px",
                 }}
               >
-                x
+                ×
               </button>
             </div>
 

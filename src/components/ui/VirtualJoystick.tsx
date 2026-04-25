@@ -184,7 +184,7 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat }: Props) =
           height: 44,
           borderRadius: "50%",
           background: "rgba(8,8,16,0.45)",
-          border: "1px solid rgba(200,134,10,0.25)",
+          border: "1px solid rgba(125,249,240,0.25)",
           backdropFilter: "blur(6px)",
           display: "flex",
           alignItems: "center",
@@ -195,8 +195,8 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat }: Props) =
           userSelect: "none",
         }}
       >
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "9px", color: "rgba(200,134,10,0.7)", letterSpacing: "0.04em" }}>
-          ASK
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "9px", color: "rgba(125,249,240,0.7)", letterSpacing: "0.04em" }}>
+          CHAT
         </span>
       </div>
     </div>

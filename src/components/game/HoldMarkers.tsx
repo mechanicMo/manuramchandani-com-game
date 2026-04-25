@@ -32,9 +32,9 @@ export const HOLDS: Hold[] = [
   { x: 30, y: 62, z: -39 }, { x: 22, y: 68, z: -39 },
 ];
 
-const COLOR_DEFAULT = new THREE.Color("#7a5e3a");
-const COLOR_NEAR    = new THREE.Color("#C8860A");
-const COLOR_FIRST   = new THREE.Color("#a06820"); // slightly brightened first hold for onboarding
+const COLOR_DEFAULT = new THREE.Color("#9a7848");
+const COLOR_NEAR    = new THREE.Color("#FFD060");  // bright enough to bloom
+const COLOR_FIRST   = new THREE.Color("#E09828");  // entry hold — more visible than others
 const NEAR_DIST     = 2.5;
 
 export const HoldMarkers = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
@@ -73,9 +73,9 @@ export const HoldMarkers = ({ characterPos }: { characterPos: THREE.Vector3 }) =
       {/* face_1 entry glow — visible from spawn */}
       <pointLight
         position={[HOLDS[0].x, HOLDS[0].y, HOLDS[0].z + 0.5]}
-        color="#C8860A"
-        intensity={1.2}
-        distance={12}
+        color="#FFB830"
+        intensity={3.0}
+        distance={20}
         decay={2}
       />
       {/* face_2 entry glow — draws the eye when walking the left side of the base */}

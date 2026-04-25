@@ -14,8 +14,7 @@ const HINTS: Record<GamePhase, Hint[]> = {
   ],
   descent: [
     { key: "← →", label: "Carve" },
-    { key: "SPACE", label: "Jump" },
-    { key: "↓", label: "Tuck" },
+    { key: "↓", label: "Tuck & speed" },
   ],
 };
 

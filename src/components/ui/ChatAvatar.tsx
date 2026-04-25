@@ -130,22 +130,35 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
               justifyContent: "space-between",
               alignItems: "center",
             }}>
-              <p style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "#C8860A", margin: 0, letterSpacing: "0.08em" }}>
-                ASK ABOUT MANU
-              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#7df9f0",
+                  boxShadow: "0 0 6px rgba(125,249,240,0.8)",
+                  flexShrink: 0,
+                }} />
+                <p style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "#7df9f0", margin: 0, letterSpacing: "0.08em" }}>
+                  BEACON
+                </p>
+                <span style={{ fontFamily: "Inter, sans-serif", fontSize: "10px", color: "rgba(250,248,244,0.3)", letterSpacing: "0.04em" }}>
+                  trail guide
+                </span>
+              </div>
               <button
                 onClick={onClose}
                 style={{
                   background: "none",
                   border: "none",
-                  color: "rgba(250,248,244,0.4)",
+                  color: "rgba(250,248,244,0.35)",
                   cursor: "pointer",
-                  fontSize: "16px",
+                  fontSize: "14px",
                   lineHeight: 1,
-                  padding: "0 4px",
+                  padding: "2px 4px",
                 }}
               >
-                x
+                ×
               </button>
             </div>
 
@@ -161,7 +174,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
                   <p style={{
                     fontFamily: "DM Mono, monospace",
                     fontSize: "10px",
-                    color: m.role === "user" ? "#C8860A" : "rgba(250,248,244,0.35)",
+                    color: m.role === "user" ? "#C8860A" : "rgba(125,249,240,0.6)",
                     margin: "0 0 2px",
                     letterSpacing: "0.06em",
                   }}>
@@ -179,7 +192,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
                 </div>
               ))}
               {loading && (
-                <p style={{ fontFamily: "DM Mono, monospace", fontSize: "12px", color: "rgba(200,134,10,0.6)", margin: 0 }}>
+                <p style={{ fontFamily: "DM Mono, monospace", fontSize: "12px", color: "rgba(125,249,240,0.55)", margin: 0 }}>
                   ...
                 </p>
               )}

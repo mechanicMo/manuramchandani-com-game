@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { useMatcaps } from "@/hooks/useMatcaps";
+import type { GamePhase } from "@/hooks/useGamePhase";
 
 type Fragment = {
   id: number;
@@ -20,14 +21,16 @@ const SPAWN_INTERVAL = 0.12;
 type Props = {
   characterPos: THREE.Vector3;
   velocityRef: React.MutableRefObject<{ x: number; y: number }>;
+  phase?: GamePhase;
 };
 
-export const ChossSystem = ({ characterPos, velocityRef }: Props) => {
+export const ChossSystem = ({ characterPos, velocityRef, phase }: Props) => {
   const [fragments, setFragments] = useState<Fragment[]>([]);
   const lastSpawn = useRef(0);
   const matcaps   = useMatcaps();
 
   useFrame(() => {
+    if (phase === "descent") return; // no rock choss on snow slope
     const now   = performance.now() / 1000;
     const vel   = velocityRef.current;
     const speed = Math.hypot(vel.x, vel.y);

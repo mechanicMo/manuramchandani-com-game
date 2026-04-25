@@ -77,10 +77,12 @@ const BaseCamp = ({ x, y, z }: { x: number; y: number; z: number }) => {
   return (
     <group position={[x, y, z]}>
       <CampfireFlame />
+      {/* Fire ring base */}
       <mesh position={[0, -0.15, 0]} rotation={[0, 0.5, 0]}>
         <cylinderGeometry args={[0.4, 0.5, 0.12, 6]} />
         <meshMatcapMaterial matcap={matcaps.wood} />
       </mesh>
+      {/* Tent panels */}
       <mesh position={[1.4, 0.5, -0.3]} rotation={[0, 0.4, 0]}>
         <coneGeometry args={[0.7, 1.2, 3, 1]} />
         <meshMatcapMaterial matcap={matcaps.fabric} side={THREE.DoubleSide} />
@@ -89,12 +91,44 @@ const BaseCamp = ({ x, y, z }: { x: number; y: number; z: number }) => {
         <coneGeometry args={[0.5, 1.0, 3, 1]} />
         <meshMatcapMaterial matcap={matcaps.fabric} side={THREE.DoubleSide} />
       </mesh>
+      {/* Log to sit on */}
       <mesh position={[-1.2, 0.05, 0.4]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.28, 0.05, 6, 16]} />
         <meshMatcapMaterial matcap={matcaps.wood} />
       </mesh>
+      {/* Cup/mug on log */}
       <mesh position={[-0.6, 0.12, 0.5]}>
         <cylinderGeometry args={[0.1, 0.09, 0.25, 8]} />
+        <meshMatcapMaterial matcap={matcaps.fabric} />
+      </mesh>
+      {/* Sitting log */}
+      <mesh position={[-0.8, 0.06, -0.7]} rotation={[0, 0.6, Math.PI / 2]}>
+        <cylinderGeometry args={[0.1, 0.12, 1.1, 7]} />
+        <meshMatcapMaterial matcap={matcaps.wood} />
+      </mesh>
+      {/* Backpack — body + top lid */}
+      <group position={[0.5, 0, -0.9]} rotation={[0, -0.5, 0]}>
+        <mesh position={[0, 0.28, 0]}>
+          <boxGeometry args={[0.28, 0.5, 0.18]} />
+          <meshMatcapMaterial matcap={matcaps.fabric} />
+        </mesh>
+        <mesh position={[0, 0.56, 0]}>
+          <boxGeometry args={[0.26, 0.12, 0.17]} />
+          <meshMatcapMaterial matcap={matcaps.fabric} />
+        </mesh>
+        {/* Pack straps visible on front */}
+        <mesh position={[-0.08, 0.28, 0.09]} rotation={[0.1, 0, 0]}>
+          <boxGeometry args={[0.04, 0.44, 0.02]} />
+          <meshMatcapMaterial matcap={matcaps.stoneDark} />
+        </mesh>
+        <mesh position={[0.08, 0.28, 0.09]} rotation={[0.1, 0, 0]}>
+          <boxGeometry args={[0.04, 0.44, 0.02]} />
+          <meshMatcapMaterial matcap={matcaps.stoneDark} />
+        </mesh>
+      </group>
+      {/* Rope coil on ground near fire */}
+      <mesh position={[-0.3, 0.02, -0.65]} rotation={[-Math.PI / 2, 0, 0.3]}>
+        <torusGeometry args={[0.18, 0.03, 6, 16]} />
         <meshMatcapMaterial matcap={matcaps.fabric} />
       </mesh>
     </group>
@@ -290,6 +324,17 @@ const BJJLedge = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const matcaps = useMatcaps();
   return (
     <group position={[x, y, z]}>
+      {/* Training mat — flat padded rectangle on the ground */}
+      <mesh position={[0, -0.04, 0.3]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[2.8, 1.8]} />
+        <meshBasicMaterial color="#1a2a4a" side={THREE.DoubleSide} />
+      </mesh>
+      {/* Mat border lines */}
+      <mesh position={[0, -0.035, 0.3]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[2.6, 1.6]} />
+        <meshBasicMaterial color="#C8860A" transparent opacity={0.18} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Gi hanging on display — two overlapping panels */}
       <mesh position={[-0.15, 0.3, 0]} rotation={[0, 0, 0.1]}>
         <boxGeometry args={[0.5, 1.1, 0.05]} />
         <meshMatcapMaterial matcap={matcaps.fabric} />
@@ -302,24 +347,38 @@ const BJJLedge = ({ x, y, z }: { x: number; y: number; z: number }) => {
         <boxGeometry args={[0.55, 0.06, 0.02]} />
         <meshMatcapMaterial matcap={matcaps.fabric} />
       </mesh>
+      {/* Belt rack pole */}
       <mesh position={[0.9, 0.4, 0.05]} rotation={[0, 0, 0.3]}>
         <cylinderGeometry args={[0.02, 0.02, 0.35, 6]} />
         <meshMatcapMaterial matcap={matcaps.metalSoft} />
       </mesh>
+      {/* Trophy / medal sphere */}
       <group position={[-0.9, -0.1, 0]}>
         <mesh position={[0, 0.08, 0]}>
           <sphereGeometry args={[0.12, 8, 6]} />
-          <meshMatcapMaterial matcap={matcaps.fabric} />
+          <meshMatcapMaterial matcap={matcaps.metalSoft} />
         </mesh>
         <mesh position={[0, -0.1, 0]}>
           <cylinderGeometry args={[0.07, 0.04, 0.2, 8]} />
-          <meshMatcapMaterial matcap={matcaps.fabric} />
+          <meshMatcapMaterial matcap={matcaps.metalSoft} />
         </mesh>
       </group>
+      {/* Mouth guard container */}
       <mesh position={[1.1, -0.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.08, 0.08, 0.1, 10]} />
         <meshMatcapMaterial matcap={matcaps.fabric} />
       </mesh>
+      {/* Water bottle */}
+      <group position={[1.2, 0, 0.6]}>
+        <mesh position={[0, 0.15, 0]}>
+          <cylinderGeometry args={[0.07, 0.065, 0.3, 8]} />
+          <meshMatcapMaterial matcap={matcaps.metalSoft} />
+        </mesh>
+        <mesh position={[0, 0.31, 0]}>
+          <cylinderGeometry args={[0.035, 0.06, 0.05, 8]} />
+          <meshMatcapMaterial matcap={matcaps.plasticDark} />
+        </mesh>
+      </group>
     </group>
   );
 };
@@ -664,6 +723,7 @@ const SnowboardRackVisual = ({ x, y, z }: { x: number; y: number; z: number }) =
         <cylinderGeometry args={[0.03, 0.03, 1.5, 6]} />
         <meshMatcapMaterial matcap={matcaps.metalSoft} />
       </mesh>
+      {/* Board 1 — amber stripe */}
       <mesh position={[0.2, 0.85, 0.15]} rotation={[0.15, 0, 0.08]} castShadow>
         <boxGeometry args={[0.22, 1.55, 0.04]} />
         <meshMatcapMaterial matcap={matcaps.stoneLight} />
@@ -671,6 +731,15 @@ const SnowboardRackVisual = ({ x, y, z }: { x: number; y: number; z: number }) =
       <mesh position={[0.2, 0.85, 0.17]} rotation={[0.15, 0, 0.08]}>
         <boxGeometry args={[0.22, 1.55, 0.005]} />
         <meshBasicMaterial color="#C8860A" />
+      </mesh>
+      {/* Board 2 — blue stripe, leaned slightly different */}
+      <mesh position={[-0.2, 0.88, 0.18]} rotation={[-0.1, 0, -0.06]} castShadow>
+        <boxGeometry args={[0.20, 1.48, 0.04]} />
+        <meshMatcapMaterial matcap={matcaps.stoneLight} />
+      </mesh>
+      <mesh position={[-0.2, 0.88, 0.20]} rotation={[-0.1, 0, -0.06]}>
+        <boxGeometry args={[0.20, 1.48, 0.005]} />
+        <meshBasicMaterial color="#4080ff" />
       </mesh>
     </group>
   );
