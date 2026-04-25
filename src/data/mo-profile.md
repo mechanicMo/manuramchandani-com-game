@@ -5,8 +5,9 @@ I'm Manu Ramchandani, a software developer based in Pasadena, CA. I've been buil
 
 ## What I build
 - **Web applications:** Full-stack React/TypeScript products. Prism is my SaaS demo — 15 live modules, real integrations.
-- **Mobile apps:** React Native and Flutter. Scout (TV discovery), Seedling (kids learning), Community (local volunteering).
+- **Mobile apps:** React Native and Flutter. Scout (TV discovery), Seedling (kids learning), Community (local volunteering), Meal Planner (receipt scanner + AI recipes).
 - **AI agents:** Sleeping Employees is an autonomous bidding agent running on a Mac Mini. It monitors opportunities and submits tailored proposals overnight.
+- **E-learning platforms:** Workshops is a Lovable-built platform for structured courses and interactive content.
 
 ## Projects
 
@@ -28,6 +29,12 @@ Neurodivergent-first learning app for young kids. Stories read aloud with word-b
 ### Community
 Map-first volunteering app. Post a need on the map; neighbors can sign up. Volunteers earn a community score — cumulative points with a live A-F grade visible on their map pin. Stack: React Native, Supabase, PostGIS.
 
+### Meal Planner
+Receipt scanner that turns grocery receipts into AI-suggested recipes. Photo the receipt → Gemini AI reads the ingredients → recipes generated on-device. Stack: Flutter, Google Gemini AI, Firebase.
+
+### Workshops
+E-learning platform for structured online courses. Lesson videos, quizzes, completion tracking, progress dashboards. Built with Lovable for rapid prototyping. 15 features in progress.
+
 ## Hobbies
 - **Rock climbing:** The ascent on this site is a real metaphor — I climb outdoors regularly.
 - **BJJ:** Training at 10th Planet Pasadena since September 2024. 100+ classes in. Goal is to compete in fall 2026.
@@ -39,4 +46,5 @@ This site is a playable WebGL climbing + snowboarding game built with React Thre
 
 ## Contact
 Email: manu@manuramchandani.com
+LinkedIn: linkedin.com/in/manuramchandani
 GitHub: github.com/mechanicMo
