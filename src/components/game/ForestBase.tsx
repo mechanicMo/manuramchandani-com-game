@@ -64,12 +64,34 @@ function makeTrees(count: number, seed = 42): TreeDef[] {
 
 const TREE_COUNTS: Record<QualityLevel, number> = { high: 32, medium: 16, low: 8 };
 
+// Easter egg — Liz nod. Small amber heart carved on a tree near the path.
+// Placed at a specific position so it's discoverable but not immediately obvious.
+const LizHeart = () => (
+  <group position={[-7.5, 1.4, 60.5]} rotation={[0, -0.4, 0]} scale={[0.18, 0.18, 0.04]}>
+    {/* Heart = two bumps + downward-pointing diamond */}
+    <mesh position={[-0.6, 0.35, 0]}>
+      <sphereGeometry args={[0.7, 12, 12]} />
+      <meshStandardMaterial color="#C8860A" emissive="#9a6000" emissiveIntensity={0.4} roughness={0.8} />
+    </mesh>
+    <mesh position={[0.6, 0.35, 0]}>
+      <sphereGeometry args={[0.7, 12, 12]} />
+      <meshStandardMaterial color="#C8860A" emissive="#9a6000" emissiveIntensity={0.4} roughness={0.8} />
+    </mesh>
+    <mesh position={[0, -0.4, 0]} rotation={[0, 0, Math.PI / 4]}>
+      <boxGeometry args={[0.9, 0.9, 0.5]} />
+      <meshStandardMaterial color="#C8860A" emissive="#9a6000" emissiveIntensity={0.4} roughness={0.8} />
+    </mesh>
+  </group>
+);
+
 export const ForestBase = ({ phase, quality = "high" }: Props) => {
   const trees = useMemo(() => makeTrees(TREE_COUNTS[quality]), [quality]);
   if (phase !== "ascent") return null;
 
   return (
     <group>
+      {/* Easter egg: Liz nod — a carved heart on the trunk of tree 3 (fixed position) */}
+      <LizHeart />
       {trees.map(tree => (
         <group key={tree.id} position={[tree.x, 0, tree.z]}>
           {/* Trunk */}
