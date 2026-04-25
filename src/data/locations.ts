@@ -1,5 +1,5 @@
 // src/data/locations.ts
-export type InteractionType = "panel" | "vignette" | "view" | "contact" | "marker";
+export type InteractionType = "panel" | "vignette" | "view" | "contact" | "marker" | "kiosk";
 export type VisualType =
   | "campfire"
   | "laptop"
@@ -321,7 +321,7 @@ export const LOCATIONS: Location[] = [
     z: -83,
     phase: "descent",
     visualType: "kiosk",
-    interactionType: "contact",
+    interactionType: "kiosk",
     proximityRadius: 14,
     content: {
       type: "newsletter",

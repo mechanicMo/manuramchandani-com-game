@@ -23,8 +23,8 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false, onB
     if (location) {
       const { interactionType } = location;
 
-      // Play panel-open sound for panel/contact types
-      if ((interactionType === "panel" || interactionType === "contact") && audio && !muted) {
+      // Play panel-open sound for panel/contact/kiosk types
+      if ((interactionType === "panel" || interactionType === "contact" || interactionType === "kiosk") && audio && !muted) {
         audio.play("panel-open");
       }
 
@@ -39,9 +39,9 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false, onB
         timerRef.current = setTimeout(onDismiss, 4500);
       }
     } else if (prevLoc) {
-      // Play panel-close when a panel/contact overlay is dismissed
+      // Play panel-close when a panel/contact/kiosk overlay is dismissed
       const { interactionType } = prevLoc;
-      if ((interactionType === "panel" || interactionType === "contact") && audio && !muted) {
+      if ((interactionType === "panel" || interactionType === "contact" || interactionType === "kiosk") && audio && !muted) {
         audio.play("panel-close");
       }
     }
@@ -320,7 +320,7 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
   }
 
   // Newsletter kiosk — inline email signup form
-  if (interactionType === "contact" && content.type === "newsletter") {
+  if ((interactionType === "contact" || interactionType === "kiosk") && content.type === "newsletter") {
     return (
       <motion.div
         initial={{ opacity: 0, x: -30 }}

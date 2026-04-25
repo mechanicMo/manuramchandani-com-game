@@ -81,21 +81,21 @@ export const GameCanvas = () => {
   const handleLocationChange = useCallback((loc: Location | null) => {
     nearbyRef.current = loc;
 
-    // Vignette, view, marker: auto-display on proximity
-    if (loc && (loc.interactionType === "vignette" || loc.interactionType === "view" || loc.interactionType === "marker")) {
+    // Vignette, view, marker, kiosk: auto-display on proximity
+    if (loc && (loc.interactionType === "vignette" || loc.interactionType === "view" || loc.interactionType === "marker" || loc.interactionType === "kiosk")) {
       setActiveLocation(loc);
     }
     // When leaving proximity, close any open panel for this location
     if (!loc) {
       setActiveLocation(prev => {
-        if (prev && (prev.interactionType === "panel" || prev.interactionType === "contact")) {
+        if (prev && (prev.interactionType === "panel" || prev.interactionType === "contact" || prev.interactionType === "kiosk")) {
           return null;
         }
         return prev;
       });
     }
 
-    // Only show [Enter] hint for types requiring explicit interaction
+    // Only show [Enter] hint for types requiring explicit interaction (kiosk auto-shows, no hint needed)
     setNearbyName(loc && (loc.interactionType === "panel" || loc.interactionType === "contact") ? loc.name : null);
   }, []);
 
