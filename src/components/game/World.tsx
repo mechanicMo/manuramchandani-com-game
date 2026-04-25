@@ -22,6 +22,7 @@ import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { ChalkParticles }      from "./ChalkParticles";
 import { BeaconSprite }        from "./BeaconSprite";
+import { BackgroundMountains } from "./BackgroundMountains";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
@@ -172,6 +173,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
       <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
       <GroundTerrain phase={phase} />
+      <BackgroundMountains quality={quality} />
       {/* ClimbingDetail still disabled — G-series coordinates */}
       <ForestBase phase={phase} quality={quality} />
       <BoulderField phase={phase} quality={quality} />

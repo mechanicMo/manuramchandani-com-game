@@ -61,10 +61,14 @@ export const GameCanvas = () => {
         setChatOpen(false);
         setHelpOpen(false);
       }
+      if (e.key === "m" || e.key === "M") {
+        handleMute();
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleMute]);
 
   const handleLocationChange = useCallback((loc: Location | null) => {
     nearbyRef.current = loc;
