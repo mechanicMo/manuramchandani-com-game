@@ -24,7 +24,7 @@ const KEY_MAP = [
   { name: "left",     keys: ["ArrowLeft",  "KeyA"] },
   { name: "right",    keys: ["ArrowRight", "KeyD"] },
   { name: "jump",     keys: ["Space"] },
-  { name: "interact", keys: ["Enter"] },
+  { name: "interact", keys: ["Enter", "KeyE"] },
 ];
 
 export const GameCanvas = () => {
@@ -41,6 +41,13 @@ export const GameCanvas = () => {
   const audio                               = useAudioManager();
   const quality                             = useDeviceQuality();
   const maxDpr = quality === "low" ? 1 : quality === "medium" ? 1.5 : Math.min(window.devicePixelRatio, 2);
+
+  const handleMute = useCallback(() => {
+    if (!muted) {
+      audio.stopAllLoops();
+    }
+    setMuted(prev => !prev);
+  }, [muted, audio]);
 
   // C / ? / ESC global key shortcuts
   useEffect(() => {
@@ -98,13 +105,6 @@ export const GameCanvas = () => {
       setActiveLocation(prev => prev?.id === nearby.id ? null : nearby);
     }
   }, []);
-
-  const handleMute = useCallback(() => {
-    if (!muted) {
-      audio.stopAllLoops();
-    }
-    setMuted(prev => !prev);
-  }, [muted, audio]);
 
   const handleRequestOpenChat = useCallback(() => {
     setOpenedByBeacon(true);
@@ -225,7 +225,7 @@ export const GameCanvas = () => {
 const KeyboardInterceptor = ({ onEnter }: { onEnter: () => void }) => {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.code === "Enter") onEnter();
+      if (e.code === "Enter" || e.code === "KeyE") onEnter();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);

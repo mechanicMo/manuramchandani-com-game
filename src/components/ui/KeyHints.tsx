@@ -93,7 +93,7 @@ export const KeyHints = ({ phase, extraHint, nearbyName, climbing = false }: Pro
             <>
               <div style={{ width: 1, height: 16, backgroundColor: "rgba(240,237,230,0.15)" }} />
               <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "11px", color: "rgba(200,134,10,0.8)", letterSpacing: "0.08em" }}>
-                [Enter] View — {nearbyName}
+                [E / Enter] View — {nearbyName}
               </span>
             </>
           )}

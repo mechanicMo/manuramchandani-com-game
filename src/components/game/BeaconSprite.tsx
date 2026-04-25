@@ -76,10 +76,25 @@ export const BeaconSprite = ({
   const initializedRef = useRef(false);
 
   const [hintText, setHintText] = useState<string | null>(null);
-  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hintTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const spawnGreeted   = useRef(false);
 
   useEffect(() => {
     return () => { if (hintTimer.current) clearTimeout(hintTimer.current); };
+  }, []);
+
+  // One-shot spawn greeting
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (spawnGreeted.current) return;
+      spawnGreeted.current = true;
+      lastHintTime.current = Date.now();
+      setHintText("Hi, I'm Beacon. Press [C] to chat.");
+      playSyntheticChirp();
+      hintTimer.current = setTimeout(() => setHintText(null), 5000);
+    }, 2000);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fireHint = (text: string) => {
