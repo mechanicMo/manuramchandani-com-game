@@ -48,7 +48,8 @@ const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
   const lightRef = useRef<THREE.PointLight>(null);
   const flameOpacity = useRef(0);
   const lightTarget  = useRef(0);
-  const [showHint, setShowHint] = useState(false);
+  const [showHint, setShowHint]   = useState(false);
+  const [litFlash, setLitFlash]   = useState(false);
   const litRef = useRef(pyreLit);
   litRef.current = pyreLit;
 
@@ -90,7 +91,11 @@ const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
       ) return;
       if (litRef.current) return;
       if (e.code === "KeyE" || e.code === "Enter") {
-        if (showHint) onLight();
+        if (showHint) {
+          onLight();
+          setLitFlash(true);
+          setTimeout(() => setLitFlash(false), 3500);
+        }
       }
     };
     window.addEventListener("keydown", handler);
@@ -174,8 +179,8 @@ const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
         </Html>
       )}
 
-      {/* Lit confirmation — brief flash */}
-      {pyreLit && flameOpacity.current < 0.5 && (
+      {/* Lit confirmation — brief flash on lighting */}
+      {litFlash && (
         <Html
           position={[0, 3.2, 0]}
           center
