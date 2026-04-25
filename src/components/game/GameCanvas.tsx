@@ -117,7 +117,7 @@ export const GameCanvas = () => {
   return (
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <LoadingScreen loading={loading} />
-      <KeyHints phase={gamePhase.phase} nearbyName={nearbyName} climbing={climbing} />
+      <KeyHints phase={gamePhase.phase} nearbyName={nearbyName} climbing={climbing} summitArriving={gamePhase.summitArriving} />
       <SummitOverlay phase={gamePhase.phase} />
       <DescentOverlay phase={gamePhase.phase} />
       <LocationOverlay location={activeLocation} onDismiss={() => setActiveLocation(null)} audio={audio} muted={muted} onBeginDescent={gamePhase.beginDescent} />

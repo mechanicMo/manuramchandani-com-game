@@ -40,6 +40,7 @@ type Props = {
   mountainScene?: THREE.Object3D | null;
   climbing?: boolean;
   cinematicPull?: boolean;
+  summitArriving?: boolean;
 };
 
 export const CameraRig = ({
@@ -49,6 +50,7 @@ export const CameraRig = ({
   mountainScene = null,
   climbing = false,
   cinematicPull = false,
+  summitArriving = false,
 }: Props) => {
   const { camera, gl } = useThree();
 
@@ -69,6 +71,9 @@ export const CameraRig = ({
   const prevCinematic = useRef(false);
   const cinematicTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cinematicActive = useRef(false);
+
+  // Summit arrival cinematic
+  const prevSummitArriving = useRef(false);
 
   // Drag state
   const dragging     = useRef(false);
@@ -204,6 +209,18 @@ export const CameraRig = ({
         cinematicActive.current = false;
         orbitingRef.current = false;
       }, 6000);
+    }
+
+    // Summit arrival cinematic: pull back wide for 2.5s then ease to summit preset
+    if (summitArriving && !prevSummitArriving.current) {
+      prevSummitArriving.current = true;
+      distanceRef.current  = 22;
+      elevationRef.current = 0.52;
+      orbitingRef.current  = true;
+    }
+    if (!summitArriving && prevSummitArriving.current) {
+      prevSummitArriving.current = false;
+      orbitingRef.current = false;
     }
 
     // Nudge preset distance and elevation toward current phase when no active orbit

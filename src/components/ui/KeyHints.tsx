@@ -32,14 +32,19 @@ type Props = {
   nearbyName: string | null;
   climbing?: boolean;
   extraHint?: string;
+  summitArriving?: boolean;
 };
 
 const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
-export const KeyHints = ({ phase, extraHint, nearbyName, climbing = false }: Props) => {
+export const KeyHints = ({ phase, extraHint, nearbyName, climbing = false, summitArriving = false }: Props) => {
   if (isTouchDevice()) return null;
 
-  const hints = (phase === "ascent" && climbing) ? CLIMB_HINTS : HINTS[phase];
+  const baseHints = (phase === "ascent" && climbing) ? CLIMB_HINTS : HINTS[phase];
+  // During the summit arrival cinematic (2.5s), suppress the SPACE / Begin descent hint
+  const hints = (phase === "summit" && summitArriving)
+    ? baseHints.filter(h => h.key !== "SPACE")
+    : baseHints;
 
   return (
     <div
@@ -57,7 +62,7 @@ export const KeyHints = ({ phase, extraHint, nearbyName, climbing = false }: Pro
     >
       <AnimatePresence mode="wait">
         <motion.div
-          key={phase + String(climbing) + (extraHint ?? "") + (nearbyName ?? "")}
+          key={phase + String(climbing) + String(summitArriving) + (extraHint ?? "") + (nearbyName ?? "")}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}

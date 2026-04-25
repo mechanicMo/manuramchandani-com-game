@@ -56,7 +56,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const velocityRef                          = useRef({ x: 0, y: 0 });
   const boulderLaunchRef                     = useRef(false);
   const prevPosRef                            = useRef(new THREE.Vector3());
-  const { phase, onCharacterY, beginDescent } = gamePhase;
+  const { phase, onCharacterY, beginDescent, summitArriving } = gamePhase;
   const sky                                  = useSkyTransition(phase);
   const quality                              = useDeviceQuality();
   const spacePressed                         = useKeyboardControls((s: Record<string, boolean>) => s.jump);
@@ -211,7 +211,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <AgentCaveNook characterPos={pos} phase={phase} />
       <BouncyBoulder characterPos={pos} phase={phase} launchRef={boulderLaunchRef} />
       <LizHeart characterPos={pos} />
-      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} cinematicPull={beaconLit} />
+      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} cinematicPull={beaconLit} summitArriving={summitArriving} />
       <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} quality={quality} />
     </>
   );
