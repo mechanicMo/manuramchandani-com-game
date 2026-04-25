@@ -39,6 +39,7 @@ type Props = {
   characterHeading?: number;
   mountainScene?: THREE.Object3D | null;
   climbing?: boolean;
+  cinematicPull?: boolean;
 };
 
 export const CameraRig = ({
@@ -47,6 +48,7 @@ export const CameraRig = ({
   characterHeading = 0,
   mountainScene = null,
   climbing = false,
+  cinematicPull = false,
 }: Props) => {
   const { camera, gl } = useThree();
 
@@ -62,6 +64,11 @@ export const CameraRig = ({
   const smAzimuth   = useRef(characterHeading + Math.PI);
   const smElevation = useRef(presetElev);
   const smDistance  = useRef(presetDist);
+
+  // Cinematic pull-out state (beacon lighting)
+  const prevCinematic = useRef(false);
+  const cinematicTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cinematicActive = useRef(false);
 
   // Drag state
   const dragging     = useRef(false);
@@ -185,6 +192,20 @@ export const CameraRig = ({
   }, [gl]);
 
   useFrame((_, delta) => {
+    // Cinematic pull-out: when beacon is lit, yank camera back dramatically
+    if (cinematicPull && !prevCinematic.current) {
+      prevCinematic.current = true;
+      cinematicActive.current = true;
+      distanceRef.current = 42;
+      elevationRef.current = 0.68;
+      orbitingRef.current = true;
+      if (cinematicTimer.current) clearTimeout(cinematicTimer.current);
+      cinematicTimer.current = setTimeout(() => {
+        cinematicActive.current = false;
+        orbitingRef.current = false;
+      }, 6000);
+    }
+
     // Nudge preset distance and elevation toward current phase when no active orbit
     if (!orbitingRef.current) {
       distanceRef.current += (presetDist - distanceRef.current) * delta * 0.8;

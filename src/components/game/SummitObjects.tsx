@@ -13,9 +13,9 @@ const SUMMIT_Y = 82;
 const PYRE_POS: [number, number, number] = [-4, SUMMIT_Y, -3];
 const PYRE_INTERACT_RADIUS = 3.5;
 
-type Props = { phase: GamePhase; characterPos: THREE.Vector3 };
+type Props = { phase: GamePhase; characterPos: THREE.Vector3; onBeaconLit?: () => void };
 
-export const SummitObjects = ({ phase, characterPos }: Props) => {
+export const SummitObjects = ({ phase, characterPos, onBeaconLit }: Props) => {
   const [pyreLit, setPyreLit] = useState(false);
 
   if (phase === "ascent") return null;
@@ -24,7 +24,7 @@ export const SummitObjects = ({ phase, characterPos }: Props) => {
     <group>
       <BeaconPyre
         pyreLit={pyreLit}
-        onLight={() => setPyreLit(true)}
+        onLight={() => { setPyreLit(true); onBeaconLit?.(); }}
         characterPos={characterPos}
         phase={phase}
       />

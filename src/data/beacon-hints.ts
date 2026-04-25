@@ -29,10 +29,20 @@ export const PROXIMITY_HINTS: Record<string, BeaconHint> = {
     type: "proximity",
     text: "Agent Cave — this thing runs while Manu sleeps. Creepy efficient.",
   },
+  "meal-planner-ledge": {
+    id: "prox-meal-planner-ledge",
+    type: "proximity",
+    text: "Meal Planner — snap a receipt, get a week of recipes. Flutter + Gemini.",
+  },
   "leaguelads-crag": {
     id: "prox-leaguelads-crag",
     type: "proximity",
     text: "LeagueLads Crag. Live team comp analysis for League players.",
+  },
+  "workshops-shelf": {
+    id: "prox-workshops-shelf",
+    type: "proximity",
+    text: "Workshops — e-learning platform he built to teach what he knows.",
   },
   "bjj-ledge": {
     id: "prox-bjj-ledge",

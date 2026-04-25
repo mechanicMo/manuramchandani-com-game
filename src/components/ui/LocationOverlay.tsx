@@ -27,9 +27,12 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: P
         audio.play("panel-open");
       }
 
-      // Auto-dismiss vignette and view after 3 seconds
+      // Auto-dismiss vignette and view after 3 seconds; marker after 4 seconds
       if (interactionType === "vignette") {
         timerRef.current = setTimeout(onDismiss, 3000);
+      }
+      if (interactionType === "marker") {
+        timerRef.current = setTimeout(onDismiss, 4000);
       }
     } else if (prevLoc) {
       // Play panel-close when a panel/contact overlay is dismissed
@@ -152,6 +155,59 @@ const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss
             {line}
           </p>
         ))}
+      </motion.div>
+    );
+  }
+
+  // Marker — trail milestone sign, top-center
+  if (interactionType === "marker" && content.type === "vignette") {
+    const lines = content.text.split("\n");
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.45 }}
+        style={{
+          position: "fixed",
+          top: "16%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          textAlign: "center",
+          pointerEvents: "none",
+          zIndex: 200,
+        }}
+      >
+        <div style={{
+          background: "rgba(8,8,16,0.82)",
+          border: "1px solid rgba(200,134,10,0.35)",
+          borderRadius: "8px",
+          padding: "10px 22px 12px",
+          backdropFilter: "blur(10px)",
+          minWidth: "140px",
+        }}>
+          <p style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: "22px",
+            color: "#C8860A",
+            margin: 0,
+            letterSpacing: "0.12em",
+            lineHeight: 1.1,
+          }}>
+            {lines[0]}
+          </p>
+          {lines.slice(1).map((line, i) => (
+            <p key={i} style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "12px",
+              color: "rgba(250,248,244,0.68)",
+              margin: "5px 0 0",
+              lineHeight: 1.4,
+            }}>
+              {line}
+            </p>
+          ))}
+        </div>
       </motion.div>
     );
   }

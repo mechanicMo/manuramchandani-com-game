@@ -48,6 +48,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const [characterHeading, setCharacterHeading] = useState(0);
   const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
   const [isClimbing, setIsClimbing]          = useState(false);
+  const [beaconLit, setBeaconLit]            = useState(false);
   const handleClimbChange = (c: boolean) => { setIsClimbing(c); onClimbStateChange?.(c); };
   const [holdGrabTick, setHoldGrabTick]      = useState(0);
   const holdGrabPosRef                       = useRef<THREE.Vector3 | null>(null);
@@ -168,7 +169,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       </Physics>
 
       <SummitLedge phase={phase} />
-      <SummitObjects phase={phase} characterPos={pos} />
+      <SummitObjects phase={phase} characterPos={pos} onBeaconLit={() => setBeaconLit(true)} />
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
       <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
       <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
@@ -184,7 +185,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <AgentCaveNook characterPos={pos} phase={phase} />
       <BouncyBoulder characterPos={pos} phase={phase} launchRef={boulderLaunchRef} />
       <LizHeart characterPos={pos} />
-      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
+      <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} cinematicPull={beaconLit} />
       <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} quality={quality} />
     </>
   );

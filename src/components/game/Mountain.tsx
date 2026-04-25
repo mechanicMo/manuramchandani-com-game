@@ -11,20 +11,18 @@
 // We bake the inverse (+90° X rotation matrix) into every mesh geometry before any
 // grounding or normal calculations so all downstream code sees correct orientation.
 //
-// Placeholder materials by mesh-name prefix. G12 matcap pass will override later.
+// G12 matcap pass: rock meshes use stoneDark, snow_ uses snow, climb_ uses stoneLight, cave_ uses stoneDark.
 import { Suspense, useMemo, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
+import { useMatcaps } from "@/hooks/useMatcaps";
 
 type MountainProps = { onSceneReady?: (scene: THREE.Object3D) => void };
 
 const MOUNTAIN_URL = "/models/mountain.tagged.glb";
 const MOUNTAIN_SCALE = 100;
-const ROCK_COLOR = "#7a8c9e";
-const SNOW_COLOR = "#e8eef5";
-const CAVE_COLOR = "#2d3748";
-const CLIMB_COLOR = ROCK_COLOR; // same as rock — climb faces blend in; hold markers show the route
+const ROCK_COLOR = "#7a8c9e"; // placeholder until matcap effect fires
 
 // +90° X rotation matrix: corrects build script Y-up → GLTF Z-up axis mismatch
 const AXIS_CORRECTION = new THREE.Matrix4().makeRotationX(Math.PI / 2);
@@ -33,6 +31,7 @@ useGLTF.preload(MOUNTAIN_URL);
 
 const MountainInner = ({ onSceneReady }: MountainProps) => {
   const { scene } = useGLTF(MOUNTAIN_URL);
+  const matcaps = useMatcaps();
 
   const { clonedScene, meshLocalOffset, rotationY } = useMemo(() => {
     const cloned = scene.clone(true);
@@ -50,19 +49,11 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
       mesh.geometry = geom;
     });
 
-    // Step 2: Apply placeholder materials by name prefix
+    // Step 2: Assign placeholder material — matcap override applied in useEffect below
     cloned.traverse((child) => {
       const mesh = child as THREE.Mesh;
       if (!mesh.isMesh) return;
-      if (mesh.name.startsWith("snow_")) {
-        mesh.material = new THREE.MeshStandardMaterial({ color: SNOW_COLOR, roughness: 0.9, side: THREE.DoubleSide });
-      } else if (mesh.name.startsWith("cave_")) {
-        mesh.material = new THREE.MeshStandardMaterial({ color: CAVE_COLOR, roughness: 1.0, side: THREE.DoubleSide });
-      } else if (mesh.name.startsWith("climb_")) {
-        mesh.material = new THREE.MeshStandardMaterial({ color: CLIMB_COLOR, roughness: 0.6, side: THREE.DoubleSide });
-      } else {
-        mesh.material = new THREE.MeshStandardMaterial({ color: ROCK_COLOR, roughness: 0.85, side: THREE.DoubleSide });
-      }
+      mesh.material = new THREE.MeshStandardMaterial({ color: ROCK_COLOR, roughness: 0.85, side: THREE.DoubleSide });
       mesh.castShadow = true;
       mesh.receiveShadow = true;
     });
@@ -127,6 +118,25 @@ const MountainInner = ({ onSceneReady }: MountainProps) => {
 
     return { clonedScene: cloned, meshLocalOffset: meshOffset, rotationY: rotY };
   }, [scene]);
+
+  // G12 matcap pass — runs after scene is built and matcap textures are ready
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      if (mesh.name.startsWith("snow_")) {
+        mesh.material = new THREE.MeshMatcapMaterial({ matcap: matcaps.snow, side: THREE.DoubleSide });
+      } else if (mesh.name.startsWith("cave_")) {
+        mesh.material = new THREE.MeshMatcapMaterial({ matcap: matcaps.stoneDark, side: THREE.DoubleSide });
+      } else if (mesh.name.startsWith("climb_")) {
+        mesh.material = new THREE.MeshMatcapMaterial({ matcap: matcaps.stoneLight, side: THREE.DoubleSide });
+      } else {
+        mesh.material = new THREE.MeshMatcapMaterial({ matcap: matcaps.stoneDark, side: THREE.DoubleSide });
+      }
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+    });
+  }, [clonedScene, matcaps.snow, matcaps.stoneDark, matcaps.stoneLight]);
 
   useEffect(() => {
     onSceneReady?.(clonedScene);
