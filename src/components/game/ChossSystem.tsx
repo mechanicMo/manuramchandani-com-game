@@ -1,22 +1,37 @@
 // src/components/game/ChossSystem.tsx
-import { useRef, useState } from "react";
+// Choss fragments — rock chips that fly off when the character moves on the wall.
+// Pool-based InstancedMesh (1 draw call, no React state, no Rapier physics).
+// Projectile math (pos + v*t + ½g*t²) matches original feel; collision bounce dropped
+// since fragments are sub-tile-scale and nobody notices pass-through at this speed.
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { useMatcaps } from "@/hooks/useMatcaps";
 import type { GamePhase } from "@/hooks/useGamePhase";
 
-type Fragment = {
-  id: number;
-  pos: [number, number, number];
-  vel: [number, number, number];
+const MAX_FRAGS      = 14;
+const LIFETIME       = 2.5;
+const SPAWN_INTERVAL = 0.12;
+const GRAVITY        = -18; // units/s² — aggressive to match original gravityScale=2.5
+
+type Frag = {
+  active: boolean;
+  bornAt: number;
+  px: number; py: number; pz: number;
+  vx: number; vy: number; vz: number;
   size: number;
-  spawnTime: number;
 };
 
-const MAX_FRAGS      = 14;
-const LIFETIME       = 2.8;
-const SPAWN_INTERVAL = 0.12;
+const mkPool = (): Frag[] =>
+  Array.from({ length: MAX_FRAGS }, () => ({
+    active: false, bornAt: 0,
+    px: 0, py: 0, pz: 0,
+    vx: 0, vy: 0, vz: 0,
+    size: 0.06,
+  }));
+
+const _dummy = new THREE.Object3D();
+_dummy.matrixAutoUpdate = false;
 
 type Props = {
   characterPos: THREE.Vector3;
@@ -25,55 +40,66 @@ type Props = {
 };
 
 export const ChossSystem = ({ characterPos, velocityRef, phase }: Props) => {
-  const [fragments, setFragments] = useState<Fragment[]>([]);
-  const lastSpawn = useRef(0);
   const matcaps   = useMatcaps();
+  const meshRef   = useRef<THREE.InstancedMesh>(null);
+  const pool      = useRef<Frag[]>(mkPool());
+  const poolHead  = useRef(0);
+  const lastSpawn = useRef(0);
 
-  useFrame(() => {
-    if (phase === "descent") return; // no rock choss on snow slope
-    const now   = performance.now() / 1000;
+  useFrame(({ clock }) => {
+    if (phase === "descent") return;
+    const mesh = meshRef.current;
+    if (!mesh) return;
+
+    const now   = clock.elapsedTime;
     const vel   = velocityRef.current;
     const speed = Math.hypot(vel.x, vel.y);
-    const shouldSpawn = speed > 0.005 && now - lastSpawn.current > SPAWN_INTERVAL;
 
-    setFragments(prev => {
-      // Expire old fragments
-      const alive = prev.filter(f => now - f.spawnTime < LIFETIME);
-      if (!shouldSpawn) return alive.length === prev.length ? prev : alive;
-
+    if (speed > 0.005 && now - lastSpawn.current > SPAWN_INTERVAL) {
       lastSpawn.current = now;
-      const r = Math.random.bind(Math);
-      return [
-        ...alive.slice(-(MAX_FRAGS - 1)),
-        {
-          id: now,
-          pos: [characterPos.x + (r() - 0.5) * 0.5, characterPos.y + (r() - 0.5) * 0.4, characterPos.z + 0.15 + r() * 0.1],
-          vel: [(r() - 0.5) * 5, r() * 3 + 0.5, r() * 4 + 1.5],
-          size: 0.04 + r() * 0.07,
-          spawnTime: now,
-        } as Fragment,
-      ];
-    });
+      const i = poolHead.current % MAX_FRAGS;
+      poolHead.current++;
+      const f = pool.current[i];
+      f.active = true;
+      f.bornAt = now;
+      f.px = characterPos.x + (Math.random() - 0.5) * 0.5;
+      f.py = characterPos.y + (Math.random() - 0.5) * 0.4;
+      f.pz = characterPos.z + 0.15 + Math.random() * 0.1;
+      f.vx = (Math.random() - 0.5) * 5;
+      f.vy = Math.random() * 3 + 0.5;
+      f.vz = Math.random() * 4 + 1.5;
+      f.size = 0.04 + Math.random() * 0.07;
+    }
+
+    for (let i = 0; i < MAX_FRAGS; i++) {
+      const f = pool.current[i];
+      const t = now - f.bornAt;
+      if (!f.active || t >= LIFETIME) {
+        f.active = false;
+        _dummy.position.set(0, -9999, 0);
+        _dummy.scale.setScalar(0.001);
+        _dummy.updateMatrix();
+        mesh.setMatrixAt(i, _dummy.matrix);
+        continue;
+      }
+      _dummy.position.set(
+        f.px + f.vx * t,
+        f.py + f.vy * t + 0.5 * GRAVITY * t * t,
+        f.pz + f.vz * t,
+      );
+      _dummy.scale.setScalar(f.size);
+      _dummy.updateMatrix();
+      mesh.setMatrixAt(i, _dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
   });
 
+  if (phase === "descent") return null;
+
   return (
-    <>
-      {fragments.map(f => (
-        <RigidBody
-          key={f.id}
-          position={f.pos}
-          linearVelocity={f.vel}
-          gravityScale={2.5}
-          restitution={0.25}
-          friction={0.6}
-          colliders="ball"
-        >
-          <mesh castShadow>
-            <dodecahedronGeometry args={[f.size, 0]} />
-            <meshMatcapMaterial matcap={matcaps.stoneDark} />
-          </mesh>
-        </RigidBody>
-      ))}
-    </>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_FRAGS]}>
+      <dodecahedronGeometry args={[1, 0]} />
+      <meshMatcapMaterial matcap={matcaps.stoneDark} />
+    </instancedMesh>
   );
 };

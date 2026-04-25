@@ -1,7 +1,7 @@
 // src/components/game/SlalomGates.tsx
 // Slalom gate poles along the snowboard descent run.
 // Alternating amber/blue flags zigzag across the slope — guides the player's path.
-// Uses InstancedMesh for poles + spikes; single useFrame for all flag animations.
+// Uses InstancedMesh for poles + spikes + flags: 4 draw calls total (was 20).
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -32,27 +32,26 @@ function makeGates(): Gate[] {
 
 const GATES = makeGates();
 
+// Split by color for InstancedMesh batching
+const AMBER_FLAGS = GATES.filter(g => g.color === "#C8860A");
+const BLUE_FLAGS  = GATES.filter(g => g.color === "#4080ff");
+
 // Unit geometries shared across instances
 const POLE_GEO  = new THREE.CylinderGeometry(0.028, 0.032, 2.0, 5);
 const SPIKE_GEO = new THREE.ConeGeometry(0.035, 0.18, 5);
 const FLAG_GEO  = new THREE.BoxGeometry(0.32, 0.22, 0.008);
 
-// Pre-built flag materials keyed by color string — avoids per-frame allocation
-const flagMats: Record<string, THREE.MeshBasicMaterial> = {};
-function getFlagMat(color: string) {
-  if (!flagMats[color]) {
-    flagMats[color] = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide });
-  }
-  return flagMats[color];
-}
+// Separate dummy for flags (needs Euler rotation support)
+const _flagDummy = new THREE.Object3D();
 
 type Props = { phase: GamePhase };
 
 export const SlalomGates = ({ phase }: Props) => {
-  const matcaps  = useMatcaps();
-  const poleRef  = useRef<THREE.InstancedMesh>(null!);
-  const spikeRef = useRef<THREE.InstancedMesh>(null!);
-  const flagRefs = useRef<(THREE.Mesh | null)[]>(Array(GATES.length).fill(null));
+  const matcaps       = useMatcaps();
+  const poleRef       = useRef<THREE.InstancedMesh>(null!);
+  const spikeRef      = useRef<THREE.InstancedMesh>(null!);
+  const amberFlagRef  = useRef<THREE.InstancedMesh>(null!);
+  const blueFlagRef   = useRef<THREE.InstancedMesh>(null!);
 
   // Stamp pole + spike matrices once — they never move
   useEffect(() => {
@@ -79,15 +78,28 @@ export const SlalomGates = ({ phase }: Props) => {
     spike.instanceMatrix.needsUpdate = true;
   }, []);
 
-  // Single useFrame updates all 18 flag rotations
+  // Single useFrame updates all flag rotations via InstancedMesh matrices
   useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    for (let i = 0; i < GATES.length; i++) {
-      const flag = flagRefs.current[i];
-      if (!flag) continue;
-      flag.rotation.y = Math.sin(t * 2.8 + i * 0.73) * 0.22;
-      flag.rotation.z = Math.sin(t * 2.1 + i * 1.1)  * 0.05;
-    }
+    const t = clock.elapsedTime;
+    const af = amberFlagRef.current;
+    const bf = blueFlagRef.current;
+    if (!af || !bf) return;
+
+    AMBER_FLAGS.forEach((g, j) => {
+      _flagDummy.position.set(g.x, g.y + 1.85, g.z);
+      _flagDummy.rotation.set(0, Math.sin(t * 2.8 + g.id * 0.73) * 0.22, Math.sin(t * 2.1 + g.id * 1.1) * 0.05);
+      _flagDummy.updateMatrix();
+      af.setMatrixAt(j, _flagDummy.matrix);
+    });
+    af.instanceMatrix.needsUpdate = true;
+
+    BLUE_FLAGS.forEach((g, j) => {
+      _flagDummy.position.set(g.x, g.y + 1.85, g.z);
+      _flagDummy.rotation.set(0, Math.sin(t * 2.8 + g.id * 0.73) * 0.22, Math.sin(t * 2.1 + g.id * 1.1) * 0.05);
+      _flagDummy.updateMatrix();
+      bf.setMatrixAt(j, _flagDummy.matrix);
+    });
+    bf.instanceMatrix.needsUpdate = true;
   });
 
   if (phase !== "descent") return null;
@@ -104,16 +116,15 @@ export const SlalomGates = ({ phase }: Props) => {
         <meshMatcapMaterial matcap={matcaps.metalSoft} />
       </instancedMesh>
 
-      {/* Flags — individual meshes (two distinct colors, each animated) */}
-      {GATES.map((gate, i) => (
-        <mesh
-          key={gate.id}
-          ref={el => { flagRefs.current[i] = el; }}
-          geometry={FLAG_GEO}
-          material={getFlagMat(gate.color)}
-          position={[gate.x, gate.y + 1.85, gate.z]}
-        />
-      ))}
+      {/* Amber flags — 1 draw call (was 9 individual meshes) */}
+      <instancedMesh ref={amberFlagRef} args={[FLAG_GEO, undefined, AMBER_FLAGS.length]}>
+        <meshBasicMaterial color="#C8860A" side={THREE.DoubleSide} />
+      </instancedMesh>
+
+      {/* Blue flags — 1 draw call (was 9 individual meshes) */}
+      <instancedMesh ref={blueFlagRef} args={[FLAG_GEO, undefined, BLUE_FLAGS.length]}>
+        <meshBasicMaterial color="#4080ff" side={THREE.DoubleSide} />
+      </instancedMesh>
     </group>
   );
 };

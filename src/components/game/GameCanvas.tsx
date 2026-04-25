@@ -42,6 +42,7 @@ export const GameCanvas = () => {
   const gamePhase                           = useGamePhase();
   const nearbyRef                           = useRef<Location | null>(null);
   const altBarRef                           = useRef<HTMLDivElement>(null);
+  const altTextRef                          = useRef<HTMLDivElement>(null);
   const audio                               = useAudioManager();
   const quality                             = useDeviceQuality();
   const maxDpr = quality === "low" ? 1 : quality === "medium" ? 1.5 : Math.min(window.devicePixelRatio, 2);
@@ -136,35 +137,60 @@ export const GameCanvas = () => {
       />
       <AudioLoader audio={audio} />
 
-      {/* Altitude progress bar — right edge, visible during ascent only */}
+      {/* Altitude progress bar + readout — right edge, visible during ascent only */}
       {gamePhase.phase === "ascent" && (
         <div
           style={{
             position: "fixed",
-            right: "18px",
+            right: "14px",
             bottom: "60px",
-            width: "2px",
-            height: "120px",
-            background: "rgba(200,134,10,0.12)",
-            borderRadius: "1px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "6px",
             zIndex: 10,
             pointerEvents: "none",
-            overflow: "hidden",
           }}
         >
+          {/* Altitude text label */}
           <div
-            ref={altBarRef}
+            ref={altTextRef}
             style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "0%",
-              background: "rgba(200,134,10,0.65)",
-              borderRadius: "1px",
-              transition: "height 0.4s ease-out",
+              fontFamily: "'DM Mono', monospace",
+              fontSize: "9px",
+              color: "rgba(200,134,10,0.45)",
+              letterSpacing: "0.05em",
+              lineHeight: 1,
+              userSelect: "none",
             }}
-          />
+          >
+            ~1,500m
+          </div>
+          {/* Bar track */}
+          <div
+            style={{
+              width: "2px",
+              height: "120px",
+              background: "rgba(200,134,10,0.12)",
+              borderRadius: "1px",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            <div
+              ref={altBarRef}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: "0%",
+                background: "rgba(200,134,10,0.65)",
+                borderRadius: "1px",
+                transition: "height 0.4s ease-out",
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -243,6 +269,7 @@ export const GameCanvas = () => {
               audio={audio}
               muted={muted}
               altBarRef={altBarRef}
+              altTextRef={altTextRef}
             />
           </Suspense>
           <EffectComposer>

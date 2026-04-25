@@ -53,9 +53,10 @@ type Props = {
   audio: ReturnType<typeof useAudioManager>;
   muted: boolean;
   altBarRef?: React.RefObject<HTMLDivElement | null>;
+  altTextRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onRequestOpenChat, audio, muted, altBarRef }: Props) => {
+export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onRequestOpenChat, audio, muted, altBarRef, altTextRef }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const [characterHeading, setCharacterHeading] = useState(0);
   const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
@@ -151,10 +152,14 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
     prevPosRef.current.copy(p);
     setPos(p.clone());
     onCharacterY(p.y, p.z);
-    // Imperatively update altitude bar — avoids React re-render per frame
+    // Imperatively update altitude bar + label — avoids React re-render per frame
     if (altBarRef?.current && phase === "ascent") {
       const pct = Math.min(p.y / 80, 1) * 100;
       altBarRef.current.style.height = `${pct}%`;
+      if (altTextRef?.current) {
+        const m = Math.round((1500 + (p.y / 80) * 2100) / 100) * 100;
+        altTextRef.current.textContent = `~${m.toLocaleString()}m`;
+      }
     }
   };
 

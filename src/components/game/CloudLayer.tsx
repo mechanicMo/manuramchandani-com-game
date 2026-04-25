@@ -53,42 +53,54 @@ const ALL_PUFFS = makePuffs(314);
 // Unit sphere geometry — scaled per instance via matrix
 const PUFF_GEO = new THREE.SphereGeometry(1, 7, 5);
 
+// Scratch objects for useFrame — one per cloud would be too many; reuse these
+const _pos = new THREE.Vector3();
+const _mat = new THREE.Matrix4();
+
 type Props = { phase: GamePhase; quality?: QualityLevel };
 
 export const CloudLayer = ({ phase, quality = "high" }: Props) => {
   const puffCount = quality === "low" ? 0 : quality === "medium" ? 9 : 18;
   const puffs     = useMemo(() => ALL_PUFFS.slice(0, puffCount), [puffCount]);
   const meshRef   = useRef<THREE.InstancedMesh>(null!);
-  const dummy     = useMemo(() => { const o = new THREE.Object3D(); o.matrixAutoUpdate = false; return o; }, []);
 
-  // Stamp initial scale+rotation once (only changes position per frame)
+  // Pre-compute quaternion+scale per cloud — avoids Euler→Quaternion conversion every frame
+  const cloudParams = useMemo(() =>
+    puffs.map(p => {
+      const euler = new THREE.Euler(p.rx, p.ry, p.rz);
+      return {
+        ...p,
+        quat:  new THREE.Quaternion().setFromEuler(euler),
+        scale: new THREE.Vector3(p.sx, p.sy, p.sz),
+      };
+    })
+  , [puffs]);
+
+  // Stamp initial matrices so puffs appear immediately
   useEffect(() => {
     const m = meshRef.current;
     if (!m) return;
-    puffs.forEach((p, i) => {
-      dummy.position.set(p.x, p.y, p.z);
-      dummy.rotation.set(p.rx, p.ry, p.rz);
-      dummy.scale.set(p.sx, p.sy, p.sz);
-      dummy.updateMatrix();
-      m.setMatrixAt(i, dummy.matrix);
+    cloudParams.forEach((p, i) => {
+      _pos.set(p.x, p.y, p.z);
+      _mat.compose(_pos, p.quat, p.scale);
+      m.setMatrixAt(i, _mat);
     });
     m.instanceMatrix.needsUpdate = true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puffs]);
+  }, [cloudParams]);
 
-  // Per-frame: update only position X/Y — bake full matrix each frame since scale and rotation stay constant
   useFrame(({ clock }) => {
     const m = meshRef.current;
     if (!m || puffCount === 0) return;
     const t = clock.elapsedTime;
-    puffs.forEach((p, i) => {
-      dummy.position.x = p.x + Math.sin(t * p.driftSpeed + p.driftPhase) * 1.2;
-      dummy.position.y = p.y + Math.sin(t * p.driftSpeed * 0.7 + p.driftPhase + 1.0) * 0.4;
-      dummy.position.z = p.z;
-      dummy.rotation.set(p.rx, p.ry, p.rz);
-      dummy.scale.set(p.sx, p.sy, p.sz);
-      dummy.updateMatrix();
-      m.setMatrixAt(i, dummy.matrix);
+    cloudParams.forEach((p, i) => {
+      _pos.set(
+        p.x + Math.sin(t * p.driftSpeed + p.driftPhase) * 1.2,
+        p.y + Math.sin(t * p.driftSpeed * 0.7 + p.driftPhase + 1.0) * 0.4,
+        p.z,
+      );
+      _mat.compose(_pos, p.quat, p.scale);
+      m.setMatrixAt(i, _mat);
     });
     m.instanceMatrix.needsUpdate = true;
   });
