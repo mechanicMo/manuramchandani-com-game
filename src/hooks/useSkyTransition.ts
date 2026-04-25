@@ -55,9 +55,12 @@ const DAWN: SkyParams = {
   ambientColor: "#cce0ff",
 };
 
+const _colA = new THREE.Color();
+const _colB = new THREE.Color();
+
 function lerpParams(a: SkyParams, b: SkyParams, t: number): SkyParams {
   const lc = (ca: string, cb: string) =>
-    "#" + new THREE.Color(ca).lerp(new THREE.Color(cb), t).getHexString();
+    "#" + _colA.setStyle(ca).lerp(_colB.setStyle(cb), t).getHexString();
   const ln = (x: number, y: number) => x + (y - x) * t;
   const lv = (x: [number,number,number], y: [number,number,number]) =>
     [ln(x[0], y[0]), ln(x[1], y[1]), ln(x[2], y[2])] as [number,number,number];

@@ -34,25 +34,25 @@ export const ChossSystem = ({ characterPos, velocityRef, phase }: Props) => {
     const now   = performance.now() / 1000;
     const vel   = velocityRef.current;
     const speed = Math.hypot(vel.x, vel.y);
+    const shouldSpawn = speed > 0.005 && now - lastSpawn.current > SPAWN_INTERVAL;
 
-    if (speed > 0.005 && now - lastSpawn.current > SPAWN_INTERVAL) {
+    setFragments(prev => {
+      // Expire old fragments
+      const alive = prev.filter(f => now - f.spawnTime < LIFETIME);
+      if (!shouldSpawn) return alive.length === prev.length ? prev : alive;
+
       lastSpawn.current = now;
       const r = Math.random.bind(Math);
-      setFragments(prev => [
-        ...prev.slice(-(MAX_FRAGS - 1)),
+      return [
+        ...alive.slice(-(MAX_FRAGS - 1)),
         {
           id: now,
           pos: [characterPos.x + (r() - 0.5) * 0.5, characterPos.y + (r() - 0.5) * 0.4, characterPos.z + 0.15 + r() * 0.1],
           vel: [(r() - 0.5) * 5, r() * 3 + 0.5, r() * 4 + 1.5],
           size: 0.04 + r() * 0.07,
           spawnTime: now,
-        },
-      ]);
-    }
-
-    setFragments(prev => {
-      const next = prev.filter(f => now - f.spawnTime < LIFETIME);
-      return next.length === prev.length ? prev : next;
+        } as Fragment,
+      ];
     });
   });
 

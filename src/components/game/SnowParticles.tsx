@@ -27,7 +27,7 @@ export const SnowParticles = ({ characterPos, phase, count = 120 }: Props) => {
     return arr;
   }, [count]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!pts.current) return;
     const arr = pts.current.geometry.attributes.position.array as Float32Array;
 
@@ -43,9 +43,10 @@ export const SnowParticles = ({ characterPos, phase, count = 120 }: Props) => {
 
     if (phase === "descent") {
       // Snow spray — particles rush upward past the descending rider
+      const scale = delta * 60;
       for (let i = 0; i < count; i++) {
-        arr[i * 3 + 1] += speeds[i];
-        arr[i * 3]     += drifts[i];
+        arr[i * 3 + 1] += speeds[i] * scale;
+        arr[i * 3]     += drifts[i] * scale;
         if (arr[i * 3 + 1] > characterPos.y + RESET_ABOVE) {
           arr[i * 3]     = characterPos.x + (Math.random() - 0.5) * SPREAD_X;
           arr[i * 3 + 1] = characterPos.y + RESET_BELOW;
@@ -54,9 +55,10 @@ export const SnowParticles = ({ characterPos, phase, count = 120 }: Props) => {
       }
     } else if (phase === "summit") {
       // Snowflakes drifting down — atmospheric summit snow
+      const scale = delta * 60;
       for (let i = 0; i < count; i++) {
-        arr[i * 3 + 1] -= speeds[i] * 0.45;
-        arr[i * 3]     += drifts[i] * 2.5;
+        arr[i * 3 + 1] -= speeds[i] * 0.45 * scale;
+        arr[i * 3]     += drifts[i] * 2.5 * scale;
         if (arr[i * 3 + 1] < characterPos.y - 8) {
           arr[i * 3]     = characterPos.x + (Math.random() - 0.5) * SPREAD_X * 1.5;
           arr[i * 3 + 1] = characterPos.y + 14;

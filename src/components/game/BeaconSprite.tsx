@@ -27,6 +27,9 @@ const TRAIL_COUNTS: Record<QualityLevel, number> = { high: 6, medium: 3, low: 2 
 const SPRING_STIFFNESS = 25;
 const SPRING_DAMPING   = 0.6;
 const HOVER_OFFSET     = new THREE.Vector3(1.2, 1.6, 0.2);
+const _springTarget    = new THREE.Vector3();
+const _toTarget        = new THREE.Vector3();
+const _dampF           = new THREE.Vector3();
 const HINT_COOLDOWN_MS  = 30_000;
 const IDLE_THRESHOLD_MS = 15_000;
 const PROXIMITY_RADIUS  = 8;
@@ -134,14 +137,14 @@ export const BeaconSprite = ({
     bobPhase.current += delta * 0.8;
     const bobY = Math.sin(bobPhase.current) * 0.2;
 
-    const target    = characterPos.clone().add(HOVER_OFFSET);
-    target.y       += bobY;
-    const toTarget  = target.sub(beaconPos.current);
-    const springF   = toTarget.multiplyScalar(SPRING_STIFFNESS);
-    const dampF     = velocity.current.clone().multiplyScalar(SPRING_DAMPING * 2);
-    const accel     = springF.sub(dampF);
+    _springTarget.copy(characterPos).add(HOVER_OFFSET);
+    _springTarget.y += bobY;
+    _toTarget.copy(_springTarget).sub(beaconPos.current);
+    _dampF.copy(velocity.current).multiplyScalar(SPRING_DAMPING * 2);
+    // accel = springF - dampF; write into _toTarget to avoid another allocation
+    _toTarget.multiplyScalar(SPRING_STIFFNESS).sub(_dampF);
 
-    velocity.current.addScaledVector(accel, delta);
+    velocity.current.addScaledVector(_toTarget, delta);
     beaconPos.current.addScaledVector(velocity.current, delta);
     if (groupRef.current) groupRef.current.position.copy(beaconPos.current);
 

@@ -8,6 +8,10 @@ import * as THREE from "three";
 
 const Y_AXIS       = new THREE.Vector3(0, 1, 0);
 const raycaster    = new THREE.Raycaster();
+const _offset      = new THREE.Vector3();
+const _dir         = new THREE.Vector3();
+const _desired     = new THREE.Vector3();
+const _lookTarget  = new THREE.Vector3();
 const MIN_CAM_DIST = 1.5;
 const CAM_SKIN     = 0.3;
 
@@ -245,7 +249,7 @@ export const CameraRig = ({
     const el  = smElevation.current;
     const az  = smAzimuth.current;
     const d   = smDistance.current;
-    const offset = new THREE.Vector3(
+    _offset.set(
       Math.sin(az) * Math.cos(el) * d,
       Math.sin(el) * d,
       Math.cos(az) * Math.cos(el) * d,
@@ -254,8 +258,8 @@ export const CameraRig = ({
     // Collision-avoidance: raycast from target toward desired camera position
     let finalDist = d;
     if (mountainScene && d > 0) {
-      const dir = offset.clone().normalize();
-      raycaster.set(target, dir);
+      _dir.copy(_offset).normalize();
+      raycaster.set(target, _dir);
       raycaster.near = 0;
       raycaster.far  = d;
       const hits = raycaster.intersectObject(mountainScene, true);
@@ -263,11 +267,10 @@ export const CameraRig = ({
         finalDist = Math.max(MIN_CAM_DIST, hits[0].distance - CAM_SKIN);
       }
     }
-    const finalOffset = offset.clone().normalize().multiplyScalar(finalDist);
 
     // Apply
-    const desired = target.clone().add(finalOffset);
-    camera.position.lerp(desired, 0.10); // 0.14→0.10: slightly more weight, cinematic feel
+    _desired.copy(target).addScaledVector(_offset.normalize(), finalDist);
+    camera.position.lerp(_desired, 0.10);
 
     // Subtle vertical bob while climbing — makes camera feel alive
     if (climbing) {
@@ -275,8 +278,8 @@ export const CameraRig = ({
     }
 
     // LookAt slightly above character center for better framing
-    const lookTarget = new THREE.Vector3(target.x, target.y + 1.2, target.z);
-    lookAtRef.current.lerp(lookTarget, 0.10);
+    _lookTarget.set(target.x, target.y + 1.2, target.z);
+    lookAtRef.current.lerp(_lookTarget, 0.10);
     camera.lookAt(lookAtRef.current);
   });
 

@@ -19,11 +19,11 @@ export const DustParticles = ({ characterPos, count = 60 }: Props) => {
     return arr;
   }, [count]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!pts.current) return;
     const arr = pts.current.geometry.attributes.position.array as Float32Array;
     for (let i = 0; i < count; i++) {
-      arr[i * 3 + 1] += speeds[i];
+      arr[i * 3 + 1] += speeds[i] * delta * 60;
       if (arr[i * 3 + 1] > characterPos.y + 14) {
         arr[i * 3]     = characterPos.x + (Math.random() - 0.5) * 10;
         arr[i * 3 + 1] = characterPos.y - 6;

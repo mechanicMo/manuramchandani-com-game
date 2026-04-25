@@ -54,16 +54,16 @@ const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
   const litRef = useRef(pyreLit);
   litRef.current = pyreLit;
 
-  // Animate flame/light in on lighting
-  useFrame(({ clock }) => {
+  // Single useFrame: animate light + check proximity for hint
+  useFrame(({ clock }, delta) => {
     if (!lightRef.current) return;
 
     if (pyreLit) {
-      flameOpacity.current = Math.min(flameOpacity.current + 0.04, 1);
+      flameOpacity.current = Math.min(flameOpacity.current + 2.4 * delta, 1);
       lightTarget.current  = 8 + Math.sin(clock.getElapsedTime() * 5.7) * 1.5
                                + Math.sin(clock.getElapsedTime() * 11.3) * 0.8;
     } else {
-      flameOpacity.current = Math.max(flameOpacity.current - 0.02, 0);
+      flameOpacity.current = Math.max(flameOpacity.current - 1.2 * delta, 0);
       lightTarget.current  = 0;
     }
     lightRef.current.intensity = THREE.MathUtils.lerp(
@@ -71,16 +71,14 @@ const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
       lightTarget.current,
       0.12
     );
-  });
 
-  // Show hint when near pyre and not yet lit
-  useFrame(() => {
-    if (litRef.current || phase !== "summit") return;
-    const dx = characterPos.x - PYRE_POS[0];
-    const dy = characterPos.y - PYRE_POS[1];
-    const dz = characterPos.z - PYRE_POS[2];
-    const near = Math.sqrt(dx * dx + dy * dy + dz * dz) < PYRE_INTERACT_RADIUS;
-    setShowHint(near);
+    if (!litRef.current && phase === "summit") {
+      const dx = characterPos.x - PYRE_POS[0];
+      const dy = characterPos.y - PYRE_POS[1];
+      const dz = characterPos.z - PYRE_POS[2];
+      const near = Math.sqrt(dx * dx + dy * dy + dz * dz) < PYRE_INTERACT_RADIUS;
+      setShowHint(near);
+    }
   });
 
   // E / Enter key → light pyre when hint is showing
@@ -232,8 +230,8 @@ const DistantBeacons = () => {
     useRef<THREE.Mesh>(null),
   ];
 
-  useFrame(({ clock }) => {
-    opacity.current = Math.min(opacity.current + 0.008, 1);
+  useFrame(({ clock }, delta) => {
+    opacity.current = Math.min(opacity.current + 0.5 * delta, 1);
     const flicker = 1 + Math.sin(clock.getElapsedTime() * 4.3) * 0.2;
 
     for (let i = 0; i < 3; i++) {

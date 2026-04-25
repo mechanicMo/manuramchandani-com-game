@@ -17,6 +17,7 @@ type Line = {
 };
 
 const dummy = new THREE.Object3D();
+dummy.matrixAutoUpdate = false;
 
 type Props = {
   characterPos: THREE.Vector3;
