@@ -3,7 +3,7 @@ import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { Canvas }            from "@react-three/fiber";
 import { KeyboardControls }  from "@react-three/drei";
 import * as THREE            from "three";
-import { EffectComposer, Bloom, Vignette, ToneMapping, SSAO } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, Vignette, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode }   from "postprocessing";
 import { World }             from "./World";
 import { LoadingScreen }     from "@/components/ui/LoadingScreen";
@@ -203,19 +203,11 @@ export const GameCanvas = () => {
               muted={muted}
             />
           </Suspense>
-          <EffectComposer enableNormalPass>
-            {quality !== "low" && (
-              <SSAO
-                radius={0.05}
-                intensity={20}
-                luminanceInfluence={0.6}
-                color="black"
-              />
-            )}
+          <EffectComposer>
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
             {quality !== "low" && (
               <Bloom
-                intensity={quality === "medium" ? 0.25 : 0.4}
+                intensity={0.25}
                 luminanceThreshold={0.6}
                 luminanceSmoothing={0.9}
               />

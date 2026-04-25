@@ -1,58 +1,47 @@
 // src/components/game/BackgroundMountains.tsx
-// Distant mountain silhouettes rendered as flat-shaded low-poly shapes.
-// Three layers at increasing distances; foremost layer is most detailed.
-// Quality tier gates the layer count.
+// Distant mountain silhouettes — authored triangulated ridge profiles, 3 depth layers.
+// Close layer: foliage matcap (dark green ridgeline).
+// Mid layer: stoneDark matcap (bare rock).
+// Far layer: near-black MeshBasicMaterial (pure silhouette, fades with fog).
 import { useMemo } from "react";
 import * as THREE from "three";
 import type { QualityLevel } from "@/hooks/useDeviceQuality";
+import { useMatcaps } from "@/hooks/useMatcaps";
 
 type Props = { quality?: QualityLevel };
 
-type PeakDef = {
-  x: number;
-  z: number;
-  height: number;
-  width: number;
-  color: string;
-};
+// Skyline profiles — [xFraction 0-1, yFraction 0-1], left to right
+const RIDGE_PROFILES: Array<Array<[number, number]>> = [
+  // Ridge A: two main peaks, left dominant
+  [[0, 0.1], [0.2, 0.6], [0.35, 0.45], [0.55, 0.9], [0.75, 0.55], [0.9, 0.7], [1, 0.2]],
+  // Ridge B: three peaks, central dominant
+  [[0, 0.2], [0.15, 0.55], [0.3, 0.4], [0.5, 1.0], [0.65, 0.5], [0.8, 0.7], [1, 0.15]],
+  // Ridge C: broad single mass with shoulder
+  [[0, 0.3], [0.2, 0.5], [0.45, 0.85], [0.6, 0.75], [0.8, 0.45], [1, 0.2]],
+];
 
-function makePeaks(seed: number, count: number, z: number, zSpread: number, hMin: number, hMax: number, xSpread: number): PeakDef[] {
-  let s = seed;
-  const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+function buildRidgeGeometry(profile: Array<[number, number]>): THREE.BufferGeometry {
+  const pts: number[] = [];
+  const verts: Array<[number, number, number]> = [];
 
-  return Array.from({ length: count }, () => ({
-    x:      (rand() - 0.5) * xSpread,
-    z:      z - rand() * zSpread,
-    height: hMin + rand() * (hMax - hMin),
-    width:  20 + rand() * 30,
-    color:  `hsl(${210 + rand() * 20}, ${8 + rand() * 6}%, ${26 + rand() * 14}%)`,
-  }));
-}
+  // Profile points (normalized, scaled at render time via mesh.scale)
+  profile.forEach(([fx, fy]) => verts.push([fx - 0.5, fy, 0]));
+  // Base corners
+  verts.push([0.5, 0, 0]);   // bottom-right
+  verts.push([-0.5, 0, 0]);  // bottom-left
 
-// Build a simple jagged ridge geometry from a peak definition
-function buildPeakGeometry(peak: PeakDef): THREE.BufferGeometry {
-  const { height, width } = peak;
-  // 5-point silhouette: base-left, shoulder-left, apex, shoulder-right, base-right
-  const sx = width * 0.5;
-  const mid = (Math.random() - 0.5) * width * 0.1; // slight horizontal apex shift
+  verts.forEach(([x, y, z]) => pts.push(x, y, z));
 
-  const verts: number[] = [
-    -sx,        0,       0,
-    -sx * 0.55, height * 0.6 + Math.random() * height * 0.1, 0,
-    mid,        height,  0,
-    sx * 0.55,  height * 0.6 + Math.random() * height * 0.1, 0,
-    sx,         0,       0,
-  ];
-
-  // Fan triangulate from apex (index 2)
-  const indices: number[] = [
-    0, 1, 2,
-    0, 2, 4,
-    2, 3, 4,
-  ];
+  const baseL = verts.length - 1;
+  const baseR = verts.length - 2;
+  const indices: number[] = [];
+  for (let i = 0; i < profile.length - 1; i++) {
+    indices.push(baseL, i, i + 1);
+  }
+  indices.push(baseL, profile.length - 1, baseR);
 
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
@@ -60,47 +49,65 @@ function buildPeakGeometry(peak: PeakDef): THREE.BufferGeometry {
 
 const LAYER_COUNTS: Record<QualityLevel, number> = { high: 3, medium: 2, low: 1 };
 
-const LAYER_CONFIGS = [
-  // Layer 1 — nearest, most detailed
-  { seed: 111, count: 12, z: -120, zSpread: 20, hMin: 28, hMax: 52, xSpread: 320 },
-  // Layer 2 — mid
-  { seed: 222, count: 10, z: -180, zSpread: 25, hMin: 38, hMax: 70, xSpread: 380 },
-  // Layer 3 — furthest, large massifs
-  { seed: 333, count:  8, z: -250, zSpread: 30, hMin: 55, hMax: 95, xSpread: 440 },
-];
+const LAYERS = [
+  {
+    z: -25, y: -5,
+    matcapKey: "foliage" as const,
+    ridges: [
+      { profileIdx: 0, x: -35, width: 50, height: 36 },
+      { profileIdx: 1, x:  10, width: 45, height: 32 },
+      { profileIdx: 2, x:  -5, width: 40, height: 28 },
+    ],
+  },
+  {
+    z: -45, y: -8,
+    matcapKey: "stoneDark" as const,
+    ridges: [
+      { profileIdx: 1, x: -40, width: 60, height: 55 },
+      { profileIdx: 0, x:   5, width: 55, height: 48 },
+      { profileIdx: 2, x: -15, width: 50, height: 50 },
+    ],
+  },
+  {
+    z: -80, y: -10,
+    matcapKey: null,
+    color: "#0e0c10",
+    ridges: [
+      { profileIdx: 2, x: -50, width: 70, height: 75 },
+      { profileIdx: 0, x:   0, width: 65, height: 70 },
+      { profileIdx: 1, x: -20, width: 60, height: 68 },
+    ],
+  },
+] as const;
 
 export const BackgroundMountains = ({ quality = "high" }: Props) => {
+  const matcaps   = useMatcaps();
   const layerCount = LAYER_COUNTS[quality];
 
-  const layers = useMemo(() =>
-    LAYER_CONFIGS.slice(0, layerCount).map(cfg =>
-      makePeaks(cfg.seed, cfg.count, cfg.z, cfg.zSpread, cfg.hMin, cfg.hMax, cfg.xSpread)
-    ),
-  [layerCount]);
+  const geometries = useMemo(
+    () => RIDGE_PROFILES.map(buildRidgeGeometry),
+    []
+  );
 
   return (
     <group>
-      {layers.map((peaks, li) =>
-        peaks.map((peak, pi) => {
-          const geo = buildPeakGeometry(peak);
-          return (
-            <mesh
-              key={`${li}-${pi}`}
-              geometry={geo}
-              position={[peak.x, 0, peak.z]}
-              receiveShadow={false}
-              castShadow={false}
-            >
-              <meshStandardMaterial
-                color={peak.color}
-                roughness={1}
-                metalness={0}
-                side={THREE.FrontSide}
-                depthWrite
-              />
-            </mesh>
-          );
-        })
+      {LAYERS.slice(0, layerCount).map((layer, li) =>
+        layer.ridges.map((ridge, ri) => (
+          <mesh
+            key={`${li}-${ri}`}
+            geometry={geometries[ridge.profileIdx]}
+            position={[ridge.x, layer.y, layer.z]}
+            scale={[ridge.width, ridge.height, 1]}
+            castShadow={false}
+            receiveShadow={false}
+          >
+            {layer.matcapKey ? (
+              <meshMatcapMaterial matcap={matcaps[layer.matcapKey]} fog />
+            ) : (
+              <meshBasicMaterial color={(layer as { color: string }).color} fog />
+            )}
+          </mesh>
+        ))
       )}
     </group>
   );

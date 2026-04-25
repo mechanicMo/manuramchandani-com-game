@@ -130,27 +130,21 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       {/* Ambient — night is deep blue-black, not grey */}
       <ambientLight ref={ambientLightRef} intensity={sky.ambientIntensity} color={sky.ambientColor} />
 
-      {/* Key light — warm sun from upper-left; far enough to cover full mountain */}
+      {/* Key light — character shadow only; matcaps handle environmental lighting */}
       <directionalLight
-        position={[-80, 200, 80]}
-        intensity={1.8}
+        position={[-6, 8, 6]}
+        intensity={1.2}
         color="#ffd4a0"
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-near={1}
-        shadow-camera-far={600}
-        shadow-camera-left={-150}
-        shadow-camera-right={150}
-        shadow-camera-top={200}
-        shadow-camera-bottom={-20}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.5}
+        shadow-camera-far={30}
+        shadow-camera-left={-6}
+        shadow-camera-right={6}
+        shadow-camera-top={6}
+        shadow-camera-bottom={-6}
       />
-
-      {/* Sky fill — cool blue, opposite side */}
-      <directionalLight position={[80, 150, -40]} intensity={0.6} color="#a8c8f0" />
-
-      {/* Rim light — separates character from rock face */}
-      <directionalLight position={[0, 50, -80]} intensity={0.5} color="#c0d8f8" />
 
       <Sky
         distance={450000}

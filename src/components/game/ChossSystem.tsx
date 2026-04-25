@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
+import { useMatcaps } from "@/hooks/useMatcaps";
 
 type Fragment = {
   id: number;
@@ -24,6 +25,7 @@ type Props = {
 export const ChossSystem = ({ characterPos, velocityRef }: Props) => {
   const [fragments, setFragments] = useState<Fragment[]>([]);
   const lastSpawn = useRef(0);
+  const matcaps   = useMatcaps();
 
   useFrame(() => {
     const now   = performance.now() / 1000;
@@ -65,7 +67,7 @@ export const ChossSystem = ({ characterPos, velocityRef }: Props) => {
         >
           <mesh castShadow>
             <dodecahedronGeometry args={[f.size, 0]} />
-            <meshStandardMaterial color="#3a2e22" roughness={1} />
+            <meshMatcapMaterial matcap={matcaps.stoneDark} />
           </mesh>
         </RigidBody>
       ))}
