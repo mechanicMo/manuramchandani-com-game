@@ -12,7 +12,7 @@ const SHORTCUTS = [
   { keys: "↓ / S",       label: "Climb down"                                  },
   { keys: "← → / A D",   label: "Move across the wall"                        },
   { keys: "SPACE",        label: "Jump to next hold / Begin descent at summit" },
-  { keys: "ENTER",        label: "Interact with location / Dismiss overlay"    },
+  { keys: "E / ENTER",    label: "Interact with location / Dismiss overlay"    },
   { keys: "C",            label: "Open chat with Beacon"                       },
   { keys: "M",            label: "Mute / unmute all audio"                     },
   { keys: "?",            label: "Show this help"                              },
