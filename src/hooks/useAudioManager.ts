@@ -51,7 +51,10 @@ export const useAudioManager = () => {
 
   const setLoopVolume = useCallback((key: string, volume: number) => {
     const entry = loops.get(key);
-    if (entry) entry.gain.gain.value = volume;
+    if (entry && audioCtx) {
+      // Exponential ramp (50ms time constant) prevents clicks from rapid volume changes
+      entry.gain.gain.setTargetAtTime(volume, audioCtx.currentTime, 0.05);
+    }
   }, []);
 
   const stopAllLoops = useCallback(() => {
