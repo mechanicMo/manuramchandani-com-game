@@ -77,17 +77,23 @@ export const ForestBase = ({ phase, quality = "high" }: Props) => {
             <cylinderGeometry args={[tree.radius * 0.35, tree.radius * 0.6, tree.height * 0.35, 6]} />
             <meshMatcapMaterial matcap={matcaps.wood} />
           </mesh>
-          {([0, 1, 2] as const).map(tier => (
-            <mesh
-              key={tier}
-              position={[0, tree.height * 0.28 + tier * tree.height * 0.2, 0]}
-              castShadow
-              receiveShadow
-            >
-              <coneGeometry args={[tree.radius * (1.2 - tier * 0.32), tree.height * 0.38, 7]} />
-              <meshMatcapMaterial matcap={matcaps.foliage} />
-            </mesh>
-          ))}
+          {([0, 1, 2] as const).map(tier => {
+            const coneY  = tree.height * 0.28 + tier * tree.height * 0.2;
+            const capY   = coneY + tree.height * 0.19;
+            const capR   = tree.radius * (1.2 - tier * 0.32) * 0.22;
+            return (
+              <group key={tier}>
+                <mesh position={[0, coneY, 0]} castShadow receiveShadow>
+                  <coneGeometry args={[tree.radius * (1.2 - tier * 0.32), tree.height * 0.38, 10]} />
+                  <meshMatcapMaterial matcap={matcaps.foliage} />
+                </mesh>
+                <mesh position={[0, capY, 0]}>
+                  <sphereGeometry args={[capR, 6, 5]} />
+                  <meshMatcapMaterial matcap={matcaps.snow} />
+                </mesh>
+              </group>
+            );
+          })}
         </group>
       ))}
     </group>

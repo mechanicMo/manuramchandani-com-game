@@ -6,6 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { GamePhase } from "@/hooks/useGamePhase";
+import { useMatcaps } from "@/hooks/useMatcaps";
 
 // Fixed position — front cluster zone, near spawn, visually distinct (slightly larger, amber-tinted)
 export const BOUNCY_BOULDER_POS: [number, number, number] = [8, 0.8, 58];
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export const BouncyBoulder = ({ characterPos, phase, launchRef }: Props) => {
+  const matcaps = useMatcaps();
   const [hopCount, setHopCount] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const wasFallingRef  = useRef(false);
@@ -82,10 +84,10 @@ export const BouncyBoulder = ({ characterPos, phase, launchRef }: Props) => {
 
   return (
     <group position={BOUNCY_BOULDER_POS}>
-      {/* Bouncy boulder — slightly larger, very subtly amber-tinted compared to normal boulders */}
+      {/* Bouncy boulder — slightly larger than normal boulders, same stone matcap */}
       <mesh castShadow receiveShadow>
         <dodecahedronGeometry args={[1.05, 0]} />
-        <meshBasicMaterial color="#2e2218" />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
       </mesh>
 
       {/* Hop progress indicator — tiny floaty orbs that appear one by one */}

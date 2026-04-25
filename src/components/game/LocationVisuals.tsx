@@ -18,9 +18,14 @@ export const LocationVisuals = ({ phase }: Props) => {
 
   return (
     <>
-      {locations.map(loc => (
-        <LocationVisual key={loc.id} x={loc.x} y={loc.y} z={loc.z} visualType={loc.visualType} />
-      ))}
+      {locations.map(loc => {
+        const detail = loc.content.type === "vignette"
+          ? loc.content.text.split("\n").slice(1).join(" ")
+          : undefined;
+        return (
+          <LocationVisual key={loc.id} x={loc.x} y={loc.y} z={loc.z} visualType={loc.visualType} name={loc.name} detail={detail} />
+        );
+      })}
     </>
   );
 };
@@ -463,8 +468,32 @@ const SnowboardRackVisual = ({ x, y, z }: { x: number; y: number; z: number }) =
 
 // ── Trail marker plaque ────────────────────────────────────────────────────────
 
-const EngravingPlaque = ({ x, y, z }: { x: number; y: number; z: number }) => {
+const EngravingPlaque = ({ x, y, z, name, detail }: { x: number; y: number; z: number; name?: string; detail?: string }) => {
   const matcaps = useMatcaps();
+
+  const plaqueTex = useMemo(() => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = 256;
+    canvas.height = 160;
+    const ctx     = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, 256, 160);
+    if (name) {
+      ctx.textAlign   = "center";
+      ctx.fillStyle   = "rgba(200,134,10,0.92)";
+      ctx.font        = "bold 54px monospace";
+      ctx.fillText(name, 128, 66);
+      ctx.strokeStyle = "rgba(200,134,10,0.30)";
+      ctx.lineWidth   = 1;
+      ctx.beginPath(); ctx.moveTo(32, 80); ctx.lineTo(224, 80); ctx.stroke();
+    }
+    if (detail) {
+      ctx.fillStyle = "rgba(250,248,244,0.60)";
+      ctx.font      = "13px sans-serif";
+      ctx.fillText(detail, 128, 108, 210);
+    }
+    return new THREE.CanvasTexture(canvas);
+  }, [name, detail]);
+
   return (
     <group position={[x, y, z]}>
       <mesh>
@@ -483,6 +512,11 @@ const EngravingPlaque = ({ x, y, z }: { x: number; y: number; z: number }) => {
           <meshBasicMaterial color="#C8860A" />
         </mesh>
       ))}
+      {/* Year + milestone text */}
+      <mesh position={[0, 0, 0.046]}>
+        <planeGeometry args={[1.2, 0.75]} />
+        <meshBasicMaterial map={plaqueTex} transparent opacity={0.9} />
+      </mesh>
       <pointLight position={[0, 0, 0.3]} color="#C8860A" intensity={0.6} distance={4} decay={2} />
     </group>
   );
@@ -490,7 +524,7 @@ const EngravingPlaque = ({ x, y, z }: { x: number; y: number; z: number }) => {
 
 // ── Dispatcher ─────────────────────────────────────────────────────────────────
 
-const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z: number; visualType: string }) => {
+const LocationVisual = memo(({ x, y, z, visualType, name, detail }: { x: number; y: number; z: number; visualType: string; name?: string; detail?: string }) => {
   switch (visualType) {
     case "campfire":       return <BaseCamp x={x} y={y} z={z} />;
     case "laptop":         return <PrismLedge x={x} y={y} z={z} />;
@@ -501,7 +535,7 @@ const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z:
     case "phone-seedling": return <SeedlingOutcrop x={x} y={y} z={z} />;
     case "map-pins":       return <CommunityApproach x={x} y={y} z={z} />;
     case "kiosk":          return <NewsletterKiosk x={x} y={y} z={z} />;
-    case "plaque":         return <EngravingPlaque x={x} y={y} z={z} />;
+    case "plaque":         return <EngravingPlaque x={x} y={y} z={z} name={name} detail={detail} />;
     case "monolith":       return <MonolithVisual x={x} y={y} z={z} />;
     case "snowboard-rack": return <SnowboardRackVisual x={x} y={y} z={z} />;
     case "carved-stone":   return <FaceCarving x={x} y={y} z={z} />;
