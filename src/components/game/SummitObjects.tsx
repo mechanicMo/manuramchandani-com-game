@@ -1,43 +1,104 @@
 // src/components/game/SummitObjects.tsx
-// Non-interactive summit decorations: Beacon pyre.
+// Summit decorations: Beacon pyre (interactive — light it with E) + Sherani snowman.
 // Monolith and SnowboardCache are rendered via LocationVisuals (they have location entries).
-import { useRef, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { CampfireFlame } from "./CampfireFlame";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import { useMatcaps } from "@/hooks/useMatcaps";
 
 const SUMMIT_Y = 82;
+const PYRE_POS: [number, number, number] = [-4, SUMMIT_Y, -3];
+const PYRE_INTERACT_RADIUS = 3.5;
 
-type Props = { phase: GamePhase };
+type Props = { phase: GamePhase; characterPos: THREE.Vector3 };
 
-export const SummitObjects = ({ phase }: Props) => {
+export const SummitObjects = ({ phase, characterPos }: Props) => {
+  const [pyreLit, setPyreLit] = useState(false);
+
   if (phase === "ascent") return null;
 
   return (
     <group>
-      <BeaconPyre />
+      <BeaconPyre
+        pyreLit={pyreLit}
+        onLight={() => setPyreLit(true)}
+        characterPos={characterPos}
+        phase={phase}
+      />
       <SheraniSnowman />
+      {pyreLit && <DistantBeacons />}
     </group>
   );
 };
 
-// ── Summit Beacon — large signal-fire pyre ─────────────────────────────────────
+// ── Summit Beacon pyre ─────────────────────────────────────────────────────────
 
-const BeaconPyre = () => {
-  const matcaps = useMatcaps();
+type PyreProps = {
+  pyreLit: boolean;
+  onLight: () => void;
+  characterPos: THREE.Vector3;
+  phase: GamePhase;
+};
+
+const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
+  const matcaps  = useMatcaps();
   const lightRef = useRef<THREE.PointLight>(null);
+  const flameOpacity = useRef(0);
+  const lightTarget  = useRef(0);
+  const [showHint, setShowHint] = useState(false);
+  const litRef = useRef(pyreLit);
+  litRef.current = pyreLit;
 
+  // Animate flame/light in on lighting
   useFrame(({ clock }) => {
     if (!lightRef.current) return;
-    const t = clock.getElapsedTime();
-    lightRef.current.intensity =
-      8 + Math.sin(t * 5.7) * 1.5 + Math.sin(t * 11.3) * 0.8;
+
+    if (pyreLit) {
+      flameOpacity.current = Math.min(flameOpacity.current + 0.04, 1);
+      lightTarget.current  = 8 + Math.sin(clock.getElapsedTime() * 5.7) * 1.5
+                               + Math.sin(clock.getElapsedTime() * 11.3) * 0.8;
+    } else {
+      flameOpacity.current = Math.max(flameOpacity.current - 0.02, 0);
+      lightTarget.current  = 0;
+    }
+    lightRef.current.intensity = THREE.MathUtils.lerp(
+      lightRef.current.intensity,
+      lightTarget.current,
+      0.12
+    );
   });
 
+  // Show hint when near pyre and not yet lit
+  useFrame(() => {
+    if (litRef.current || phase !== "summit") return;
+    const dx = characterPos.x - PYRE_POS[0];
+    const dy = characterPos.y - PYRE_POS[1];
+    const dz = characterPos.z - PYRE_POS[2];
+    const near = Math.sqrt(dx * dx + dy * dy + dz * dz) < PYRE_INTERACT_RADIUS;
+    setShowHint(near);
+  });
+
+  // E / Enter key → light pyre when hint is showing
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement
+      ) return;
+      if (litRef.current) return;
+      if (e.code === "KeyE" || e.code === "Enter") {
+        if (showHint) onLight();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showHint, onLight]);
+
   return (
-    <group position={[-4, SUMMIT_Y, -3]}>
+    <group position={PYRE_POS}>
       {/* Stone fire-ring base */}
       <mesh position={[0, 0.15, 0]} receiveShadow>
         <cylinderGeometry args={[0.9, 1.0, 0.3, 10]} />
@@ -65,30 +126,145 @@ const BeaconPyre = () => {
         );
       })}
 
-      {/* Large flame — CampfireFlame scaled up */}
-      <group position={[0, 0.5, 0]} scale={[1.8, 2.2, 1.8]}>
-        <CampfireFlame />
-      </group>
+      {/* Flame — only visible when lit */}
+      {pyreLit && (
+        <group position={[0, 0.5, 0]} scale={[1.8, 2.2, 1.8]}>
+          <CampfireFlame />
+        </group>
+      )}
 
-      {/* Strong flickering point light */}
+      {/* Unlit ember glow — very faint amber to hint it's there before lighting */}
+      {!pyreLit && (
+        <pointLight color="#c04010" intensity={0.35} distance={5} decay={2} />
+      )}
+
+      {/* Strong flickering point light — animates in when lit */}
       <pointLight
         ref={lightRef}
         position={[0, 2.5, 0]}
         color="#ff9020"
-        intensity={8}
+        intensity={0}
         distance={30}
         decay={2}
         castShadow
       />
+
+      {/* Interaction hint */}
+      {showHint && !pyreLit && (
+        <Html
+          position={[0, 3.2, 0]}
+          center
+          distanceFactor={10}
+          style={{ pointerEvents: "none" }}
+        >
+          <div style={{
+            background: "rgba(8,8,16,0.88)",
+            border: "1px solid rgba(200,134,10,0.45)",
+            borderRadius: "8px",
+            padding: "6px 14px",
+            fontFamily: "'DM Mono', monospace",
+            fontSize: "11px",
+            color: "#C8860A",
+            letterSpacing: "0.07em",
+            whiteSpace: "nowrap",
+            backdropFilter: "blur(10px)",
+          }}>
+            [E] Light the beacon
+          </div>
+        </Html>
+      )}
+
+      {/* Lit confirmation — brief flash */}
+      {pyreLit && flameOpacity.current < 0.5 && (
+        <Html
+          position={[0, 3.2, 0]}
+          center
+          distanceFactor={10}
+          style={{ pointerEvents: "none" }}
+        >
+          <div style={{
+            background: "rgba(8,8,16,0.92)",
+            border: "1px solid rgba(255,144,32,0.6)",
+            borderRadius: "8px",
+            padding: "7px 16px",
+            fontFamily: "'DM Mono', monospace",
+            fontSize: "11px",
+            color: "#ff9020",
+            letterSpacing: "0.07em",
+            whiteSpace: "nowrap",
+            backdropFilter: "blur(12px)",
+            boxShadow: "0 0 16px rgba(255,144,32,0.2)",
+            animation: "beaconFadeIn 0.3s ease both",
+          }}>
+            The beacon is lit.
+          </div>
+        </Html>
+      )}
     </group>
   );
 };
 
-// ── Sherani Snowman — easter egg at summit ─────────────────────────────────────
-// Child-scaled (0.65x) snowman near the summit beacon. Thought-bubble appears on approach.
-// Named "Sherani" (Mo's daughter) — a tiny nod no one but him will fully get.
+// ── Distant beacons — appear when pyre is lit ──────────────────────────────────
+// Three distant glow points on the horizon, fading in over ~2 seconds.
 
-const SNOW_WHITE = "#eef4ff";
+const DISTANT_BEACON_POSITIONS: [number, number, number][] = [
+  [-80, 30, -140],
+  [ 55, 45, -120],
+  [-20, 55, -160],
+];
+
+const DistantBeacons = () => {
+  const opacity  = useRef(0);
+  const lightRefs = [
+    useRef<THREE.PointLight>(null),
+    useRef<THREE.PointLight>(null),
+    useRef<THREE.PointLight>(null),
+  ];
+  const meshRefs = [
+    useRef<THREE.Mesh>(null),
+    useRef<THREE.Mesh>(null),
+    useRef<THREE.Mesh>(null),
+  ];
+
+  useFrame(({ clock }) => {
+    opacity.current = Math.min(opacity.current + 0.008, 1);
+    const flicker = 1 + Math.sin(clock.getElapsedTime() * 4.3) * 0.2;
+
+    for (let i = 0; i < 3; i++) {
+      if (lightRefs[i].current) {
+        lightRefs[i].current!.intensity = opacity.current * 6 * flicker;
+      }
+      if (meshRefs[i].current) {
+        (meshRefs[i].current!.material as THREE.MeshBasicMaterial).opacity =
+          opacity.current * 0.9;
+      }
+    }
+  });
+
+  return (
+    <>
+      {DISTANT_BEACON_POSITIONS.map((pos, i) => (
+        <group key={i} position={pos}>
+          <mesh ref={meshRefs[i]}>
+            <sphereGeometry args={[0.6, 8, 8]} />
+            <meshBasicMaterial color="#ff8010" transparent opacity={0} />
+          </mesh>
+          <pointLight
+            ref={lightRefs[i]}
+            color="#ff9020"
+            intensity={0}
+            distance={60}
+            decay={2}
+          />
+        </group>
+      ))}
+    </>
+  );
+};
+
+// ── Sherani Snowman ────────────────────────────────────────────────────────────
+// Child-scaled snowman near the summit beacon. Named after Mo's daughter.
+
 const SNOW_SHADOW = "#c8d8f0";
 
 const SheraniSnowman = () => {
@@ -111,8 +287,8 @@ const SheraniSnowman = () => {
         <meshMatcapMaterial matcap={matcaps.snow} />
       </mesh>
       {/* Eyes */}
-      {[-0.08, 0.08].map((x, i) => (
-        <mesh key={i} position={[x, 1.98, 0.26]} castShadow>
+      {[-0.08, 0.08].map((x, idx) => (
+        <mesh key={idx} position={[x, 1.98, 0.26]} castShadow>
           <sphereGeometry args={[0.035, 8, 8]} />
           <meshBasicMaterial color="#1a1a2e" />
         </mesh>
@@ -128,9 +304,9 @@ const SheraniSnowman = () => {
         <meshBasicMaterial color="#C8860A" />
       </mesh>
       {/* Arms — two sticks */}
-      {[-1, 1].map((side, i) => (
+      {[-1, 1].map((side, idx) => (
         <mesh
-          key={i}
+          key={idx}
           position={[side * 0.42, 1.38, 0]}
           rotation={[0, 0, side * -0.55]}
           castShadow
@@ -147,4 +323,3 @@ const SheraniSnowman = () => {
     </group>
   );
 };
-

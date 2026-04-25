@@ -26,6 +26,7 @@ import { BackgroundMountains } from "./BackgroundMountains";
 import { BJJBelts }            from "./BJJBelts";
 import { AgentCaveNook }       from "./AgentCaveNook";
 import { BouncyBoulder }       from "./BouncyBoulder";
+import { LizHeart }            from "./LizHeart";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
@@ -166,7 +167,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       </Physics>
 
       <SummitLedge phase={phase} />
-      <SummitObjects phase={phase} />
+      <SummitObjects phase={phase} characterPos={pos} />
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
       <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
       <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
@@ -180,6 +181,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <BJJBelts characterPos={pos} phase={phase} />
       <AgentCaveNook characterPos={pos} phase={phase} />
       <BouncyBoulder characterPos={pos} phase={phase} launchRef={boulderLaunchRef} />
+      <LizHeart characterPos={pos} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
       <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} quality={quality} />
     </>
