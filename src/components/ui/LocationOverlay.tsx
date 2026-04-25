@@ -363,6 +363,8 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
   // Panel + Contact — side panel with project info
   if ((interactionType === "panel" || interactionType === "contact") &&
       (content.type === "panel" || content.type === "contact")) {
+    const hasImage = content.type === "panel" && !!content.imageUrl;
+    const stack    = content.type === "panel" ? content.stack : undefined;
     return (
       <motion.div
         initial={{ opacity: 0, x: -30 }}
@@ -374,93 +376,140 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
           top: "50%",
           left: "5%",
           transform: "translateY(-50%)",
-          width: "320px",
+          width: "340px",
           zIndex: 200,
+          maxHeight: "90vh",
+          overflowY: "auto",
         }}
       >
         <div style={{
-          background: "rgba(10,10,20,0.85)",
+          background: "rgba(10,10,20,0.90)",
           border: "1px solid rgba(200,134,10,0.3)",
           borderRadius: "8px",
-          padding: "24px",
-          backdropFilter: "blur(12px)",
+          backdropFilter: "blur(14px)",
+          overflow: "hidden",
         }}>
-          <p style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "#C8860A", margin: "0 0 8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            {name}
-          </p>
-          <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "22px", color: "#FAF8F4", margin: "0 0 12px", lineHeight: 1.2 }}>
-            {content.title}
-          </h2>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: "14px", color: "rgba(250,248,244,0.8)", margin: "0 0 20px", lineHeight: 1.6 }}>
-            {content.description}
-          </p>
-
-          <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
-            {content.type === "panel" && content.link && (
-              <a
-                href={content.link}
-                target={content.link.startsWith("http") ? "_blank" : undefined}
-                rel={content.link.startsWith("http") ? "noopener noreferrer" : undefined}
+          {/* Screenshot thumbnail */}
+          {hasImage && (
+            <div style={{ position: "relative", lineHeight: 0 }}>
+              <img
+                src={(content as { imageUrl: string }).imageUrl}
+                alt={content.title}
                 style={{
-                  display: "inline-block",
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#FAF8F4",
-                  background: "#C8860A",
-                  padding: "8px 16px",
-                  borderRadius: "4px",
-                  textDecoration: "none",
-                  textAlign: "center",
+                  width: "100%",
+                  height: "140px",
+                  objectFit: "cover",
+                  display: "block",
+                  opacity: 0.85,
                 }}
-              >
-                {content.linkLabel ?? "Learn more"}
-              </a>
-            )}
-            {content.type === "contact" && content.link && (
-              <a
-                href={content.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "inline-block",
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#FAF8F4",
-                  background: "#C8860A",
-                  padding: "8px 16px",
-                  borderRadius: "4px",
-                  textDecoration: "none",
-                  textAlign: "center",
-                }}
-              >
-                {content.linkLabel ?? "Subscribe"}
-              </a>
-            )}
-            {content.type === "contact" && (
-              <ContactFields
-                email={content.email}
-                linkedin={content.linkedin}
-                github={content.github}
-                hasExternalLink={!!content.link}
               />
+              <div style={{
+                position: "absolute",
+                bottom: 0, left: 0, right: 0,
+                height: "40px",
+                background: "linear-gradient(transparent, rgba(10,10,20,0.90))",
+              }} />
+            </div>
+          )}
+
+          <div style={{ padding: "20px 22px 22px" }}>
+            <p style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "#C8860A", margin: "0 0 6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              {name}
+            </p>
+            <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "22px", color: "#FAF8F4", margin: "0 0 10px", lineHeight: 1.2 }}>
+              {content.title}
+            </h2>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", color: "rgba(250,248,244,0.78)", margin: "0 0 14px", lineHeight: 1.65 }}>
+              {content.description}
+            </p>
+
+            {/* Tech stack chips */}
+            {stack && stack.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "18px" }}>
+                {stack.map(tech => (
+                  <span key={tech} style={{
+                    fontFamily: "DM Mono, monospace",
+                    fontSize: "10px",
+                    color: "rgba(200,134,10,0.75)",
+                    background: "rgba(200,134,10,0.08)",
+                    border: "1px solid rgba(200,134,10,0.2)",
+                    borderRadius: "3px",
+                    padding: "2px 7px",
+                    letterSpacing: "0.04em",
+                  }}>
+                    {tech}
+                  </span>
+                ))}
+              </div>
             )}
-            <button
-              onClick={onDismiss}
-              style={{
-                fontFamily: "DM Mono, monospace",
-                fontSize: "11px",
-                color: "rgba(250,248,244,0.4)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                textAlign: "left",
-              }}
-            >
-              {DISMISS_LABEL}
-            </button>
+
+            <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
+              {content.type === "panel" && content.link && (
+                <a
+                  href={content.link}
+                  target={content.link.startsWith("http") ? "_blank" : undefined}
+                  rel={content.link.startsWith("http") ? "noopener noreferrer" : undefined}
+                  style={{
+                    display: "inline-block",
+                    fontFamily: "Inter, sans-serif",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "#FAF8F4",
+                    background: "#C8860A",
+                    padding: "9px 16px",
+                    borderRadius: "4px",
+                    textDecoration: "none",
+                    textAlign: "center",
+                  }}
+                >
+                  {content.linkLabel ?? "Learn more"}
+                </a>
+              )}
+              {content.type === "contact" && content.link && (
+                <a
+                  href={content.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    fontFamily: "Inter, sans-serif",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "#FAF8F4",
+                    background: "#C8860A",
+                    padding: "9px 16px",
+                    borderRadius: "4px",
+                    textDecoration: "none",
+                    textAlign: "center",
+                  }}
+                >
+                  {content.linkLabel ?? "Subscribe"}
+                </a>
+              )}
+              {content.type === "contact" && (
+                <ContactFields
+                  email={content.email}
+                  linkedin={content.linkedin}
+                  github={content.github}
+                  hasExternalLink={!!content.link}
+                />
+              )}
+              <button
+                onClick={onDismiss}
+                style={{
+                  fontFamily: "DM Mono, monospace",
+                  fontSize: "11px",
+                  color: "rgba(250,248,244,0.4)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  textAlign: "left",
+                }}
+              >
+                {DISMISS_LABEL}
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>

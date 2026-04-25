@@ -23,6 +23,8 @@ export type PanelContent = {
   description: string;
   link?: string;
   linkLabel?: string;
+  imageUrl?: string;
+  stack?: string[];
 };
 
 export type ContactContent = {
@@ -117,6 +119,8 @@ export const LOCATIONS: Location[] = [
         "Production SaaS demo — 15 modules, real integrations, zero mocks. Auth, analytics, AI chat, a Snake game with a global leaderboard.",
       link: "/projects/prism",
       linkLabel: "View case study",
+      imageUrl: "/screenshots/prism.png",
+      stack: ["React", "Supabase", "Cloudflare Workers", "Stripe", "OpenAI"],
     },
   },
   {
@@ -136,6 +140,7 @@ export const LOCATIONS: Location[] = [
         "Point your phone at a grocery receipt. Gemini AI scans the ingredients and generates a full recipe set — shopping list included. Built with Flutter.",
       link: "/projects/meal-planner",
       linkLabel: "View case study",
+      stack: ["Flutter", "Firebase", "Gemini Vision AI"],
     },
   },
   {
@@ -155,6 +160,7 @@ export const LOCATIONS: Location[] = [
         "An AI system that monitors opportunities and generates tailored proposals while I sleep. Running 24/7 on a Mac Mini.",
       link: "https://sleepingemployees.com",
       linkLabel: "Visit sleepingemployees.com",
+      stack: ["Node.js", "Claude API", "Playwright", "Mac Mini"],
     },
   },
   {
@@ -174,6 +180,7 @@ export const LOCATIONS: Location[] = [
         "League of Legends companion — live champion pick coordination and team comp analysis powered by Riot's API.",
       link: "/projects/leaguelads",
       linkLabel: "View case study",
+      stack: ["React", "Riot Games API", "Cloudflare Pages"],
     },
   },
   {
@@ -208,6 +215,8 @@ export const LOCATIONS: Location[] = [
         "TV and movie discovery with AI-ranked picks and natural-language mood search. Built with React Native + Llama 70B.",
       link: "/projects/scout",
       linkLabel: "View case study",
+      imageUrl: "/screenshots/scout.png",
+      stack: ["React Native", "Groq / Llama 70B", "Supabase", "TMDB API"],
     },
   },
   {
@@ -227,6 +236,7 @@ export const LOCATIONS: Location[] = [
         "E-learning platform built with Lovable + Supabase. Covers React, TypeScript, and modern web dev. Video chapters, quizzes, and progress tracking.",
       link: "/projects/workshops",
       linkLabel: "View case study",
+      stack: ["Lovable", "Supabase", "React", "TypeScript"],
     },
   },
   {
@@ -246,6 +256,8 @@ export const LOCATIONS: Location[] = [
         "Neurodivergent-first learning app for young kids. Stories with ASL, seven teaching games, and an AI parent companion.",
       link: "/projects/seedling",
       linkLabel: "View case study",
+      imageUrl: "/screenshots/seedling.png",
+      stack: ["Flutter", "Firebase", "Gemini AI", "ElevenLabs"],
     },
   },
   {
@@ -265,6 +277,8 @@ export const LOCATIONS: Location[] = [
         "Map-first volunteering app. Post a need on the map; anyone nearby can sign up. Volunteers earn a live A-F community score.",
       link: "/projects/community",
       linkLabel: "View case study",
+      imageUrl: "/screenshots/community.png",
+      stack: ["React Native", "Supabase", "PostGIS", "Expo"],
     },
   },
 
