@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
-import { Sky, Stars } from "@react-three/drei";
+import { Sky } from "@react-three/drei";
 import { useKeyboardControls } from "@react-three/drei";
 import * as THREE from "three";
 import { Character }           from "./Character";
@@ -152,14 +152,6 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, audio, 
         rayleigh={sky.rayleigh}
         turbidity={sky.turbidity}
       />
-      {phase === "ascent" && <Stars radius={80} depth={50} count={7000} factor={5.5} saturation={0} fade speed={0.5} />}
-      {phase === "ascent" && (
-        <mesh position={[-22, 88, -65]}>
-          <sphereGeometry args={[1.4, 12, 8]} />
-          <meshBasicMaterial color="#d8e8ff" />
-        </mesh>
-      )}
-
       <Physics gravity={[0, -9.81, 0]}>
         {/* Big ground plane so character has walkable terrain around the mountain */}
         <RigidBody type="fixed" colliders={false}>
