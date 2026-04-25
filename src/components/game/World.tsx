@@ -17,6 +17,7 @@ import { SnowParticles }       from "./SnowParticles";
 import { GroundTerrain }       from "./GroundTerrain";
 import { ForestBase }          from "./ForestBase";
 import { BoulderField }        from "./BoulderField";
+import { BoulderField }        from "./BoulderField";
 import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
@@ -176,8 +177,9 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, audio, 
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />
       <GroundTerrain phase={phase} />
-      {/* BoulderField, ClimbingDetail still disabled — G-series coordinates */}
+      {/* ClimbingDetail still disabled — G-series coordinates */}
       <ForestBase phase={phase} />
+      <BoulderField phase={phase} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} isClimbing={isClimbing} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
