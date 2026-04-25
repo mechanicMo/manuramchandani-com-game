@@ -1,0 +1,262 @@
+// src/components/game/BeaconSprite.tsx
+import { useRef, useState, useEffect } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
+import * as THREE from "three";
+import {
+  PROXIMITY_HINTS,
+  ALTITUDE_HINTS,
+  IDLE_HINTS,
+} from "@/data/beacon-hints";
+import { LOCATIONS } from "@/data/locations";
+import type { GamePhase } from "@/hooks/useGamePhase";
+import type { useAudioManager } from "@/hooks/useAudioManager";
+
+type Props = {
+  characterPos: THREE.Vector3;
+  phase: GamePhase;
+  onRequestOpenChat: () => void;
+  audio: ReturnType<typeof useAudioManager>;
+  muted: boolean;
+};
+
+const SPRING_STIFFNESS = 25;
+const SPRING_DAMPING   = 0.6;
+const HOVER_OFFSET     = new THREE.Vector3(1.2, 1.6, 0.2);
+const HINT_COOLDOWN_MS  = 30_000;
+const IDLE_THRESHOLD_MS = 15_000;
+const PROXIMITY_RADIUS  = 8;
+const PROXIMITY_RESET   = 10;
+
+// Synthetic chirp — no asset file needed
+let _syntheticCtx: AudioContext | null = null;
+
+function playSyntheticChirp() {
+  try {
+    if (!_syntheticCtx) _syntheticCtx = new AudioContext();
+    const ctx  = _syntheticCtx;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch {
+    // AudioContext blocked or not supported — silently ignore
+  }
+}
+
+export const BeaconSprite = ({
+  characterPos,
+  phase,
+  onRequestOpenChat,
+  muted,
+}: Props) => {
+  const groupRef      = useRef<THREE.Group>(null!);
+  const beaconPos     = useRef(new THREE.Vector3());
+  const velocity      = useRef(new THREE.Vector3());
+  const bobPhase      = useRef(0);
+
+  const lastHintTime   = useRef<number>(0);
+  const lastCharPos    = useRef(new THREE.Vector3());
+  const lastMoveTime   = useRef<number>(Date.now());
+  const idleIndex      = useRef(0);
+  const firedProximity = useRef<Set<string>>(new Set());
+  const lastAltY       = useRef<number>(0);
+  const prevY          = useRef<number>(0);
+  const initializedRef = useRef(false);
+
+  const [hintText, setHintText] = useState<string | null>(null);
+  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => { if (hintTimer.current) clearTimeout(hintTimer.current); };
+  }, []);
+
+  const fireHint = (text: string) => {
+    const now = Date.now();
+    if (now - lastHintTime.current < HINT_COOLDOWN_MS) return;
+    lastHintTime.current = now;
+
+    setHintText(text);
+    if (!muted) playSyntheticChirp();
+
+    if (hintTimer.current) clearTimeout(hintTimer.current);
+    hintTimer.current = setTimeout(() => setHintText(null), 4000);
+  };
+
+  useFrame((_, delta) => {
+    if (!characterPos) return;
+    const now = Date.now();
+
+    if (!initializedRef.current) {
+      const initTarget = characterPos.clone().add(HOVER_OFFSET);
+      beaconPos.current.copy(initTarget);
+      if (groupRef.current) groupRef.current.position.copy(initTarget);
+      lastCharPos.current.copy(characterPos);
+      prevY.current = characterPos.y;
+      initializedRef.current = true;
+      return;
+    }
+
+    // Spring movement with gentle bob
+    bobPhase.current += delta * 0.8;
+    const bobY = Math.sin(bobPhase.current) * 0.2;
+
+    const target    = characterPos.clone().add(HOVER_OFFSET);
+    target.y       += bobY;
+    const toTarget  = target.sub(beaconPos.current);
+    const springF   = toTarget.multiplyScalar(SPRING_STIFFNESS);
+    const dampF     = velocity.current.clone().multiplyScalar(SPRING_DAMPING * 2);
+    const accel     = springF.sub(dampF);
+
+    velocity.current.addScaledVector(accel, delta);
+    beaconPos.current.addScaledVector(velocity.current, delta);
+    if (groupRef.current) groupRef.current.position.copy(beaconPos.current);
+
+    // Idle detection
+    const moved = characterPos.distanceTo(lastCharPos.current) > 0.05;
+    if (moved) {
+      lastMoveTime.current = now;
+      lastCharPos.current.copy(characterPos);
+    } else if (now - lastMoveTime.current > IDLE_THRESHOLD_MS) {
+      const hint = IDLE_HINTS[idleIndex.current % IDLE_HINTS.length];
+      idleIndex.current += 1;
+      fireHint(hint.text);
+      lastMoveTime.current = now;
+    }
+
+    // Proximity hints
+    for (const loc of LOCATIONS) {
+      const dist = Math.abs(characterPos.y - loc.y);
+      if (!firedProximity.current.has(loc.id) && dist < PROXIMITY_RADIUS) {
+        const hint = PROXIMITY_HINTS[loc.id];
+        if (hint) {
+          firedProximity.current.add(loc.id);
+          fireHint(hint.text);
+          break;
+        }
+      }
+      if (firedProximity.current.has(loc.id) && dist > PROXIMITY_RESET) {
+        firedProximity.current.delete(loc.id);
+      }
+    }
+
+    // Altitude hints — ascending only, one-shot per session
+    const currentY = characterPos.y;
+    if (phase === "ascent" && currentY > prevY.current) {
+      for (const hint of ALTITUDE_HINTS) {
+        if (hint.yThreshold === undefined) continue;
+        if (prevY.current < hint.yThreshold && currentY >= hint.yThreshold) {
+          if (lastAltY.current < hint.yThreshold) {
+            lastAltY.current = hint.yThreshold;
+            fireHint(hint.text);
+            break;
+          }
+        }
+      }
+    }
+    prevY.current = currentY;
+  });
+
+  return (
+    <group ref={groupRef}>
+      <mesh
+        onClick={(e) => {
+          e.stopPropagation();
+          onRequestOpenChat();
+        }}
+      >
+        <sphereGeometry args={[0.12, 16, 16]} />
+        <meshBasicMaterial color="#7df9f0" />
+      </mesh>
+
+      <pointLight color="#7df9f0" intensity={0.8} distance={3} decay={2} />
+
+      <TrailParticles parentPos={beaconPos} />
+
+      {hintText && (
+        <Html
+          position={[0, 0.5, 0]}
+          center
+          distanceFactor={8}
+          style={{ pointerEvents: "none" }}
+        >
+          <div
+            style={{
+              position: "relative",
+              background: "rgba(8,8,16,0.88)",
+              border: "1px solid rgba(125,249,240,0.45)",
+              borderRadius: "8px",
+              padding: "7px 12px",
+              fontFamily: "'Inter', system-ui, sans-serif",
+              fontSize: "12px",
+              color: "rgba(250,248,244,0.9)",
+              lineHeight: 1.5,
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 0 12px rgba(125,249,240,0.15)",
+              maxWidth: "220px",
+              whiteSpace: "normal",
+              textAlign: "center",
+              animation: "beaconFadeIn 0.3s ease",
+            }}
+          >
+            {hintText}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "-6px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 0,
+                height: 0,
+                borderLeft: "6px solid transparent",
+                borderRight: "6px solid transparent",
+                borderTop: "6px solid rgba(125,249,240,0.45)",
+              }}
+            />
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+};
+
+const TRAIL_COUNT = 6;
+
+function TrailParticles({ parentPos }: { parentPos: React.MutableRefObject<THREE.Vector3> }) {
+  const history  = useRef<THREE.Vector3[]>(
+    Array.from({ length: TRAIL_COUNT }, () => new THREE.Vector3())
+  );
+  const meshRefs = useRef<(THREE.Mesh | null)[]>(Array(TRAIL_COUNT).fill(null));
+
+  useFrame((_, delta) => {
+    for (let i = TRAIL_COUNT - 1; i > 0; i--) {
+      history.current[i].lerp(history.current[i - 1], 1 - Math.exp(-12 * delta));
+    }
+    history.current[0].lerp(parentPos.current, 1 - Math.exp(-20 * delta));
+
+    for (let i = 0; i < TRAIL_COUNT; i++) {
+      const mesh = meshRefs.current[i];
+      if (!mesh) continue;
+      mesh.position.copy(history.current[i]).sub(parentPos.current);
+      (mesh.material as THREE.MeshBasicMaterial).opacity =
+        (1 - i / TRAIL_COUNT) * 0.5;
+    }
+  });
+
+  return (
+    <>
+      {Array.from({ length: TRAIL_COUNT }, (_, i) => (
+        <mesh key={i} ref={(el) => { meshRefs.current[i] = el; }}>
+          <sphereGeometry args={[Math.max(0.02, 0.06 - i * 0.007), 8, 8]} />
+          <meshBasicMaterial color="#7df9f0" transparent opacity={0.5} />
+        </mesh>
+      ))}
+    </>
+  );
+}

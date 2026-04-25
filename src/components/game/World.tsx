@@ -21,6 +21,7 @@ import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";
 import { ChalkParticles }      from "./ChalkParticles";
+import { BeaconSprite }        from "./BeaconSprite";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import type { useGamePhase }   from "@/hooks/useGamePhase";
@@ -30,11 +31,12 @@ type Props = {
   gamePhase: ReturnType<typeof useGamePhase>;
   onLocationChange: (loc: Location | null) => void;
   onClimbStateChange?: (climbing: boolean) => void;
+  onRequestOpenChat: () => void;
   audio: ReturnType<typeof useAudioManager>;
   muted: boolean;
 };
 
-export const World = ({ gamePhase, onLocationChange, onClimbStateChange, audio, muted }: Props) => {
+export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onRequestOpenChat, audio, muted }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const [characterHeading, setCharacterHeading] = useState(0);
   const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
@@ -174,6 +176,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, audio, 
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} isClimbing={isClimbing} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
+      <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} />
     </>
   );
 };

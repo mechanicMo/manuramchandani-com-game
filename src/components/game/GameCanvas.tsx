@@ -12,6 +12,7 @@ import { LocationOverlay }   from "@/components/ui/LocationOverlay";
 import { SummitOverlay }     from "@/components/ui/SummitOverlay";
 import { DescentOverlay }    from "@/components/ui/DescentOverlay";
 import { ChatAvatar }        from "@/components/ui/ChatAvatar";
+import { ShortcutsHelp }     from "@/components/ui/ShortcutsHelp";
 import { useGamePhase }      from "@/hooks/useGamePhase";
 import { useAudioManager }   from "@/hooks/useAudioManager";
 import type { Location }     from "@/data/locations";
@@ -31,11 +32,37 @@ export const GameCanvas = () => {
   const [nearbyName, setNearbyName]         = useState<string | null>(null);
   const [muted, setMuted]                   = useState(false);
   const [climbing, setClimbing]             = useState(false);
+  const [chatOpen, setChatOpen]             = useState(false);
+  const [helpOpen, setHelpOpen]             = useState(false);
+  const [openedByBeacon, setOpenedByBeacon] = useState(false);
   const gamePhase                           = useGamePhase();
   const nearbyRef                           = useRef<Location | null>(null);
   const audio                               = useAudioManager();
 
-  // LocationManager fires this whenever proximity changes
+  // C / ? / ESC global key shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement
+      ) return;
+
+      if (e.key === "?") {
+        setHelpOpen(prev => !prev);
+      }
+      if (e.key === "c" || e.key === "C") {
+        setOpenedByBeacon(false);
+        setChatOpen(prev => !prev);
+      }
+      if (e.key === "Escape") {
+        setChatOpen(false);
+        setHelpOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   const handleLocationChange = useCallback((loc: Location | null) => {
     nearbyRef.current = loc;
 
@@ -43,7 +70,6 @@ export const GameCanvas = () => {
     if (loc && (loc.interactionType === "gate" || loc.interactionType === "vignette" || loc.interactionType === "view")) {
       setActiveLocation(loc);
     }
-    // Panel / contact: open only on Enter key press (handled below)
     // When leaving proximity, close any open panel for this location
     if (!loc) {
       setActiveLocation(prev => {
@@ -58,7 +84,6 @@ export const GameCanvas = () => {
     setNearbyName(loc && (loc.interactionType === "panel" || loc.interactionType === "contact") ? loc.name : null);
   }, []);
 
-  // Enter key opens panel for nearby panel/contact locations
   const handleInteractKey = useCallback(() => {
     const nearby = nearbyRef.current;
     if (!nearby) return;
@@ -74,6 +99,11 @@ export const GameCanvas = () => {
     setMuted(prev => !prev);
   }, [muted, audio]);
 
+  const handleRequestOpenChat = useCallback(() => {
+    setOpenedByBeacon(true);
+    setChatOpen(true);
+  }, []);
+
   return (
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <LoadingScreen loading={loading} />
@@ -81,10 +111,39 @@ export const GameCanvas = () => {
       <SummitOverlay phase={gamePhase.phase} />
       <DescentOverlay phase={gamePhase.phase} />
       <LocationOverlay location={activeLocation} onDismiss={() => setActiveLocation(null)} audio={audio} muted={muted} />
-      <ChatAvatar phase={gamePhase.phase} />
+      <ChatAvatar
+        phase={gamePhase.phase}
+        open={chatOpen}
+        onClose={() => { setChatOpen(false); setOpenedByBeacon(false); }}
+        openedByBeacon={openedByBeacon}
+      />
+      <ShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
       <AudioLoader audio={audio} />
 
-      {/* Mute toggle — top-right corner */}
+      {/* Help button — top-left */}
+      <button
+        onClick={() => setHelpOpen(true)}
+        style={{
+          position: "fixed",
+          top: "20px",
+          left: "20px",
+          background: "rgba(8,8,16,0.65)",
+          border: "1px solid rgba(200,134,10,0.25)",
+          borderRadius: "6px",
+          color: "rgba(200,134,10,0.75)",
+          fontFamily: "'DM Mono', monospace",
+          fontSize: "11px",
+          padding: "5px 9px",
+          cursor: "pointer",
+          zIndex: 100,
+          backdropFilter: "blur(8px)",
+          letterSpacing: "0.06em",
+        }}
+      >
+        (?)
+      </button>
+
+      {/* Mute toggle — top-right */}
       <button
         onClick={handleMute}
         title={muted ? "Unmute" : "Mute"}
@@ -127,7 +186,14 @@ export const GameCanvas = () => {
           onCreated={() => setLoading(false)}
         >
           <Suspense fallback={null}>
-            <World gamePhase={gamePhase} onLocationChange={handleLocationChange} onClimbStateChange={setClimbing} audio={audio} muted={muted} />
+            <World
+              gamePhase={gamePhase}
+              onLocationChange={handleLocationChange}
+              onClimbStateChange={setClimbing}
+              onRequestOpenChat={handleRequestOpenChat}
+              audio={audio}
+              muted={muted}
+            />
           </Suspense>
           <EffectComposer enableNormalPass>
             <SSAO
@@ -143,13 +209,11 @@ export const GameCanvas = () => {
         </Canvas>
       </KeyboardControls>
 
-      {/* Fallback for Enter key outside Canvas */}
       <KeyboardInterceptor onEnter={handleInteractKey} />
     </div>
   );
 };
 
-// Fallback component to capture Enter key outside Canvas
 const KeyboardInterceptor = ({ onEnter }: { onEnter: () => void }) => {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -162,7 +226,6 @@ const KeyboardInterceptor = ({ onEnter }: { onEnter: () => void }) => {
   return null;
 };
 
-// Preloads all audio files on first user interaction (browser autoplay policy)
 const AudioLoader = ({ audio }: { audio: ReturnType<typeof useAudioManager> }) => {
   const loaded = useRef(false);
 

@@ -5,7 +5,12 @@ import type { GamePhase } from "@/hooks/useGamePhase";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-type Props = { phase: GamePhase };
+type Props = {
+  phase: GamePhase;
+  open: boolean;
+  onClose: () => void;
+  openedByBeacon?: boolean;
+};
 
 const MO_SYSTEM_PROMPT = `You are a friendly AI guide on manuramchandani.com — a portfolio site built as a playable WebGL climbing + snowboarding game. You speak on behalf of Manu (Mo) Ramchandani and can answer questions about him, his projects, and his work.
 
@@ -21,8 +26,10 @@ About Manu:
 
 About this site: a playable WebGL game — climb the rock face, summit at y=80, snowboard down. Built with React Three Fiber + Rapier physics. The climb is a metaphor for his career.`;
 
-export const ChatAvatar = ({ phase }: Props) => {
-  const [open, setOpen]         = useState(false);
+const BEACON_GREETING =
+  "Hey! I'm Beacon — Manu's trail guide up this wall. I can answer anything about him, his work, or this climb. What do you want to know?";
+
+export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Props) => {
   const [input, setInput]       = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading]   = useState(false);
@@ -32,8 +39,18 @@ export const ChatAvatar = ({ phase }: Props) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const fetchWithTimeout = async (url: string, options: any) => {
-    const timeout = new Promise((_, reject) =>
+  // Beacon greeting on first open via Beacon click
+  useEffect(() => {
+    if (open && openedByBeacon && messages.length === 0) {
+      setMessages([{ role: "assistant", content: BEACON_GREETING }]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, openedByBeacon]);
+
+  // phase is available for future context-aware greetings
+
+  const fetchWithTimeout = async (url: string, options: RequestInit) => {
+    const timeout = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("Request timeout (8s)")), 8000)
     );
     return Promise.race([fetch(url, options), timeout]);
@@ -85,8 +102,6 @@ export const ChatAvatar = ({ phase }: Props) => {
     }
   };
 
-  // phase is available for future use (e.g., context-aware prompts)
-
   return (
     <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 300 }}>
       <AnimatePresence>
@@ -97,9 +112,6 @@ export const ChatAvatar = ({ phase }: Props) => {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
             style={{
-              position: "absolute",
-              bottom: "56px",
-              right: 0,
               width: "300px",
               background: "rgba(8,8,16,0.92)",
               border: "1px solid rgba(200,134,10,0.3)",
@@ -109,10 +121,30 @@ export const ChatAvatar = ({ phase }: Props) => {
             }}
           >
             {/* Header */}
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(200,134,10,0.15)" }}>
+            <div style={{
+              padding: "12px 16px",
+              borderBottom: "1px solid rgba(200,134,10,0.15)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}>
               <p style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "#C8860A", margin: 0, letterSpacing: "0.08em" }}>
                 ASK ABOUT MANU
               </p>
+              <button
+                onClick={onClose}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "rgba(250,248,244,0.4)",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  lineHeight: 1,
+                  padding: "0 4px",
+                }}
+              >
+                x
+              </button>
             </div>
 
             {/* Messages */}
@@ -131,7 +163,7 @@ export const ChatAvatar = ({ phase }: Props) => {
                     margin: "0 0 2px",
                     letterSpacing: "0.06em",
                   }}>
-                    {m.role === "user" ? "YOU" : "MO"}
+                    {m.role === "user" ? "YOU" : "BEACON"}
                   </p>
                   <p style={{
                     fontFamily: "Inter, sans-serif",
@@ -186,42 +218,12 @@ export const ChatAvatar = ({ phase }: Props) => {
                   opacity: loading || !input.trim() ? 0.5 : 1,
                 }}
               >
-                →
+                -&gt;
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Toggle button */}
-      <motion.button
-        onClick={() => setOpen(o => !o)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        style={{
-          width: "44px",
-          height: "44px",
-          borderRadius: "50%",
-          background: "rgba(200,134,10,0.9)",
-          border: "1px solid rgba(200,134,10,0.5)",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-            backdropFilter: "blur(8px)",
-        }}
-      >
-        {open ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FAF8F4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FAF8F4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        )}
-      </motion.button>
     </div>
   );
 };
