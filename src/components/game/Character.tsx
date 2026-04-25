@@ -104,6 +104,7 @@ export const Character = ({
   const targetHold = useRef<Hold | null>(null);
   const jumpingToHold = useRef(false);
   const descentStarted = useRef(false);
+  const descentPauseTimerRef = useRef(0);
   const climbingRef     = useRef(false);
   // Per-face climb geometry — derived at attach time from world-space mesh data
   const climbNormalRef  = useRef(new THREE.Vector3(0, 0, 1));  // outward world normal
@@ -173,6 +174,7 @@ export const Character = ({
       modeRef.current = "descent";
       vertVelRef.current = 0;
       descentStarted.current = false; // triggers z-snap on next frame
+      descentPauseTimerRef.current = 0;
     }
     // Descent → walk reset: fires when phase returns to "ascent" after having been "descent"
     if (gamePhase === "ascent" && prevGamePhase.current === "descent") {
@@ -302,6 +304,21 @@ export const Character = ({
         posRef.current.z = SNOW_SLOPE_START_Z;
         body.setNextKinematicTranslation({ x: posRef.current.x, y: posRef.current.y, z: SNOW_SLOPE_START_Z });
         descentStarted.current = true;
+      }
+
+      // 0.8s anticipation pause before descent movement begins
+      descentPauseTimerRef.current += delta;
+      if (descentPauseTimerRef.current < 0.8) {
+        if (actions) crossFade(actions, "snowboard_idle");
+        if (modelGroupRef.current) {
+          modelGroupRef.current.rotation.y = 0;
+          modelGroupRef.current.rotation.x = 0;
+          modelGroupRef.current.rotation.z = THREE.MathUtils.lerp(modelGroupRef.current.rotation.z, 0, 0.15);
+          modelGroupRef.current.position.y = 0;
+        }
+        onPositionChange?.(posRef.current.clone());
+        onHeadingChange?.(facingYawRef.current);
+        return;
       }
 
       const descentSpeed = intent.tuck ? DESCEND_TUCK : DESCEND_BASE;

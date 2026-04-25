@@ -196,7 +196,7 @@ export const CameraRig = ({
     };
   }, [gl]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     // Cinematic pull-out: when beacon is lit, yank camera back dramatically
     if (cinematicPull && !prevCinematic.current) {
       prevCinematic.current = true;
@@ -267,11 +267,16 @@ export const CameraRig = ({
 
     // Apply
     const desired = target.clone().add(finalOffset);
-    camera.position.lerp(desired, 0.14);
+    camera.position.lerp(desired, 0.10); // 0.14→0.10: slightly more weight, cinematic feel
+
+    // Subtle vertical bob while climbing — makes camera feel alive
+    if (climbing) {
+      camera.position.y += Math.sin(state.clock.elapsedTime * 8) * 0.015;
+    }
 
     // LookAt slightly above character center for better framing
     const lookTarget = new THREE.Vector3(target.x, target.y + 1.2, target.z);
-    lookAtRef.current.lerp(lookTarget, 0.14);
+    lookAtRef.current.lerp(lookTarget, 0.10);
     camera.lookAt(lookAtRef.current);
   });
 
