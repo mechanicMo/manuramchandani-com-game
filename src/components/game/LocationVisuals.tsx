@@ -487,7 +487,8 @@ const FaceCarving = ({ x, y, z }: { x: number; y: number; z: number }) => {
   }, []);
 
   return (
-    <group position={[x, y, z]}>
+    // Rotated 180° so the carved face points toward +Z (toward the player approaching from z=65)
+    <group position={[x, y, z]} rotation={[0, Math.PI, 0]}>
       {/* Main slab */}
       <mesh position={[0, 1.1, 0]}>
         <boxGeometry args={[3.4, 2.4, 0.22]} />
@@ -498,19 +499,19 @@ const FaceCarving = ({ x, y, z }: { x: number; y: number; z: number }) => {
         <boxGeometry args={[3.8, 0.22, 0.45]} />
         <meshBasicMaterial color="#141210" />
       </mesh>
-      {/* Carved rune text */}
-      <mesh position={[0, 1.1, 0.12]}>
+      {/* Carved rune text — at -0.12 so after Y-rotation it's world +0.12 (in front of slab) */}
+      <mesh position={[0, 1.1, -0.12]}>
         <planeGeometry args={[3.1, 2.1]} />
         <meshBasicMaterial map={runeTex} transparent opacity={0.88} />
       </mesh>
       {/* Amber border lines */}
-      {([[-1.65, 1.1, 0.12], [1.65, 1.1, 0.12]] as [number,number,number][]).map((pos, i) => (
+      {([[-1.65, 1.1, -0.12], [1.65, 1.1, -0.12]] as [number,number,number][]).map((pos, i) => (
         <mesh key={i} position={pos}>
           <boxGeometry args={[0.04, 2.4, 0.01]} />
           <meshBasicMaterial color="#C8860A" />
         </mesh>
       ))}
-      <pointLight position={[0, 1.1, 1.2]} color="#C8860A" intensity={1.8} distance={12} decay={2} />
+      <pointLight position={[0, 1.1, -1.2]} color="#C8860A" intensity={1.8} distance={12} decay={2} />
     </group>
   );
 };

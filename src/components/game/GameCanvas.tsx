@@ -28,6 +28,8 @@ const KEY_MAP = [
   { name: "interact", keys: ["Enter", "KeyE"] },
 ];
 
+const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
 export const GameCanvas = () => {
   const [loading, setLoading]               = useState(true);
   const [activeLocation, setActiveLocation] = useState<Location | null>(null);
@@ -133,8 +135,8 @@ export const GameCanvas = () => {
       />
       <AudioLoader audio={audio} />
 
-      {/* Help button — top-left */}
-      <button
+      {/* Help button — top-left (keyboard-only, hidden on touch devices) */}
+      {!isTouchDevice() && <button
         onClick={() => setHelpOpen(true)}
         style={{
           position: "fixed",
@@ -154,7 +156,7 @@ export const GameCanvas = () => {
         }}
       >
         (?)
-      </button>
+      </button>}
 
       {/* Mute toggle — top-right */}
       <button
