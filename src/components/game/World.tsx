@@ -23,6 +23,7 @@ import { LocationVisuals }     from "./LocationVisuals";
 import { ChalkParticles }      from "./ChalkParticles";
 import { BeaconSprite }        from "./BeaconSprite";
 import { BackgroundMountains } from "./BackgroundMountains";
+import { BJJBelts }            from "./BJJBelts";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
@@ -179,6 +180,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <BoulderField phase={phase} quality={quality} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} isClimbing={isClimbing} />
+      <BJJBelts characterPos={pos} phase={phase} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
       <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} quality={quality} />
     </>
