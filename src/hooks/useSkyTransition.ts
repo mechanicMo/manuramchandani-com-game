@@ -20,8 +20,8 @@ const MORNING: SkyParams = {
   fogColor: "#b8d8f0",
   fogDensity: 0.010,
   sunPosition: [0.6, 0.55, 0.5],
-  rayleigh: 3.2,
-  turbidity: 5,
+  rayleigh: 3.5,
+  turbidity: 5.5,
   ambientIntensity: 0.75,
   ambientColor: "#ddeeff",
 };
