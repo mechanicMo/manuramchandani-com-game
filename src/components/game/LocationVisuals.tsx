@@ -378,6 +378,66 @@ const MonolithVisual = ({ x, y, z }: { x: number; y: number; z: number }) => {
   );
 };
 
+// ── Mountain Face Carving ──────────────────────────────────────────────────────
+
+const FaceCarving = ({ x, y, z }: { x: number; y: number; z: number }) => {
+  const runeTex = useMemo(() => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = 512;
+    canvas.height = 256;
+    const ctx     = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, 512, 256);
+
+    ctx.fillStyle = "rgba(200,134,10,0.95)";
+    ctx.font      = "bold 30px monospace";
+    ctx.fillText("MANU RAMCHANDANI", 20, 60);
+
+    ctx.strokeStyle = "rgba(200,134,10,0.4)";
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath(); ctx.moveTo(10, 76); ctx.lineTo(490, 76); ctx.stroke();
+
+    ctx.fillStyle = "rgba(200,134,10,0.72)";
+    ctx.font      = "18px monospace";
+    ctx.fillText("manu@manuramchandani.com", 20, 120);
+    ctx.fillText("linkedin.com/in/manuramchandani", 20, 155);
+
+    ctx.beginPath(); ctx.moveTo(10, 172); ctx.lineTo(490, 172); ctx.stroke();
+    ctx.font      = "14px monospace";
+    ctx.fillStyle = "rgba(200,134,10,0.45)";
+    ctx.fillText("[E] to contact", 20, 200);
+
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  return (
+    <group position={[x, y, z]}>
+      {/* Main slab */}
+      <mesh position={[0, 1.1, 0]}>
+        <boxGeometry args={[3.4, 2.4, 0.22]} />
+        <meshBasicMaterial color="#18140e" />
+      </mesh>
+      {/* Base block */}
+      <mesh position={[0, -0.08, 0]}>
+        <boxGeometry args={[3.8, 0.22, 0.45]} />
+        <meshBasicMaterial color="#141210" />
+      </mesh>
+      {/* Carved rune text */}
+      <mesh position={[0, 1.1, 0.12]}>
+        <planeGeometry args={[3.1, 2.1]} />
+        <meshBasicMaterial map={runeTex} transparent opacity={0.88} />
+      </mesh>
+      {/* Amber border lines */}
+      {([[-1.65, 1.1, 0.12], [1.65, 1.1, 0.12]] as [number,number,number][]).map((pos, i) => (
+        <mesh key={i} position={pos}>
+          <boxGeometry args={[0.04, 2.4, 0.01]} />
+          <meshBasicMaterial color="#C8860A" />
+        </mesh>
+      ))}
+      <pointLight position={[0, 1.1, 1.2]} color="#C8860A" intensity={1.8} distance={12} decay={2} />
+    </group>
+  );
+};
+
 // ── Snowboard Cache ────────────────────────────────────────────────────────────
 
 const SnowboardRackVisual = ({ x, y, z }: { x: number; y: number; z: number }) => {
@@ -453,6 +513,7 @@ const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z:
     case "plaque":         return <EngravingPlaque x={x} y={y} z={z} />;
     case "monolith":       return <MonolithVisual x={x} y={y} z={z} />;
     case "snowboard-rack": return <SnowboardRackVisual x={x} y={y} z={z} />;
+    case "carved-stone":   return <FaceCarving x={x} y={y} z={z} />;
     default:               return null;
   }
 });

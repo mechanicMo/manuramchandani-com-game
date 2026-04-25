@@ -14,7 +14,8 @@ export type VisualType =
   | "lit-ground"
   | "plaque"
   | "monolith"
-  | "snowboard-rack";
+  | "snowboard-rack"
+  | "carved-stone";
 
 export type PanelContent = {
   type: "panel";
@@ -53,6 +54,24 @@ export type Location = {
 
 export const LOCATIONS: Location[] = [
   // ── ASCENT ────────────────────────────────────────────────────────────────
+  {
+    id: "face-carving",
+    name: "Manu Ramchandani",
+    x: -4,
+    y: 5,
+    z: 58,
+    phase: "ascent",
+    visualType: "carved-stone",
+    interactionType: "contact",
+    proximityRadius: 8,
+    content: {
+      type: "contact",
+      title: "Manu Ramchandani",
+      description: "14 years building. Currently freelance. Let's talk.",
+      email: "manu@manuramchandani.com",
+      linkLabel: "Send a message",
+    },
+  },
   {
     id: "base-camp",
     name: "Base Camp",
