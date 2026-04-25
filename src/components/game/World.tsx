@@ -17,7 +17,6 @@ import { SnowParticles }       from "./SnowParticles";
 import { GroundTerrain }       from "./GroundTerrain";
 import { ForestBase }          from "./ForestBase";
 import { BoulderField }        from "./BoulderField";
-import { BoulderField }        from "./BoulderField";
 import { ClimbingDetail }      from "./ClimbingDetail";
 import { LocationManager }     from "./LocationManager";
 import { LocationVisuals }     from "./LocationVisuals";

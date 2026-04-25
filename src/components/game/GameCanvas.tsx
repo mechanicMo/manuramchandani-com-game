@@ -54,8 +54,8 @@ export const GameCanvas = () => {
       });
     }
 
-    // Update nearbyName for KeyHints
-    setNearbyName(loc ? loc.name : null);
+    // Only show [Enter] hint for types requiring explicit interaction
+    setNearbyName(loc && (loc.interactionType === "panel" || loc.interactionType === "contact") ? loc.name : null);
   }, []);
 
   // Enter key opens panel for nearby panel/contact locations

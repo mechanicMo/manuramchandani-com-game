@@ -9,6 +9,7 @@ const HINTS: Record<GamePhase, Hint[]> = {
     { key: "SPACE", label: "Jump" },
   ],
   summit: [
+    { key: "WASD / ↑↓←→", label: "Explore" },
     { key: "SPACE", label: "Begin descent" },
   ],
   descent: [
