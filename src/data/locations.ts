@@ -42,10 +42,16 @@ export type NewsletterContent = {
   description: string;
 };
 
+export type SnowboardContent = {
+  type: "snowboard";
+  title: string;
+  description: string;
+};
+
 export type VignetteContent = { type: "vignette"; text: string };
 export type ViewContent    = { type: "view";    lines: string[] };
 
-export type LocationContent = PanelContent | VignetteContent | ViewContent | ContactContent | NewsletterContent;
+export type LocationContent = PanelContent | VignetteContent | ViewContent | ContactContent | NewsletterContent | SnowboardContent;
 
 export type Location = {
   id: string;
@@ -349,8 +355,12 @@ export const LOCATIONS: Location[] = [
     x: 0, y: 82, z: 4,
     phase: "summit",
     visualType: "snowboard-rack",
-    interactionType: "view",
+    interactionType: "contact",
     proximityRadius: 4,
-    content: { type: "view", lines: ["The descent awaits.", "Press SPACE to drop in."] },
+    content: {
+      type: "snowboard",
+      title: "The Descent",
+      description: "The other side of the mountain. Carve down to the newsletter kiosk.",
+    },
   },
 ];

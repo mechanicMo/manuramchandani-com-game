@@ -9,9 +9,10 @@ type Props = {
   onDismiss: () => void;
   audio?: ReturnType<typeof useAudioManager>;
   muted?: boolean;
+  onBeginDescent?: () => void;
 };
 
-export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: Props) => {
+export const LocationOverlay = ({ location, onDismiss, audio, muted = false, onBeginDescent }: Props) => {
   const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevLocRef   = useRef<Location | null>(null);
 
@@ -63,7 +64,7 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: P
 
   return (
     <AnimatePresence>
-      {location && <OverlayContent location={location} onDismiss={onDismiss} />}
+      {location && <OverlayContent location={location} onDismiss={onDismiss} onBeginDescent={onBeginDescent} />}
     </AnimatePresence>
   );
 };
@@ -127,7 +128,7 @@ const ContactFields = ({
   );
 };
 
-const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss: () => void }) => {
+const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Location; onDismiss: () => void; onBeginDescent?: () => void }) => {
   const { interactionType, content, name } = location;
 
   // Vignette — small text center-left
@@ -251,6 +252,69 @@ const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss
             {line}
           </motion.p>
         ))}
+      </motion.div>
+    );
+  }
+
+  // Snowboard cache — descent trigger panel
+  if (interactionType === "contact" && content.type === "snowboard") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -30 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "5%",
+          transform: "translateY(-50%)",
+          width: "300px",
+          zIndex: 200,
+        }}
+      >
+        <div style={{
+          background: "rgba(10,10,20,0.88)",
+          border: "1px solid rgba(200,134,10,0.35)",
+          borderRadius: "8px",
+          padding: "24px",
+          backdropFilter: "blur(12px)",
+        }}>
+          <p style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "#C8860A", margin: "0 0 8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            {name}
+          </p>
+          <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "22px", color: "#FAF8F4", margin: "0 0 10px", lineHeight: 1.2 }}>
+            {content.title}
+          </h2>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: "14px", color: "rgba(250,248,244,0.75)", margin: "0 0 20px", lineHeight: 1.6 }}>
+            {content.description}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <button
+              onClick={() => { onBeginDescent?.(); onDismiss(); }}
+              style={{
+                background: "#C8860A",
+                border: "none",
+                borderRadius: "4px",
+                padding: "10px 16px",
+                fontFamily: "Inter, sans-serif",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#FAF8F4",
+                cursor: "pointer",
+                textAlign: "center",
+              }}
+            >
+              Drop in →
+            </button>
+            <button
+              onClick={onDismiss}
+              style={{ fontFamily: "DM Mono, monospace", fontSize: "11px", color: "rgba(250,248,244,0.4)", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+            >
+              [Enter] dismiss
+            </button>
+          </div>
+        </div>
       </motion.div>
     );
   }

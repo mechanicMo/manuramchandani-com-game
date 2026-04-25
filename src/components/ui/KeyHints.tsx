@@ -34,7 +34,11 @@ type Props = {
   extraHint?: string;
 };
 
+const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
 export const KeyHints = ({ phase, extraHint, nearbyName, climbing = false }: Props) => {
+  if (isTouchDevice()) return null;
+
   const hints = (phase === "ascent" && climbing) ? CLIMB_HINTS : HINTS[phase];
 
   return (
