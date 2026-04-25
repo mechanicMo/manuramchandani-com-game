@@ -405,6 +405,40 @@ const ContactLanding = ({ x, y, z }: { x: number; y: number; z: number }) => (
   </group>
 );
 
+// ── Trail marker plaque ────────────────────────────────────────────────────────
+
+const EngravingPlaque = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
+    {/* Stone slab */}
+    <mesh>
+      <boxGeometry args={[1.4, 0.75, 0.08]} />
+      <meshStandardMaterial color="#5a6878" roughness={0.95} metalness={0.0} />
+    </mesh>
+    {/* Amber border — top */}
+    <mesh position={[0, 0.355, 0.045]}>
+      <boxGeometry args={[1.4, 0.04, 0.01]} />
+      <meshStandardMaterial color="#C8860A" emissive="#C8860A" emissiveIntensity={1.2} roughness={0.4} />
+    </mesh>
+    {/* Amber border — bottom */}
+    <mesh position={[0, -0.355, 0.045]}>
+      <boxGeometry args={[1.4, 0.04, 0.01]} />
+      <meshStandardMaterial color="#C8860A" emissive="#C8860A" emissiveIntensity={1.2} roughness={0.4} />
+    </mesh>
+    {/* Amber border — left */}
+    <mesh position={[-0.68, 0, 0.045]}>
+      <boxGeometry args={[0.04, 0.75, 0.01]} />
+      <meshStandardMaterial color="#C8860A" emissive="#C8860A" emissiveIntensity={1.2} roughness={0.4} />
+    </mesh>
+    {/* Amber border — right */}
+    <mesh position={[0.68, 0, 0.045]}>
+      <boxGeometry args={[0.04, 0.75, 0.01]} />
+      <meshStandardMaterial color="#C8860A" emissive="#C8860A" emissiveIntensity={1.2} roughness={0.4} />
+    </mesh>
+    {/* Warm ambient glow */}
+    <pointLight position={[0, 0, 0.3]} color="#C8860A" intensity={0.6} distance={4} decay={2} />
+  </group>
+);
+
 // ── Dispatcher ─────────────────────────────────────────────────────────────────
 
 const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z: number; visualType: string }) => {
@@ -420,6 +454,7 @@ const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z:
     case "slalom-gate":    return <SlalomGate x={x} y={y} z={z} />;
     case "snow-text":      return <AboutSlope x={x} y={y} z={z} />;
     case "lit-ground":     return <ContactLanding x={x} y={y} z={z} />;
+    case "plaque":         return <EngravingPlaque x={x} y={y} z={z} />;
     default:               return null;
   }
 });

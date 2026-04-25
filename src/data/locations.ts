@@ -11,7 +11,8 @@ export type VisualType =
   | "map-pins"
   | "slalom-gate"
   | "snow-text"
-  | "lit-ground";
+  | "lit-ground"
+  | "plaque";
 
 export type PanelContent = {
   type: "panel";
@@ -190,6 +191,50 @@ export const LOCATIONS: Location[] = [
       link: "/projects/community",
       linkLabel: "View case study",
     },
+  },
+
+  // ── TRAIL MARKERS — personal milestone plaques, Y gaps between project stops ─
+  {
+    id: "marker-2012", name: "2012",
+    x: 8, y: 9, z: 39,
+    phase: "ascent", visualType: "plaque", interactionType: "vignette", proximityRadius: 5,
+    content: { type: "vignette", text: "2012\nStarted developing software." },
+  },
+  {
+    id: "marker-2015", name: "2015",
+    x: -8, y: 19, z: 39,
+    phase: "ascent", visualType: "plaque", interactionType: "vignette", proximityRadius: 5,
+    content: { type: "vignette", text: "2015\nFirst professional dev job." },
+  },
+  {
+    id: "marker-2018", name: "2018",
+    x: 8, y: 27, z: 39,
+    phase: "ascent", visualType: "plaque", interactionType: "vignette", proximityRadius: 5,
+    content: { type: "vignette", text: "2018\nFirst shipped product." },
+  },
+  {
+    id: "marker-2020", name: "2020",
+    x: -8, y: 36, z: 39,
+    phase: "ascent", visualType: "plaque", interactionType: "vignette", proximityRadius: 5,
+    content: { type: "vignette", text: "2020\nGot married." },
+  },
+  {
+    id: "marker-2024", name: "2024",
+    x: 8, y: 44, z: 39,
+    phase: "ascent", visualType: "plaque", interactionType: "vignette", proximityRadius: 5,
+    content: { type: "vignette", text: "2024\nStarted BJJ. 10th Planet Pasadena." },
+  },
+  {
+    id: "marker-2025", name: "2025",
+    x: -8, y: 55, z: 39,
+    phase: "ascent", visualType: "plaque", interactionType: "vignette", proximityRadius: 5,
+    content: { type: "vignette", text: "2025\nWent freelance. Stay-at-home dad." },
+  },
+  {
+    id: "marker-2026", name: "2026",
+    x: 8, y: 67, z: 39,
+    phase: "ascent", visualType: "plaque", interactionType: "vignette", proximityRadius: 5,
+    content: { type: "vignette", text: "2026\nSherani born." },
   },
 
   // ── DESCENT ───────────────────────────────────────────────────────────────
