@@ -59,7 +59,7 @@ export const ClimbingDetail = ({ phase }: Props) => {
       {/* Rope segments */}
       {ropeGeometries.map((geo, i) => (
         <mesh key={i} geometry={geo}>
-          <meshStandardMaterial color="#8a7040" roughness={0.9} metalness={0.1} />
+          <meshBasicMaterial color="#8a7040" />
         </mesh>
       ))}
 
@@ -70,13 +70,7 @@ export const ClimbingDetail = ({ phase }: Props) => {
         return (
           <mesh key={hi} position={[h.x, h.y, -0.1]}>
             <circleGeometry args={[0.18, 8]} />
-            <meshStandardMaterial
-              color="white"
-              transparent
-              opacity={0.4}
-              roughness={1}
-              metalness={0}
-            />
+            <meshBasicMaterial color="white" transparent opacity={0.4} />
           </mesh>
         );
       })}
@@ -89,7 +83,7 @@ export const ClimbingDetail = ({ phase }: Props) => {
           rotation={[0, 0, p.rot]}
         >
           <cylinderGeometry args={[0.03, 0.03, 0.3, 6]} />
-          <meshStandardMaterial color="#706050" roughness={0.8} metalness={0.4} />
+          <meshBasicMaterial color="#706050" />
         </mesh>
       ))}
     </group>

@@ -6,6 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { CampfireFlame } from "./CampfireFlame";
 import type { GamePhase } from "@/hooks/useGamePhase";
+import { useMatcaps } from "@/hooks/useMatcaps";
 
 const SUMMIT_Y = 82;
 
@@ -25,6 +26,7 @@ export const SummitObjects = ({ phase }: Props) => {
 // ── Summit Beacon — large signal-fire pyre ─────────────────────────────────────
 
 const BeaconPyre = () => {
+  const matcaps = useMatcaps();
   const lightRef = useRef<THREE.PointLight>(null);
 
   useFrame(({ clock }) => {
@@ -39,12 +41,12 @@ const BeaconPyre = () => {
       {/* Stone fire-ring base */}
       <mesh position={[0, 0.15, 0]} receiveShadow>
         <cylinderGeometry args={[0.9, 1.0, 0.3, 10]} />
-        <meshStandardMaterial color="#5a6070" roughness={0.95} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
       </mesh>
       {/* Stone cap ring — darker inner lip */}
       <mesh position={[0, 0.32, 0]}>
         <torusGeometry args={[0.7, 0.12, 6, 12]} />
-        <meshStandardMaterial color="#404858" roughness={0.98} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
       </mesh>
 
       {/* Log ring — 4 logs crossed */}
@@ -58,7 +60,7 @@ const BeaconPyre = () => {
             castShadow
           >
             <cylinderGeometry args={[0.07, 0.09, 1.1, 6]} />
-            <meshStandardMaterial color="#3a2810" roughness={1} />
+            <meshMatcapMaterial matcap={matcaps.wood} />
           </mesh>
         );
       })}
@@ -90,39 +92,40 @@ const SNOW_WHITE = "#eef4ff";
 const SNOW_SHADOW = "#c8d8f0";
 
 const SheraniSnowman = () => {
+  const matcaps = useMatcaps();
   return (
     <group position={[3.5, SUMMIT_Y, -1]} scale={[0.65, 0.65, 0.65]}>
       {/* Bottom body */}
       <mesh position={[0, 0.5, 0]} castShadow>
         <sphereGeometry args={[0.55, 12, 12]} />
-        <meshStandardMaterial color={SNOW_WHITE} roughness={0.9} metalness={0} />
+        <meshMatcapMaterial matcap={matcaps.snow} />
       </mesh>
       {/* Middle body */}
       <mesh position={[0, 1.28, 0]} castShadow>
         <sphereGeometry args={[0.40, 12, 12]} />
-        <meshStandardMaterial color={SNOW_WHITE} roughness={0.9} metalness={0} />
+        <meshMatcapMaterial matcap={matcaps.snow} />
       </mesh>
       {/* Head */}
       <mesh position={[0, 1.92, 0]} castShadow>
         <sphereGeometry args={[0.28, 12, 12]} />
-        <meshStandardMaterial color={SNOW_WHITE} roughness={0.9} metalness={0} />
+        <meshMatcapMaterial matcap={matcaps.snow} />
       </mesh>
       {/* Eyes */}
       {[-0.08, 0.08].map((x, i) => (
         <mesh key={i} position={[x, 1.98, 0.26]} castShadow>
           <sphereGeometry args={[0.035, 8, 8]} />
-          <meshStandardMaterial color="#1a1a2e" roughness={1} />
+          <meshBasicMaterial color="#1a1a2e" />
         </mesh>
       ))}
       {/* Carrot nose */}
       <mesh position={[0, 1.93, 0.3]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <coneGeometry args={[0.035, 0.14, 8]} />
-        <meshStandardMaterial color="#e07020" roughness={0.8} />
+        <meshBasicMaterial color="#e07020" />
       </mesh>
       {/* Scarf — amber to match brand */}
       <mesh position={[0, 1.67, 0]}>
         <torusGeometry args={[0.30, 0.055, 8, 20]} />
-        <meshStandardMaterial color="#C8860A" roughness={0.8} />
+        <meshBasicMaterial color="#C8860A" />
       </mesh>
       {/* Arms — two sticks */}
       {[-1, 1].map((side, i) => (
@@ -133,13 +136,13 @@ const SheraniSnowman = () => {
           castShadow
         >
           <cylinderGeometry args={[0.025, 0.018, 0.55, 5]} />
-          <meshStandardMaterial color="#3d2810" roughness={1} />
+          <meshMatcapMaterial matcap={matcaps.wood} />
         </mesh>
       ))}
       {/* Snow shadow disc */}
       <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.55, 16]} />
-        <meshStandardMaterial color={SNOW_SHADOW} transparent opacity={0.35} depthWrite={false} />
+        <meshBasicMaterial color={SNOW_SHADOW} transparent opacity={0.35} depthWrite={false} />
       </mesh>
     </group>
   );

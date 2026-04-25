@@ -85,25 +85,14 @@ export const BouncyBoulder = ({ characterPos, phase, launchRef }: Props) => {
       {/* Bouncy boulder — slightly larger, very subtly amber-tinted compared to normal boulders */}
       <mesh castShadow receiveShadow>
         <dodecahedronGeometry args={[1.05, 0]} />
-        <meshStandardMaterial
-          color="#2e2218"
-          emissive="#5a3800"
-          emissiveIntensity={0.06}
-          roughness={1}
-          metalness={0}
-        />
+        <meshBasicMaterial color="#2e2218" />
       </mesh>
 
       {/* Hop progress indicator — tiny floaty orbs that appear one by one */}
       {[0, 1, 2].map(i => (
         <mesh key={i} position={[-0.3 + i * 0.3, 1.5, 0]}>
           <sphereGeometry args={[0.06, 8, 8]} />
-          <meshStandardMaterial
-            color={i < hopCount ? "#C8860A" : "#2a2218"}
-            emissive={i < hopCount ? "#9a6000" : "#000000"}
-            emissiveIntensity={i < hopCount ? 0.8 : 0}
-            roughness={0.4}
-          />
+          <meshBasicMaterial color={i < hopCount ? "#C8860A" : "#2a2218"} />
         </mesh>
       ))}
 

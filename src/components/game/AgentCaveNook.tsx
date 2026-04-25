@@ -45,16 +45,11 @@ export const AgentCaveNook = ({ characterPos, phase }: Props) => {
       {/* Faint amber glow — barely visible until you're very close */}
       <pointLight color="#C8860A" intensity={triggered ? 0 : 0.18} distance={3} decay={2} />
 
-      {/* Tiny recess marker — a recessed box with a subtle etched glow */}
+      {/* Tiny recess marker — amber-tinted so it's barely visible until very close */}
       {!triggered && (
         <mesh>
           <boxGeometry args={[0.22, 0.22, 0.08]} />
-          <meshStandardMaterial
-            color="#1a1428"
-            emissive="#C8860A"
-            emissiveIntensity={0.15}
-            roughness={0.9}
-          />
+          <meshBasicMaterial color="#3a2208" />
         </mesh>
       )}
 

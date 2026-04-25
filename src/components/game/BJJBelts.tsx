@@ -169,12 +169,12 @@ const BeltMesh = ({ belt }: { belt: Belt }) => {
       {/* Belt body — flat and wide */}
       <mesh>
         <boxGeometry args={[0.8, 0.12, 0.04]} />
-        <meshStandardMaterial color={belt.color} emissive={belt.emissive} emissiveIntensity={0.3} roughness={0.6} />
+        <meshBasicMaterial color={belt.color} />
       </mesh>
       {/* Belt knot — small box in center */}
       <mesh position={[0, 0, 0.03]}>
         <boxGeometry args={[0.12, 0.16, 0.06]} />
-        <meshStandardMaterial color={belt.color} emissive={belt.emissive} emissiveIntensity={0.5} roughness={0.5} />
+        <meshBasicMaterial color={belt.color} />
       </mesh>
       {/* Subtle point light so belt glows slightly */}
       <pointLight color={belt.color} intensity={0.4} distance={4} decay={2} />
