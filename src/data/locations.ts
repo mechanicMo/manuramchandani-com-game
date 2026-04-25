@@ -59,7 +59,7 @@ export const LOCATIONS: Location[] = [
     phase: "ascent",
     visualType: "campfire",
     interactionType: "view",
-    proximityRadius: 5,
+    proximityRadius: 12,
     content: { type: "view", lines: ["Base Camp.", "The climb starts here."] },
   },
   {
@@ -253,7 +253,7 @@ export const LOCATIONS: Location[] = [
     phase: "descent",
     visualType: "lit-ground",
     interactionType: "contact",
-    proximityRadius: 8,
+    proximityRadius: 14,
     content: {
       type: "contact",
       title: "Working on something?",

@@ -44,7 +44,11 @@ export const LocationManager = ({ characterPos, phase, onLocationChange, audio, 
 
     let found: Location | null = null;
     for (const loc of candidates) {
-      const dist = Math.abs(characterPos.y - loc.y);
+      const dist = Math.sqrt(
+        (characterPos.x - loc.x) ** 2 +
+        (characterPos.y - loc.y) ** 2 +
+        (characterPos.z - loc.z) ** 2
+      );
       if (dist < loc.proximityRadius) {
         found = loc;
         break;
