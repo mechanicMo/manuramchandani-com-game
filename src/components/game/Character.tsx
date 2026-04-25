@@ -191,7 +191,7 @@ export const Character = ({
   // ============================================================================
   // Main loop
   // ============================================================================
-  useFrame((_state, delta) => {
+  useFrame((state, delta) => {
     const body = rigidBodyRef.current;
     const controller = controllerRef.current;
     if (!body || !controller) return; // physics not ready yet — spawn safety
@@ -268,9 +268,11 @@ export const Character = ({
         vertVelRef.current = 0;
       }
 
-      // Face into rock surface
+      // Face into rock surface; clear any walk-mode gait lean
       if (modelGroupRef.current) {
         modelGroupRef.current.rotation.y = climbYawRef.current;
+        modelGroupRef.current.rotation.x = 0;
+        modelGroupRef.current.position.y = 0;
       }
 
       // Animation
@@ -312,7 +314,11 @@ export const Character = ({
       body.setNextKinematicTranslation({ x: p.x, y: p.y, z: p.z });
       posRef.current.copy(p);
 
-      if (modelGroupRef.current) modelGroupRef.current.rotation.y = 0; // face forward for snowboard
+      if (modelGroupRef.current) {
+        modelGroupRef.current.rotation.y = 0; // face forward for snowboard
+        modelGroupRef.current.rotation.x = 0;
+        modelGroupRef.current.position.y = 0;
+      }
 
       if (actions) {
         if (intent.strafe > 0.1)       crossFade(actions, "snowboard_right");
@@ -384,9 +390,17 @@ export const Character = ({
       currentTrans.z + corrected.z
     );
 
-    // Visual model rotation
+    // Visual model rotation + procedural gait (bob + lean while moving)
     if (modelGroupRef.current) {
       modelGroupRef.current.rotation.y = facingYawRef.current;
+      if (moveVec.lengthSq() > 0.0001) {
+        const gaitPhase = state.clock.elapsedTime * 6.5;
+        modelGroupRef.current.position.y = Math.sin(gaitPhase) * 0.045;
+        modelGroupRef.current.rotation.x = 0.07;
+      } else {
+        modelGroupRef.current.position.y = THREE.MathUtils.lerp(modelGroupRef.current.position.y, 0, 0.2);
+        modelGroupRef.current.rotation.x = THREE.MathUtils.lerp(modelGroupRef.current.rotation.x, 0, 0.2);
+      }
     }
 
     // Animation

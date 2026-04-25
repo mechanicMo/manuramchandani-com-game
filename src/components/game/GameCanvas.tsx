@@ -195,7 +195,7 @@ export const GameCanvas = () => {
 
       <KeyboardControls map={KEY_MAP}>
         <Canvas
-          shadows
+          shadows={{ type: THREE.PCFShadowMap }}
           dpr={[1, maxDpr]}
           camera={{ fov: 60, near: 0.1, far: 1000, position: [1.5, 4, 8] }}
           gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
