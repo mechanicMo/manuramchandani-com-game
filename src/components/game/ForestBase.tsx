@@ -4,8 +4,9 @@
 // All trees at Y=0 (ground plane).
 import { useMemo } from "react";
 import type { GamePhase } from "@/hooks/useGamePhase";
+import type { QualityLevel } from "@/hooks/useDeviceQuality";
 
-type Props = { phase: GamePhase };
+type Props = { phase: GamePhase; quality?: QualityLevel };
 
 type TreeDef = {
   id: number;
@@ -61,14 +62,15 @@ function makeTrees(count: number, seed = 42): TreeDef[] {
   });
 }
 
-const TREES = makeTrees(32);
+const TREE_COUNTS: Record<QualityLevel, number> = { high: 32, medium: 16, low: 8 };
 
-export const ForestBase = ({ phase }: Props) => {
+export const ForestBase = ({ phase, quality = "high" }: Props) => {
+  const trees = useMemo(() => makeTrees(TREE_COUNTS[quality]), [quality]);
   if (phase !== "ascent") return null;
 
   return (
     <group>
-      {TREES.map(tree => (
+      {trees.map(tree => (
         <group key={tree.id} position={[tree.x, 0, tree.z]}>
           {/* Trunk */}
           <mesh position={[0, tree.height * 0.18, 0]} castShadow>

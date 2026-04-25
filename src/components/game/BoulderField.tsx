@@ -2,9 +2,11 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import type { GamePhase } from "@/hooks/useGamePhase";
+import type { QualityLevel } from "@/hooks/useDeviceQuality";
 
 type Props = {
   phase: GamePhase;
+  quality?: QualityLevel;
 };
 
 type Boulder = {
@@ -58,8 +60,10 @@ function makeBoulderClusters(count: number, seed = 456): BoulderCluster[] {
   });
 }
 
-export const BoulderField = ({ phase }: Props) => {
-  const clusters = useMemo(() => makeBoulderClusters(16), []);
+const BOULDER_COUNTS: Record<QualityLevel, number> = { high: 16, medium: 10, low: 5 };
+
+export const BoulderField = ({ phase, quality = "high" }: Props) => {
+  const clusters = useMemo(() => makeBoulderClusters(BOULDER_COUNTS[quality]), [quality]);
 
   if (phase !== "ascent") return null;
 

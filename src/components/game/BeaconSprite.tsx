@@ -11,6 +11,7 @@ import {
 import { LOCATIONS } from "@/data/locations";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import type { useAudioManager } from "@/hooks/useAudioManager";
+import type { QualityLevel } from "@/hooks/useDeviceQuality";
 
 type Props = {
   characterPos: THREE.Vector3;
@@ -18,7 +19,10 @@ type Props = {
   onRequestOpenChat: () => void;
   audio: ReturnType<typeof useAudioManager>;
   muted: boolean;
+  quality?: QualityLevel;
 };
+
+const TRAIL_COUNTS: Record<QualityLevel, number> = { high: 6, medium: 3, low: 2 };
 
 const SPRING_STIFFNESS = 25;
 const SPRING_DAMPING   = 0.6;
@@ -55,6 +59,7 @@ export const BeaconSprite = ({
   phase,
   onRequestOpenChat,
   muted,
+  quality = "high",
 }: Props) => {
   const groupRef      = useRef<THREE.Group>(null!);
   const beaconPos     = useRef(new THREE.Vector3());
@@ -177,7 +182,7 @@ export const BeaconSprite = ({
 
       <pointLight color="#7df9f0" intensity={0.8} distance={3} decay={2} />
 
-      <TrailParticles parentPos={beaconPos} />
+      <TrailParticles parentPos={beaconPos} count={TRAIL_COUNTS[quality]} />
 
       {hintText && (
         <Html
@@ -226,32 +231,30 @@ export const BeaconSprite = ({
   );
 };
 
-const TRAIL_COUNT = 6;
-
-function TrailParticles({ parentPos }: { parentPos: React.MutableRefObject<THREE.Vector3> }) {
+function TrailParticles({ parentPos, count }: { parentPos: React.MutableRefObject<THREE.Vector3>; count: number }) {
   const history  = useRef<THREE.Vector3[]>(
-    Array.from({ length: TRAIL_COUNT }, () => new THREE.Vector3())
+    Array.from({ length: count }, () => new THREE.Vector3())
   );
-  const meshRefs = useRef<(THREE.Mesh | null)[]>(Array(TRAIL_COUNT).fill(null));
+  const meshRefs = useRef<(THREE.Mesh | null)[]>(Array(count).fill(null));
 
   useFrame((_, delta) => {
-    for (let i = TRAIL_COUNT - 1; i > 0; i--) {
+    for (let i = count - 1; i > 0; i--) {
       history.current[i].lerp(history.current[i - 1], 1 - Math.exp(-12 * delta));
     }
     history.current[0].lerp(parentPos.current, 1 - Math.exp(-20 * delta));
 
-    for (let i = 0; i < TRAIL_COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       const mesh = meshRefs.current[i];
       if (!mesh) continue;
       mesh.position.copy(history.current[i]).sub(parentPos.current);
       (mesh.material as THREE.MeshBasicMaterial).opacity =
-        (1 - i / TRAIL_COUNT) * 0.5;
+        (1 - i / count) * 0.5;
     }
   });
 
   return (
     <>
-      {Array.from({ length: TRAIL_COUNT }, (_, i) => (
+      {Array.from({ length: count }, (_, i) => (
         <mesh key={i} ref={(el) => { meshRefs.current[i] = el; }}>
           <sphereGeometry args={[Math.max(0.02, 0.06 - i * 0.007), 8, 8]} />
           <meshBasicMaterial color="#7df9f0" transparent opacity={0.5} />

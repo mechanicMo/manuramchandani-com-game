@@ -15,6 +15,7 @@ import { ChatAvatar }        from "@/components/ui/ChatAvatar";
 import { ShortcutsHelp }     from "@/components/ui/ShortcutsHelp";
 import { useGamePhase }      from "@/hooks/useGamePhase";
 import { useAudioManager }   from "@/hooks/useAudioManager";
+import { useDeviceQuality }  from "@/hooks/useDeviceQuality";
 import type { Location }     from "@/data/locations";
 
 const KEY_MAP = [
@@ -38,6 +39,8 @@ export const GameCanvas = () => {
   const gamePhase                           = useGamePhase();
   const nearbyRef                           = useRef<Location | null>(null);
   const audio                               = useAudioManager();
+  const quality                             = useDeviceQuality();
+  const maxDpr = quality === "low" ? 1 : quality === "medium" ? 1.5 : Math.min(window.devicePixelRatio, 2);
 
   // C / ? / ESC global key shortcuts
   useEffect(() => {
@@ -181,6 +184,7 @@ export const GameCanvas = () => {
       <KeyboardControls map={KEY_MAP}>
         <Canvas
           shadows
+          dpr={[1, maxDpr]}
           camera={{ fov: 60, near: 0.1, far: 1000, position: [1.5, 4, 8] }}
           gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           onCreated={() => setLoading(false)}
@@ -196,15 +200,23 @@ export const GameCanvas = () => {
             />
           </Suspense>
           <EffectComposer enableNormalPass>
-            <SSAO
-              radius={0.05}
-              intensity={20}
-              luminanceInfluence={0.6}
-              color="black"
-            />
+            {quality !== "low" && (
+              <SSAO
+                radius={0.05}
+                intensity={20}
+                luminanceInfluence={0.6}
+                color="black"
+              />
+            )}
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-            <Bloom intensity={0.4} luminanceThreshold={0.6} luminanceSmoothing={0.9} />
-            <Vignette offset={0.4} darkness={0.5} />
+            {quality !== "low" && (
+              <Bloom
+                intensity={quality === "medium" ? 0.25 : 0.4}
+                luminanceThreshold={0.6}
+                luminanceSmoothing={0.9}
+              />
+            )}
+            {quality !== "low" && <Vignette offset={0.4} darkness={0.5} />}
           </EffectComposer>
         </Canvas>
       </KeyboardControls>

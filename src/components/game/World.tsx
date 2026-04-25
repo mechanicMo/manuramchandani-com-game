@@ -24,6 +24,7 @@ import { ChalkParticles }      from "./ChalkParticles";
 import { BeaconSprite }        from "./BeaconSprite";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
+import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
 import type { useGamePhase }   from "@/hooks/useGamePhase";
 import type { Location }       from "@/data/locations";
 
@@ -48,6 +49,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const prevPosRef                            = useRef(new THREE.Vector3());
   const { phase, onCharacterY, beginDescent } = gamePhase;
   const sky                                  = useSkyTransition(phase);
+  const quality                              = useDeviceQuality();
   const spacePressed                         = useKeyboardControls((s: Record<string, boolean>) => s.jump);
   const spaceWasDown                         = useRef(false);
   const ambientLightRef                      = useRef<THREE.Light>(null);
@@ -167,16 +169,16 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <SummitLedge phase={phase} />
       <SummitObjects phase={phase} />
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
-      <DustParticles characterPos={pos} />
-      <SnowParticles characterPos={pos} phase={phase} />
+      <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
+      <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
       <GroundTerrain phase={phase} />
       {/* ClimbingDetail still disabled — G-series coordinates */}
-      <ForestBase phase={phase} />
-      <BoulderField phase={phase} />
+      <ForestBase phase={phase} quality={quality} />
+      <BoulderField phase={phase} quality={quality} />
       <LocationVisuals phase={phase} />
       <LocationManager characterPos={pos} phase={phase} onLocationChange={onLocationChange} audio={audio} muted={muted} isClimbing={isClimbing} />
       <CameraRig target={pos} phase={phase} characterHeading={characterHeading} mountainScene={mountainScene} climbing={isClimbing} />
-      <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} />
+      <BeaconSprite characterPos={pos} phase={phase} onRequestOpenChat={onRequestOpenChat} audio={audio} muted={muted} quality={quality} />
     </>
   );
 };
