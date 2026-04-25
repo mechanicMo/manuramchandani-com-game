@@ -9,15 +9,20 @@ export type BeaconHint = {
 
 // One per location id — fires within 8 units of loc.y
 export const PROXIMITY_HINTS: Record<string, BeaconHint> = {
+  "face-carving": {
+    id: "prox-face-carving",
+    type: "proximity",
+    text: "That stone carving — that's Manu. Press [E] to reach out.",
+  },
   "base-camp": {
     id: "prox-base-camp",
     type: "proximity",
-    text: "Base camp. Deep breath — the wall is ahead.",
+    text: "Base camp. This is where everything starts. The mountain is ahead.",
   },
   "prism-ledge": {
     id: "prox-prism-ledge",
     type: "proximity",
-    text: "Prism Ledge. 15 modules, zero mocks. Hit Enter to look.",
+    text: "Prism Ledge. 15 modules, zero mocks. Press [E] to look closer.",
   },
   "agent-cave": {
     id: "prox-agent-cave",
@@ -27,12 +32,12 @@ export const PROXIMITY_HINTS: Record<string, BeaconHint> = {
   "leaguelads-crag": {
     id: "prox-leaguelads-crag",
     type: "proximity",
-    text: "LeagueLads Crag. Real-time team comp analysis. Challengers only.",
+    text: "LeagueLads Crag. Live team comp analysis for League players.",
   },
   "bjj-ledge": {
     id: "prox-bjj-ledge",
     type: "proximity",
-    text: "BJJ Ledge. 104 classes and counting. On the mat before the product.",
+    text: "BJJ Ledge. 104 classes. On the mat before the product gets built.",
   },
   "scout-perch": {
     id: "prox-scout-perch",
@@ -42,32 +47,17 @@ export const PROXIMITY_HINTS: Record<string, BeaconHint> = {
   "seedling-outcrop": {
     id: "prox-seedling-outcrop",
     type: "proximity",
-    text: "Seedling Outcrop. Built for kids learning ASL. Small app, big care.",
+    text: "Seedling. Built for kids learning ASL. Small app, real care.",
   },
   "community-approach": {
     id: "prox-community-approach",
     type: "proximity",
-    text: "Community Approach — almost to the summit. Map-first volunteering.",
-  },
-  "gate-001": {
-    id: "prox-gate-001",
-    type: "proximity",
-    text: "Gate 001 coming up. Carve through it. Don't blow it.",
-  },
-  "gate-002": {
-    id: "prox-gate-002",
-    type: "proximity",
-    text: "Gate 002 — lean into it. You've got this.",
-  },
-  "about-slope": {
-    id: "prox-about-slope",
-    type: "proximity",
-    text: "About Slope. This is the real stuff. Slow down.",
+    text: "Community — almost to the summit. Map-first volunteering app.",
   },
   "contact-landing": {
     id: "prox-contact-landing",
     type: "proximity",
-    text: "Contact Landing! You made it down. Say hi — he actually responds.",
+    text: "You made it down. Say hi — he actually responds.",
   },
 };
 
@@ -77,31 +67,31 @@ export const ALTITUDE_HINTS: BeaconHint[] = [
     id: "alt-10",
     type: "altitude",
     yThreshold: 10,
-    text: "First pitch done. The cliff opens up from here.",
+    text: "First pitch done. Mountain opens up from here.",
   },
   {
-    id: "alt-20",
+    id: "alt-25",
     type: "altitude",
-    yThreshold: 20,
-    text: "Halfway to the cave. Watch your footing.",
+    yThreshold: 25,
+    text: "Halfway to the cave. Good pace.",
   },
   {
-    id: "alt-40",
+    id: "alt-45",
     type: "altitude",
-    yThreshold: 40,
-    text: "Y=40 — crux zone. Projects are getting deeper from here.",
+    yThreshold: 45,
+    text: "Crux zone. Projects get deeper from here.",
   },
   {
-    id: "alt-60",
+    id: "alt-65",
     type: "altitude",
-    yThreshold: 60,
-    text: "Summit's close. Three more ledges — don't look down.",
+    yThreshold: 65,
+    text: "Summit's close. Don't stop now.",
   },
   {
     id: "alt-80",
     type: "altitude",
     yThreshold: 80,
-    text: "Summit! Press SPACE to start the descent. Boards waiting.",
+    text: "Summit. Light the beacon — boards are waiting.",
   },
 ];
 
@@ -110,26 +100,26 @@ export const IDLE_HINTS: BeaconHint[] = [
   {
     id: "idle-0",
     type: "idle",
-    text: "Take a look around. Some of the best holds are off the beaten path.",
+    text: "Look around. Some of the best things are off the main path.",
   },
   {
     id: "idle-1",
     type: "idle",
-    text: "Resting? Fair. The climb is relentless.",
+    text: "Taking a break? The mountain has time.",
   },
   {
     id: "idle-2",
     type: "idle",
-    text: "Arrow keys move. SPACE jumps to the next hold. C opens my full intel.",
+    text: "WASD or arrow keys move. SPACE jumps. Press C to chat with me.",
   },
   {
     id: "idle-3",
     type: "idle",
-    text: "Still here? Try pressing ? — I have a full shortcut map.",
+    text: "Try pressing ? — I have a full shortcut map.",
   },
   {
     id: "idle-4",
     type: "idle",
-    text: "The wall doesn't wait. Keep climbing.",
+    text: "There are a few hidden things on this mountain. Worth exploring.",
   },
 ];
