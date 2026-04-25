@@ -9,6 +9,7 @@ import { World }             from "./World";
 import { LoadingScreen }     from "@/components/ui/LoadingScreen";
 import { KeyHints }          from "@/components/ui/KeyHints";
 import { LocationOverlay }   from "@/components/ui/LocationOverlay";
+import { SummitOverlay }     from "@/components/ui/SummitOverlay";
 import { ChatAvatar }        from "@/components/ui/ChatAvatar";
 import { useGamePhase }      from "@/hooks/useGamePhase";
 import { useAudioManager }   from "@/hooks/useAudioManager";
@@ -76,6 +77,7 @@ export const GameCanvas = () => {
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <LoadingScreen loading={loading} />
       <KeyHints phase={gamePhase.phase} nearbyName={nearbyName} climbing={climbing} />
+      <SummitOverlay phase={gamePhase.phase} />
       <LocationOverlay location={activeLocation} onDismiss={() => setActiveLocation(null)} audio={audio} muted={muted} />
       <ChatAvatar phase={gamePhase.phase} />
       <AudioLoader audio={audio} />
