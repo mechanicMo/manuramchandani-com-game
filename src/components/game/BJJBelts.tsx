@@ -22,22 +22,25 @@ type Belt = {
 
 const BELTS: Belt[] = [
   {
+    // White belt — near base camp, slightly off the main path (tucked beside a boulder)
     id: "white",
-    position: [12, 0.6, 64],
+    position: [-11, 1.0, 60],
     color: "#e8e8f0",
     emissive: "#888899",
     label: "White Belt — found. The beginning.",
   },
   {
+    // Blue belt — mid-climb, reachable in climb mode at the left edge of the face
     id: "blue",
-    position: [-6, 36, 32],
+    position: [-10, 38, 36],
     color: "#2244aa",
     emissive: "#112266",
     label: "Blue Belt — found. Keep drilling.",
   },
   {
+    // Purple belt — near summit, tucked at the right edge of the upper climb
     id: "purple",
-    position: [5, 67, 14],
+    position: [9, 70, 36],
     color: "#6622aa",
     emissive: "#330055",
     label: "Purple Belt — found. Almost there.",

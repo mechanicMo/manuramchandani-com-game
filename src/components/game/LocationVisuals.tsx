@@ -355,23 +355,102 @@ const NewsletterKiosk = ({ x, y, z }: { x: number; y: number; z: number }) => {
 
 const MonolithVisual = ({ x, y, z }: { x: number; y: number; z: number }) => {
   const matcaps = useMatcaps();
+
+  const faceTex = useMemo(() => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = 256;
+    canvas.height = 512;
+    const ctx     = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, 256, 512);
+
+    // Carved name — large amber
+    ctx.textAlign   = "center";
+    ctx.fillStyle   = "rgba(200,134,10,0.95)";
+    ctx.font        = "bold 28px monospace";
+    ctx.fillText("MANU", 128, 72);
+    ctx.fillText("RAMCHANDANI", 128, 108);
+
+    // Divider
+    ctx.strokeStyle = "rgba(200,134,10,0.35)";
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(30, 126); ctx.lineTo(226, 126); ctx.stroke();
+
+    // Circuit-rune accent lines
+    for (let i = 0; i < 3; i++) {
+      const ry = 148 + i * 12;
+      ctx.strokeStyle = `rgba(200,134,10,${0.18 - i * 0.04})`;
+      ctx.lineWidth   = 1;
+      ctx.beginPath(); ctx.moveTo(30, ry); ctx.lineTo(226, ry); ctx.stroke();
+    }
+
+    // Email field
+    ctx.fillStyle = "rgba(200,134,10,0.75)";
+    ctx.font      = "12px monospace";
+    ctx.fillText("manu@manuramchandani.com", 128, 218);
+
+    ctx.strokeStyle = "rgba(200,134,10,0.2)";
+    ctx.beginPath(); ctx.moveTo(30, 232); ctx.lineTo(226, 232); ctx.stroke();
+
+    // LinkedIn
+    ctx.fillStyle = "rgba(200,134,10,0.60)";
+    ctx.font      = "11px monospace";
+    ctx.fillText("linkedin.com/in/", 128, 266);
+    ctx.fillText("manuramchandani", 128, 284);
+
+    ctx.strokeStyle = "rgba(200,134,10,0.2)";
+    ctx.beginPath(); ctx.moveTo(30, 298); ctx.lineTo(226, 298); ctx.stroke();
+
+    // GitHub
+    ctx.fillStyle = "rgba(200,134,10,0.45)";
+    ctx.font      = "11px monospace";
+    ctx.fillText("github.com/mechanicMo", 128, 326);
+
+    // Bottom divider + interact hint
+    ctx.strokeStyle = "rgba(200,134,10,0.25)";
+    ctx.beginPath(); ctx.moveTo(30, 380); ctx.lineTo(226, 380); ctx.stroke();
+    ctx.fillStyle = "rgba(200,134,10,0.35)";
+    ctx.font      = "10px monospace";
+    ctx.fillText("[E] to copy", 128, 404);
+
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
   return (
     <group position={[x, y, z]}>
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <boxGeometry args={[0.75, 2.8, 0.35]} />
+      {/* Stone body — tall narrow megalith */}
+      <mesh position={[0, 1.8, 0]} castShadow>
+        <boxGeometry args={[0.90, 3.6, 0.42]} />
         <meshMatcapMaterial matcap={matcaps.stoneDark} />
       </mesh>
-      <mesh position={[0, 1.6, 0.18]}>
-        <planeGeometry args={[0.5, 1.8]} />
-        <meshBasicMaterial color="#C8860A" transparent opacity={0.7} />
+      {/* Slight taper at top */}
+      <mesh position={[0, 3.62, 0]} castShadow>
+        <boxGeometry args={[0.78, 0.28, 0.38]} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
       </mesh>
-      {[0.7, 1.4, 2.1].map((yOff, i) => (
-        <mesh key={i} position={[0, yOff, 0.185]}>
-          <planeGeometry args={[0.45, 0.04]} />
-          <meshBasicMaterial color="#C8860A" />
+      {/* Carved face — front panel with rune text */}
+      <mesh position={[0, 1.9, 0.22]}>
+        <planeGeometry args={[0.78, 3.2]} />
+        <meshBasicMaterial map={faceTex} transparent opacity={0.92} />
+      </mesh>
+      {/* Amber side accent lines */}
+      {([-0.44, 0.44] as number[]).map((ox, i) => (
+        <mesh key={i} position={[ox, 1.8, 0.22]}>
+          <planeGeometry args={[0.025, 3.2]} />
+          <meshBasicMaterial color="#C8860A" transparent opacity={0.5} />
         </mesh>
       ))}
-      <pointLight position={[0, 1.5, 0.5]} color="#C8860A" intensity={1.8} distance={8} decay={2} />
+      {/* Base plinth */}
+      <mesh position={[0, 0.12, 0]} receiveShadow>
+        <boxGeometry args={[1.3, 0.24, 0.7]} />
+        <meshMatcapMaterial matcap={matcaps.stoneDark} />
+      </mesh>
+      {/* Snow accumulation on top */}
+      <mesh position={[0, 3.8, 0]}>
+        <boxGeometry args={[0.88, 0.10, 0.40]} />
+        <meshMatcapMaterial matcap={matcaps.snow} />
+      </mesh>
+      {/* Warm amber glow — casts on nearby snow */}
+      <pointLight position={[0, 1.8, 0.8]} color="#C8860A" intensity={2.2} distance={10} decay={2} />
     </group>
   );
 };
@@ -522,6 +601,158 @@ const EngravingPlaque = ({ x, y, z, name, detail }: { x: number; y: number; z: n
   );
 };
 
+// ── Meal Planner ──────────────────────────────────────────────────────────────
+
+const MealPlannerLedge = ({ x, y, z }: { x: number; y: number; z: number }) => {
+  const matcaps = useMatcaps();
+
+  const screenTex = useMemo(() => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = 256;
+    canvas.height = 448;
+    const ctx     = canvas.getContext("2d")!;
+
+    ctx.fillStyle = "#0a0e08";
+    ctx.fillRect(0, 0, 256, 448);
+
+    ctx.fillStyle = "rgba(80,160,60,0.12)";
+    ctx.fillRect(0, 0, 256, 64);
+
+    ctx.fillStyle = "#50a03c";
+    ctx.font = "bold 13px monospace";
+    ctx.fillText("MEAL PLANNER", 16, 28);
+
+    ctx.strokeStyle = "rgba(80,160,60,0.3)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(12, 42); ctx.lineTo(244, 42); ctx.stroke();
+
+    ctx.fillStyle = "rgba(250,248,244,0.75)";
+    ctx.font = "bold 15px sans-serif";
+    ctx.fillText("This week", 16, 72);
+
+    const meals = ["Mon  Chicken stir-fry", "Tue  Lentil soup", "Wed  Pasta bake", "Thu  Salmon tacos", "Fri  Veggie bowl"];
+    meals.forEach((meal, i) => {
+      ctx.fillStyle = i % 2 === 0 ? "rgba(80,160,60,0.08)" : "transparent";
+      ctx.fillRect(0, 90 + i * 36, 256, 36);
+      ctx.fillStyle = "rgba(250,248,244,0.70)";
+      ctx.font = "12px sans-serif";
+      ctx.fillText(meal, 16, 113 + i * 36);
+    });
+
+    ctx.strokeStyle = "rgba(80,160,60,0.25)";
+    ctx.beginPath(); ctx.moveTo(12, 280); ctx.lineTo(244, 280); ctx.stroke();
+
+    ctx.fillStyle = "#50a03c";
+    ctx.font = "bold 12px monospace";
+    ctx.fillText("Receipt → Recipe", 16, 308);
+    ctx.fillStyle = "rgba(250,248,244,0.45)";
+    ctx.font = "11px sans-serif";
+    ctx.fillText("Scan any grocery receipt.", 16, 332);
+    ctx.fillText("Gemini AI generates the", 16, 352);
+    ctx.fillText("week's meals automatically.", 16, 372);
+
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  return (
+    <group position={[x, y, z]}>
+      <mesh>
+        <boxGeometry args={[0.45, 0.92, 0.055]} />
+        <meshMatcapMaterial matcap={matcaps.plasticDark} />
+      </mesh>
+      <group position={[0, 0, 0.028]}>
+        <mesh>
+          <planeGeometry args={[0.39, 0.82]} />
+          <meshBasicMaterial map={screenTex} transparent opacity={0.95} />
+        </mesh>
+      </group>
+      <pointLight position={[0, 0, 0.4]} color="#50a03c" intensity={0.8} distance={5} decay={2} />
+    </group>
+  );
+};
+
+// ── Workshops ──────────────────────────────────────────────────────────────────
+
+const WorkshopsShelf = ({ x, y, z }: { x: number; y: number; z: number }) => {
+  const matcaps = useMatcaps();
+
+  const screenTex = useMemo(() => {
+    const canvas  = document.createElement("canvas");
+    canvas.width  = 512;
+    canvas.height = 320;
+    const ctx     = canvas.getContext("2d")!;
+
+    ctx.fillStyle = "#080a10";
+    ctx.fillRect(0, 0, 512, 320);
+
+    ctx.fillStyle = "rgba(80,120,200,0.15)";
+    ctx.fillRect(0, 0, 512, 56);
+
+    ctx.fillStyle = "#7090d0";
+    ctx.font = "bold 13px monospace";
+    ctx.fillText("WORKSHOPS", 20, 26);
+
+    ctx.fillStyle = "rgba(250,248,244,0.45)";
+    ctx.font = "11px sans-serif";
+    ctx.fillText("e-learning platform", 20, 44);
+
+    ctx.strokeStyle = "rgba(80,120,200,0.3)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(12, 64); ctx.lineTo(500, 64); ctx.stroke();
+
+    const courses = [
+      { title: "React + TypeScript", progress: 0.78, color: "#6090e0" },
+      { title: "Modern Web Dev",    progress: 0.45, color: "#5080cc" },
+      { title: "Supabase Backends", progress: 0.92, color: "#4070b8" },
+    ];
+
+    courses.forEach(({ title, progress, color }, i) => {
+      const cardY = 80 + i * 78;
+      ctx.fillStyle = "rgba(80,120,200,0.08)";
+      ctx.fillRect(12, cardY, 488, 66);
+      ctx.strokeStyle = "rgba(80,120,200,0.2)";
+      ctx.strokeRect(12, cardY, 488, 66);
+
+      ctx.fillStyle = "rgba(250,248,244,0.80)";
+      ctx.font = "bold 14px sans-serif";
+      ctx.fillText(title, 24, cardY + 24);
+
+      ctx.fillStyle = "rgba(80,120,200,0.25)";
+      ctx.fillRect(24, cardY + 38, 440, 8);
+      ctx.fillStyle = color;
+      ctx.fillRect(24, cardY + 38, 440 * progress, 8);
+
+      ctx.fillStyle = "rgba(250,248,244,0.45)";
+      ctx.font = "10px monospace";
+      ctx.fillText(`${Math.round(progress * 100)}%`, 24 + 440 * progress + 4, cardY + 47);
+    });
+
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  return (
+    <group position={[x, y, z]}>
+      {/* Laptop base */}
+      <mesh position={[0, -0.02, 0.15]} receiveShadow>
+        <boxGeometry args={[0.75, 0.03, 0.52]} />
+        <meshMatcapMaterial matcap={matcaps.plasticDark} />
+      </mesh>
+      {/* Screen + hinge */}
+      <group position={[0, 0.02, -0.08]} rotation={[-(Math.PI * 105) / 180, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[0.75, 0.50, 0.03]} />
+          <meshMatcapMaterial matcap={matcaps.plasticDark} />
+        </mesh>
+        <mesh position={[0, 0, 0.016]}>
+          <planeGeometry args={[0.68, 0.44]} />
+          <meshBasicMaterial map={screenTex} transparent opacity={0.92} />
+        </mesh>
+      </group>
+      <pointLight position={[0, 0.3, 0.4]} color="#6090e0" intensity={1.0} distance={6} decay={2} />
+    </group>
+  );
+};
+
 // ── Dispatcher ─────────────────────────────────────────────────────────────────
 
 const LocationVisual = memo(({ x, y, z, visualType, name, detail }: { x: number; y: number; z: number; visualType: string; name?: string; detail?: string }) => {
@@ -532,8 +763,10 @@ const LocationVisual = memo(({ x, y, z, visualType, name, detail }: { x: number;
     case "champion-slabs": return <LeagueLadsCrag x={x} y={y} z={z} />;
     case "bjj-gear":       return <BJJLedge x={x} y={y} z={z} />;
     case "phone-scout":    return <ScoutPerch x={x} y={y} z={z} />;
-    case "phone-seedling": return <SeedlingOutcrop x={x} y={y} z={z} />;
-    case "map-pins":       return <CommunityApproach x={x} y={y} z={z} />;
+    case "phone-seedling":    return <SeedlingOutcrop x={x} y={y} z={z} />;
+    case "phone-meal":        return <MealPlannerLedge x={x} y={y} z={z} />;
+    case "map-pins":          return <CommunityApproach x={x} y={y} z={z} />;
+    case "tablet-workshops":  return <WorkshopsShelf x={x} y={y} z={z} />;
     case "kiosk":          return <NewsletterKiosk x={x} y={y} z={z} />;
     case "plaque":         return <EngravingPlaque x={x} y={y} z={z} name={name} detail={detail} />;
     case "monolith":       return <MonolithVisual x={x} y={y} z={z} />;

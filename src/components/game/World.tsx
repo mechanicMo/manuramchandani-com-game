@@ -27,6 +27,7 @@ import { BJJBelts }            from "./BJJBelts";
 import { AgentCaveNook }       from "./AgentCaveNook";
 import { BouncyBoulder }       from "./BouncyBoulder";
 import { LizHeart }            from "./LizHeart";
+import { SnowSlope }           from "./SnowSlope";
 import { useSkyTransition }    from "@/hooks/useSkyTransition";
 import { useAudioManager }     from "@/hooks/useAudioManager";
 import { useDeviceQuality }    from "@/hooks/useDeviceQuality";
@@ -172,6 +173,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
       <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
       <GroundTerrain phase={phase} />
+      <SnowSlope phase={phase} />
       <BackgroundMountains quality={quality} />
       <ClimbingDetail phase={phase} />
       <ForestBase phase={phase} quality={quality} />

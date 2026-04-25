@@ -1,5 +1,5 @@
 // src/components/ui/LocationOverlay.tsx
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Location } from "@/data/locations";
 import type { useAudioManager } from "@/hooks/useAudioManager";
@@ -59,6 +59,65 @@ export const LocationOverlay = ({ location, onDismiss, audio, muted = false }: P
     <AnimatePresence>
       {location && <OverlayContent location={location} onDismiss={onDismiss} />}
     </AnimatePresence>
+  );
+};
+
+// Click-to-copy field row used inside contact overlays
+const ContactFields = ({
+  email, linkedin, github, hasExternalLink,
+}: { email: string; linkedin?: string; github?: string; hasExternalLink: boolean }) => {
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copy = (value: string, key: string) => {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1800);
+    });
+  };
+
+  const fieldStyle = (key: string): React.CSSProperties => ({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    fontFamily: "DM Mono, monospace",
+    fontSize: "12px",
+    color: copied === key ? "#C8860A" : "rgba(200,134,10,0.75)",
+    background: "rgba(200,134,10,0.06)",
+    border: `1px solid rgba(200,134,10,${copied === key ? "0.5" : "0.2"})`,
+    borderRadius: "4px",
+    padding: "7px 10px",
+    cursor: "pointer",
+    transition: "border-color 0.2s, color 0.2s",
+    letterSpacing: "0.02em",
+    userSelect: "none",
+    gap: "8px",
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: hasExternalLink ? "4px" : "0" }}>
+      <button onClick={() => copy(email, "email")} style={fieldStyle("email")}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{email}</span>
+        <span style={{ fontSize: "10px", flexShrink: 0, color: copied === "email" ? "#C8860A" : "rgba(200,134,10,0.45)" }}>
+          {copied === "email" ? "copied!" : "copy"}
+        </span>
+      </button>
+      {linkedin && (
+        <button onClick={() => copy(linkedin, "linkedin")} style={fieldStyle("linkedin")}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{linkedin}</span>
+          <span style={{ fontSize: "10px", flexShrink: 0, color: copied === "linkedin" ? "#C8860A" : "rgba(200,134,10,0.45)" }}>
+            {copied === "linkedin" ? "copied!" : "copy"}
+          </span>
+        </button>
+      )}
+      {github && (
+        <button onClick={() => copy(github, "github")} style={fieldStyle("github")}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{github}</span>
+          <span style={{ fontSize: "10px", flexShrink: 0, color: copied === "github" ? "#C8860A" : "rgba(200,134,10,0.45)" }}>
+            {copied === "github" ? "copied!" : "copy"}
+          </span>
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -215,25 +274,13 @@ const OverlayContent = ({ location, onDismiss }: { location: Location; onDismiss
                 {content.linkLabel ?? "Subscribe"}
               </a>
             )}
-            {content.type === "contact" && content.email && (
-              <a
-                href={`mailto:${content.email}`}
-                style={{
-                  display: "inline-block",
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "rgba(200,134,10,0.85)",
-                  background: "rgba(200,134,10,0.1)",
-                  border: "1px solid rgba(200,134,10,0.3)",
-                  padding: "8px 16px",
-                  borderRadius: "4px",
-                  textDecoration: "none",
-                  textAlign: "center",
-                }}
-              >
-                {content.link ? "Or send an email" : (content.linkLabel ?? "Get in touch")}
-              </a>
+            {content.type === "contact" && (
+              <ContactFields
+                email={content.email}
+                linkedin={content.linkedin}
+                github={content.github}
+                hasExternalLink={!!content.link}
+              />
             )}
             <button
               onClick={onDismiss}

@@ -8,7 +8,9 @@ export type VisualType =
   | "bjj-gear"
   | "phone-scout"
   | "phone-seedling"
+  | "phone-meal"
   | "map-pins"
+  | "tablet-workshops"
   | "kiosk"
   | "plaque"
   | "monolith"
@@ -28,6 +30,8 @@ export type ContactContent = {
   title: string;
   description: string;
   email: string;
+  linkedin?: string;
+  github?: string;
   link?: string;
   linkLabel?: string;
 };
@@ -67,6 +71,8 @@ export const LOCATIONS: Location[] = [
       title: "Manu Ramchandani",
       description: "14 years building. Currently freelance. Let's talk.",
       email: "manu@manuramchandani.com",
+      linkedin: "linkedin.com/in/manuramchandani",
+      github: "github.com/mechanicMo",
       linkLabel: "Send a message",
     },
   },
@@ -98,6 +104,25 @@ export const LOCATIONS: Location[] = [
       description:
         "Production SaaS demo — 15 modules, real integrations, zero mocks. Auth, analytics, AI chat, a Snake game with a global leaderboard.",
       link: "/projects/prism",
+      linkLabel: "View case study",
+    },
+  },
+  {
+    id: "meal-planner-ledge",
+    name: "Meal Planner",
+    x: -7,
+    y: 18,
+    z: 40,
+    phase: "ascent",
+    visualType: "phone-meal",
+    interactionType: "panel",
+    proximityRadius: 5,
+    content: {
+      type: "panel",
+      title: "Meal Planner",
+      description:
+        "Point your phone at a grocery receipt. Gemini AI scans the ingredients and generates a full recipe set — shopping list included. Built with Flutter.",
+      link: "/projects/meal-planner",
       linkLabel: "View case study",
     },
   },
@@ -170,6 +195,25 @@ export const LOCATIONS: Location[] = [
       description:
         "TV and movie discovery with AI-ranked picks and natural-language mood search. Built with React Native + Llama 70B.",
       link: "/projects/scout",
+      linkLabel: "View case study",
+    },
+  },
+  {
+    id: "workshops-shelf",
+    name: "Workshops",
+    x: 7,
+    y: 57,
+    z: 40,
+    phase: "ascent",
+    visualType: "tablet-workshops",
+    interactionType: "panel",
+    proximityRadius: 5,
+    content: {
+      type: "panel",
+      title: "Workshops",
+      description:
+        "E-learning platform built with Lovable + Supabase. Covers React, TypeScript, and modern web dev. Video chapters, quizzes, and progress tracking.",
+      link: "/projects/workshops",
       linkLabel: "View case study",
     },
   },
@@ -291,6 +335,8 @@ export const LOCATIONS: Location[] = [
       title: "Manu Ramchandani",
       description: "14 years building. Currently freelance. Let's talk.",
       email: "manu@manuramchandani.com",
+      linkedin: "linkedin.com/in/manuramchandani",
+      github: "github.com/mechanicMo",
       linkLabel: "Send a message",
     },
   },

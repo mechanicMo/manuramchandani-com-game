@@ -64,7 +64,7 @@ export const GroundTerrain = ({ phase }: Props) => {
     return groups;
   }, []);
 
-  if (phase !== "ascent") return null;
+  if (phase === "descent") return null;
 
   return (
     <group>

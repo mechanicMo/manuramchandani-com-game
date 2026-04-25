@@ -66,7 +66,7 @@ export const ForestBase = ({ phase, quality = "high" }: Props) => {
   const trees   = useMemo(() => makeTrees(TREE_COUNTS[quality]), [quality]);
   const matcaps = useMatcaps();
 
-  if (phase !== "ascent") return null;
+  if (phase === "descent") return null;
 
   return (
     <group>

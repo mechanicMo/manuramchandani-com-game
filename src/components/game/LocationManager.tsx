@@ -27,20 +27,14 @@ export const LocationManager = ({ characterPos, phase, onLocationChange, audio, 
 
   useFrame(() => {
     if (!characterPos) return;
-    // Suppress location detection while on the climb face — avoids triggering walk-path
-    // locations when character happens to be at the matching Y while climbing
-    if (isClimbing) {
-      if (activeIdRef.current !== null) {
-        const prev = LOCATION_SOUNDS[activeIdRef.current ?? ""];
-        if (prev) audio.setLoopVolume(prev.key, 0);
-        activeIdRef.current = null;
-        activeSoundRef.current = null;
-        onLocationChange(null);
-      }
-      return;
-    }
-    // Only check locations matching current phase
-    const candidates = LOCATIONS.filter(loc => loc.phase === phase);
+
+    // During climbing: only check locations that are in the climb zone (y > 4) —
+    // suppress ground-level locations to avoid false triggers at matching altitude.
+    const candidates = LOCATIONS.filter(loc => {
+      if (loc.phase !== phase) return false;
+      if (isClimbing && loc.y < 4) return false; // skip ground-level spots while on wall
+      return true;
+    });
 
     let found: Location | null = null;
     for (const loc of candidates) {

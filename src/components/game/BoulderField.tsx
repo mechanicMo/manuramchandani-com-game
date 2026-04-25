@@ -65,7 +65,7 @@ export const BoulderField = ({ phase, quality = "high" }: Props) => {
   const matcaps   = useMatcaps();
   const boulderMat = useMatcapWithGroundBounce(matcaps.stoneDark);
 
-  if (phase !== "ascent") return null;
+  if (phase === "descent") return null;
 
   return (
     <group>
