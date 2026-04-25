@@ -1,7 +1,7 @@
 // src/components/game/ClimbingDetail.tsx
 // Decorative climbing details on the mountain face: rope segments, chalk marks, pitons.
 // Updated to use full 3D hold positions (z≈36 on the mountain's front climb face).
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import * as THREE from "three";
 import { HOLDS } from "./HoldMarkers";
 import type { GamePhase } from "@/hooks/useGamePhase";
@@ -30,6 +30,19 @@ function makePitons(seed = 234) {
   }));
 }
 
+// Module-level shared materials and geometries — created once, never re-allocated
+const _dummy    = new THREE.Object3D();
+_dummy.matrixAutoUpdate = false;
+
+const ROPE_MAT  = new THREE.MeshBasicMaterial({ color: "#7a6035" });
+const CHALK_GEO = new THREE.CircleGeometry(0.22, 7);
+const CHALK_MAT = new THREE.MeshBasicMaterial({
+  color: "white", transparent: true, opacity: 0.28,
+  side: THREE.DoubleSide, depthWrite: false,
+});
+const PITON_GEO = new THREE.CylinderGeometry(0.025, 0.02, 0.28, 5);
+const PITON_MAT = new THREE.MeshBasicMaterial({ color: "#5a5040" });
+
 export const ClimbingDetail = ({ phase }: Props) => {
   const ropeGeometries = useMemo(() => {
     return ROPE_PAIRS.map(([ai, bi]) => {
@@ -54,40 +67,48 @@ export const ClimbingDetail = ({ phase }: Props) => {
 
   const pitons = useMemo(() => makePitons(), []);
 
+  const chalkRef = useRef<THREE.InstancedMesh>(null!);
+  const pitonRef = useRef<THREE.InstancedMesh>(null!);
+
+  useEffect(() => {
+    if (chalkRef.current) {
+      CHALK_HOLDS.forEach((hi, i) => {
+        const h = HOLDS[hi];
+        if (!h) return;
+        _dummy.position.set(
+          h.x + (hi % 2 === 0 ? 0.2 : -0.15),
+          h.y - 0.25,
+          h.z - 0.05,
+        );
+        _dummy.rotation.set(0, 0, 0);
+        _dummy.updateMatrix();
+        chalkRef.current.setMatrixAt(i, _dummy.matrix);
+      });
+      chalkRef.current.instanceMatrix.needsUpdate = true;
+    }
+    if (pitonRef.current) {
+      pitons.forEach((p, i) => {
+        _dummy.position.set(p.x, p.y, p.z);
+        _dummy.rotation.set(0, 0, p.rotZ);
+        _dummy.updateMatrix();
+        pitonRef.current.setMatrixAt(i, _dummy.matrix);
+      });
+      pitonRef.current.instanceMatrix.needsUpdate = true;
+    }
+  }, [pitons]);
+
   if (phase !== "ascent") return null;
 
   return (
     <group>
-      {/* Rope segments — worn tan hemp rope */}
+      {/* Rope segments — worn tan hemp rope; each geometry is unique so can't be instanced */}
       {ropeGeometries.map((geo, i) => (
-        <mesh key={i} geometry={geo}>
-          <meshBasicMaterial color="#7a6035" />
-        </mesh>
+        <mesh key={i} geometry={geo} material={ROPE_MAT} />
       ))}
 
-      {/* Chalk smears — faint white circles on the face at hold positions */}
-      {CHALK_HOLDS.map((hi) => {
-        const h = HOLDS[hi];
-        if (!h) return null;
-        return (
-          <mesh key={hi} position={[h.x + (hi % 2 === 0 ? 0.2 : -0.15), h.y - 0.25, h.z - 0.05]}>
-            <circleGeometry args={[0.22, 7]} />
-            <meshBasicMaterial color="white" transparent opacity={0.28} side={THREE.DoubleSide} depthWrite={false} />
-          </mesh>
-        );
-      })}
-
-      {/* Pitons — short steel pegs hammered into the face */}
-      {pitons.map((p) => (
-        <mesh
-          key={p.id}
-          position={[p.x, p.y, p.z]}
-          rotation={[0, 0, p.rotZ]}
-        >
-          <cylinderGeometry args={[0.025, 0.02, 0.28, 5]} />
-          <meshBasicMaterial color="#5a5040" />
-        </mesh>
-      ))}
+      {/* Chalk smears and pitons batched into InstancedMesh (9 + 5 → 2 draw calls) */}
+      <instancedMesh ref={chalkRef} args={[CHALK_GEO, CHALK_MAT, CHALK_HOLDS.length]} />
+      <instancedMesh ref={pitonRef} args={[PITON_GEO, PITON_MAT, pitons.length]} />
     </group>
   );
 };

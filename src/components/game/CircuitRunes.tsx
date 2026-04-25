@@ -90,6 +90,9 @@ type RunePlate = {
   seed: number;
 };
 
+// Shared geometry for all rune plates (all are 0.3×0.3 planes)
+const RUNE_PLANE_GEO = new THREE.PlaneGeometry(0.3, 0.3);
+
 type Props = { phase: GamePhase };
 
 export const CircuitRunes = ({ phase }: Props) => {
@@ -124,8 +127,7 @@ export const CircuitRunes = ({ phase }: Props) => {
     <>
       {plates.map((plate, i) => (
         <group key={i} position={plate.pos}>
-          <mesh>
-            <planeGeometry args={[0.3, 0.3]} />
+          <mesh geometry={RUNE_PLANE_GEO}>
             <meshBasicMaterial map={textures[i]} transparent opacity={0.8} side={THREE.DoubleSide} depthWrite={false} />
           </mesh>
           <pointLight

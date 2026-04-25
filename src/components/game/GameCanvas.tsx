@@ -3,7 +3,7 @@ import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { Canvas }            from "@react-three/fiber";
 import { KeyboardControls }  from "@react-three/drei";
 import * as THREE            from "three";
-import { EffectComposer, Bloom, Vignette, ToneMapping } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, Vignette, ToneMapping, ChromaticAberration } from "@react-three/postprocessing";
 import { ToneMappingMode }   from "postprocessing";
 import { World }             from "./World";
 import { LoadingScreen }     from "@/components/ui/LoadingScreen";
@@ -41,6 +41,7 @@ export const GameCanvas = () => {
   const [openedByBeacon, setOpenedByBeacon] = useState(false);
   const gamePhase                           = useGamePhase();
   const nearbyRef                           = useRef<Location | null>(null);
+  const altBarRef                           = useRef<HTMLDivElement>(null);
   const audio                               = useAudioManager();
   const quality                             = useDeviceQuality();
   const maxDpr = quality === "low" ? 1 : quality === "medium" ? 1.5 : Math.min(window.devicePixelRatio, 2);
@@ -135,6 +136,38 @@ export const GameCanvas = () => {
       />
       <AudioLoader audio={audio} />
 
+      {/* Altitude progress bar — right edge, visible during ascent only */}
+      {gamePhase.phase === "ascent" && (
+        <div
+          style={{
+            position: "fixed",
+            right: "18px",
+            bottom: "60px",
+            width: "2px",
+            height: "120px",
+            background: "rgba(200,134,10,0.12)",
+            borderRadius: "1px",
+            zIndex: 10,
+            pointerEvents: "none",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            ref={altBarRef}
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "0%",
+              background: "rgba(200,134,10,0.65)",
+              borderRadius: "1px",
+              transition: "height 0.4s ease-out",
+            }}
+          />
+        </div>
+      )}
+
       {/* Help button — top-left (keyboard-only, hidden on touch devices) */}
       {!isTouchDevice() && <button
         onClick={() => setHelpOpen(true)}
@@ -209,18 +242,27 @@ export const GameCanvas = () => {
               onRequestOpenChat={handleRequestOpenChat}
               audio={audio}
               muted={muted}
+              altBarRef={altBarRef}
             />
           </Suspense>
           <EffectComposer>
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
             {quality !== "low" && (
               <Bloom
-                intensity={0.35}
-                luminanceThreshold={0.55}
+                intensity={gamePhase.summitArriving ? 0.65 : 0.35}
+                luminanceThreshold={gamePhase.summitArriving ? 0.45 : 0.55}
                 luminanceSmoothing={0.85}
               />
             )}
-            {quality !== "low" && <Vignette offset={0.4} darkness={0.5} />}
+            {quality !== "low" && (
+              <Vignette
+                offset={0.4}
+                darkness={gamePhase.phase === "descent" ? 0.68 : 0.5}
+              />
+            )}
+            {quality !== "low" && gamePhase.phase === "descent" && (
+              <ChromaticAberration offset={new THREE.Vector2(0.0018, 0.0012)} />
+            )}
           </EffectComposer>
         </Canvas>
       </KeyboardControls>

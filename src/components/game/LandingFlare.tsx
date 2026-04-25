@@ -94,10 +94,17 @@ export const LandingFlare = ({ phase, characterPos, quality = "high" }: Props) =
       ptsRef.current.geometry.attributes.color.needsUpdate    = true;
     }
 
-    // Flickering golden light that fades in then out
+    // Flickering golden light — intensity tracks the earliest-born active particle
     if (lightRef.current) {
-      const minLife = Math.min(...pool.current.filter(p => p.active).map(p => p.life / p.maxLife), 1);
-      lightRef.current.intensity = (1 - minLife) * 4.5;
+      let minProgress = 1;
+      for (let i = 0; i < burstCount; i++) {
+        const p = pool.current[i];
+        if (p.active) {
+          const t = p.life / p.maxLife;
+          if (t < minProgress) minProgress = t;
+        }
+      }
+      lightRef.current.intensity = (1 - minProgress) * 4.5;
     }
 
     if (!anyActive) setActive(false);

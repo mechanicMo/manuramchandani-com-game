@@ -15,6 +15,9 @@ const _lookTarget  = new THREE.Vector3();
 const MIN_CAM_DIST = 1.5;
 const CAM_SKIN     = 0.3;
 
+// Descent carve shake — pre-allocated scratch
+const _shake       = new THREE.Vector3();
+
 // Orbit drag sensitivity
 const AZIMUTH_SENS   = 0.006;
 const ELEVATION_SENS = 0.005;
@@ -93,6 +96,10 @@ export const CameraRig = ({
 
   // Smooth lookAt target
   const lookAtRef = useRef(new THREE.Vector3());
+
+  // Descent carve shake — track target X delta to derive lateral speed
+  const prevTargetX   = useRef(0);
+  const shakeIntensity = useRef(0);
 
   const markOrbiting = () => {
     orbitingRef.current = true;
@@ -272,9 +279,33 @@ export const CameraRig = ({
     _desired.copy(target).addScaledVector(_offset.normalize(), finalDist);
     camera.position.lerp(_desired, 0.10);
 
+    // Descent carve shake — lateral speed drives camera vibration
+    if (phase === "descent") {
+      const lateralSpeed = Math.abs(target.x - prevTargetX.current) / Math.max(delta, 0.001);
+      shakeIntensity.current += (lateralSpeed * 0.004 - shakeIntensity.current) * delta * 8;
+      shakeIntensity.current = Math.min(shakeIntensity.current, 0.08);
+      const si = shakeIntensity.current;
+      if (si > 0.001) {
+        _shake.set(
+          (Math.random() - 0.5) * si,
+          (Math.random() - 0.5) * si * 0.5,
+          0,
+        );
+        camera.position.add(_shake);
+      }
+    }
+    prevTargetX.current = target.x;
+
     // Subtle vertical bob while climbing — makes camera feel alive
     if (climbing) {
       camera.position.y += Math.sin(state.clock.elapsedTime * 8) * 0.015;
+    }
+
+    // FOV widens during fast descent for speed sensation
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const targetFov = phase === "descent" ? 80 : 60;
+      camera.fov += (targetFov - camera.fov) * delta * 2;
+      camera.updateProjectionMatrix();
     }
 
     // LookAt slightly above character center for better framing

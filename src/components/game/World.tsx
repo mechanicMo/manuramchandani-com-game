@@ -1,5 +1,5 @@
 // src/components/game/World.tsx
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
 import { Sky } from "@react-three/drei";
@@ -52,9 +52,10 @@ type Props = {
   onRequestOpenChat: () => void;
   audio: ReturnType<typeof useAudioManager>;
   muted: boolean;
+  altBarRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onRequestOpenChat, audio, muted }: Props) => {
+export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onRequestOpenChat, audio, muted, altBarRef }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const [characterHeading, setCharacterHeading] = useState(0);
   const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
@@ -150,6 +151,11 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
     prevPosRef.current.copy(p);
     setPos(p.clone());
     onCharacterY(p.y, p.z);
+    // Imperatively update altitude bar — avoids React re-render per frame
+    if (altBarRef?.current && phase === "ascent") {
+      const pct = Math.min(p.y / 80, 1) * 100;
+      altBarRef.current.style.height = `${pct}%`;
+    }
   };
 
   return (
