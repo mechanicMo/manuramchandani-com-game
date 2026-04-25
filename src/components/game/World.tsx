@@ -63,6 +63,8 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const spaceRef                             = useRef(false);
   const spaceWasDown                         = useRef(false);
   const ambientLightRef                      = useRef<THREE.Light>(null);
+  const rimLightRef                          = useRef<THREE.SpotLight>(null);
+  const rimTargetRef                         = useRef(new THREE.Object3D());
 
   // Start ambient wind loops once (audio buffers may not be ready yet — setLoopVolume handles gracefully)
   useEffect(() => {
@@ -103,6 +105,14 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       (ambientLightRef.current as THREE.Light).color.setStyle(sky.ambientColor);
     }
 
+    // Rim light trails behind-above the character, separating it from the cliff
+    if (rimLightRef.current) {
+      rimLightRef.current.position.set(pos.x, pos.y + 3, pos.z - 5);
+      rimTargetRef.current.position.set(pos.x, pos.y + 1, pos.z);
+      rimTargetRef.current.updateMatrixWorld();
+      rimLightRef.current.target = rimTargetRef.current;
+    }
+
     if (!muted) {
       // Elevation-based wind volumes
       const y = pos.y;
@@ -138,6 +148,17 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
 
       {/* Ambient — night is deep blue-black, not grey */}
       <ambientLight ref={ambientLightRef} intensity={sky.ambientIntensity} color={sky.ambientColor} />
+
+      {/* Rim light — blue-cool backlight that follows the character, separates from cliff */}
+      <spotLight
+        ref={rimLightRef}
+        intensity={1.5}
+        color="#d0e8ff"
+        angle={0.5}
+        penumbra={0.5}
+        distance={14}
+        castShadow={false}
+      />
 
       {/* Key light — character shadow only; matcaps handle environmental lighting */}
       <directionalLight

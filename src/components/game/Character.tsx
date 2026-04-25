@@ -315,9 +315,15 @@ export const Character = ({
       posRef.current.copy(p);
 
       if (modelGroupRef.current) {
-        modelGroupRef.current.rotation.y = 0; // face forward for snowboard
+        modelGroupRef.current.rotation.y = 0;
         modelGroupRef.current.rotation.x = 0;
         modelGroupRef.current.position.y = 0;
+        // Lean into turns: positive strafe = +x (right) = tilt top right = -z rotation
+        modelGroupRef.current.rotation.z = THREE.MathUtils.lerp(
+          modelGroupRef.current.rotation.z,
+          -intent.strafe * 0.35,
+          0.1
+        );
       }
 
       if (actions) {
@@ -393,6 +399,7 @@ export const Character = ({
     // Visual model rotation + procedural gait (bob + lean while moving)
     if (modelGroupRef.current) {
       modelGroupRef.current.rotation.y = facingYawRef.current;
+      modelGroupRef.current.rotation.z = THREE.MathUtils.lerp(modelGroupRef.current.rotation.z, 0, 0.15);
       if (moveVec.lengthSq() > 0.0001) {
         const gaitPhase = state.clock.elapsedTime * 6.5;
         modelGroupRef.current.position.y = Math.sin(gaitPhase) * 0.045;
