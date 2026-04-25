@@ -9,8 +9,6 @@ export type VisualType =
   | "phone-scout"
   | "phone-seedling"
   | "map-pins"
-  | "slalom-gate"
-  | "snow-text"
   | "lit-ground"
   | "plaque"
   | "monolith"
@@ -259,57 +257,6 @@ export const LOCATIONS: Location[] = [
   },
 
   // ── DESCENT ───────────────────────────────────────────────────────────────
-  {
-    id: "gate-001",
-    name: "Issue Gate 001",
-    x: 8,
-    y: 68,
-    z: -14,
-    phase: "descent",
-    visualType: "slalom-gate",
-    interactionType: "gate",
-    proximityRadius: 8,
-    content: {
-      type: "gate",
-      headline: "Issue #001 — What I learned building an AI agent from scratch",
-      link: "https://sleepingemployees.com",
-    },
-  },
-  {
-    id: "gate-002",
-    name: "Issue Gate 002",
-    x: -8,
-    y: 50,
-    z: -34,
-    phase: "descent",
-    visualType: "slalom-gate",
-    interactionType: "gate",
-    proximityRadius: 8,
-    content: {
-      type: "gate",
-      headline: "Issue #002 — The portfolio that builds itself",
-      link: "https://sleepingemployees.com",
-    },
-  },
-  {
-    id: "about-slope",
-    name: "About Slope",
-    x: 0,
-    y: 30,
-    z: -55,
-    phase: "descent",
-    visualType: "snow-text",
-    interactionType: "view",
-    proximityRadius: 10,
-    content: {
-      type: "view",
-      lines: [
-        "14 years building.",
-        "1 kid. Infinite problems to solve.",
-        "Not an expert. Someone doing the work.",
-      ],
-    },
-  },
   {
     id: "contact-landing",
     name: "Contact Landing",

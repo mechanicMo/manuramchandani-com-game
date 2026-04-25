@@ -28,7 +28,7 @@ export const SummitObjects = ({ phase, characterPos }: Props) => {
         characterPos={characterPos}
         phase={phase}
       />
-      <SheraniSnowman />
+      <SheraniSnowman characterPos={characterPos} />
       {pyreLit && <DistantBeacons />}
     </group>
   );
@@ -264,13 +264,61 @@ const DistantBeacons = () => {
 
 // ── Sherani Snowman ────────────────────────────────────────────────────────────
 // Child-scaled snowman near the summit beacon. Named after Mo's daughter.
+// On close approach: shows a thought-bubble.
 
+const SNOWMAN_POS: [number, number, number] = [3.5, SUMMIT_Y, -1];
+const SNOWMAN_TRIGGER_RADIUS = 2.8;
 const SNOW_SHADOW = "#c8d8f0";
 
-const SheraniSnowman = () => {
+const SheraniSnowman = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
   const matcaps = useMatcaps();
+  const [bubble, setBubble] = useState(false);
+  const suppressRef = useRef(false);
+  const timerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useFrame(() => {
+    if (suppressRef.current) return;
+    const dx = characterPos.x - SNOWMAN_POS[0];
+    const dy = characterPos.y - SNOWMAN_POS[1];
+    const dz = characterPos.z - SNOWMAN_POS[2];
+    if (Math.sqrt(dx * dx + dy * dy + dz * dz) < SNOWMAN_TRIGGER_RADIUS) {
+      suppressRef.current = true;
+      setBubble(true);
+      timerRef.current = setTimeout(() => setBubble(false), 5500);
+    }
+  });
+
   return (
-    <group position={[3.5, SUMMIT_Y, -1]} scale={[0.65, 0.65, 0.65]}>
+    <group position={SNOWMAN_POS}>
+      {bubble && (
+        <Html
+          position={[0, 2.2, 0]}
+          center
+          distanceFactor={8}
+          style={{ pointerEvents: "none" }}
+        >
+          <div style={{
+            background: "rgba(8,8,16,0.9)",
+            border: "1px solid rgba(200,134,10,0.35)",
+            borderRadius: "10px",
+            padding: "8px 14px",
+            fontFamily: "'Inter', system-ui, sans-serif",
+            fontSize: "12px",
+            color: "rgba(250,248,244,0.88)",
+            lineHeight: 1.55,
+            backdropFilter: "blur(10px)",
+            whiteSpace: "nowrap",
+            animation: "beaconFadeIn 0.4s ease both",
+            textAlign: "center",
+          }}>
+            One day we'll build<br />
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "10px", color: "#C8860A" }}>
+              something together, Sherani.
+            </span>
+          </div>
+        </Html>
+      )}
+    <group position={[0, 0, 0]} scale={[0.65, 0.65, 0.65]}>
       {/* Bottom body */}
       <mesh position={[0, 0.5, 0]} castShadow>
         <sphereGeometry args={[0.55, 12, 12]} />
@@ -320,6 +368,7 @@ const SheraniSnowman = () => {
         <circleGeometry args={[0.55, 16]} />
         <meshBasicMaterial color={SNOW_SHADOW} transparent opacity={0.35} depthWrite={false} />
       </mesh>
+    </group>
     </group>
   );
 };

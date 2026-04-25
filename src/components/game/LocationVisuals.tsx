@@ -49,49 +49,6 @@ function makeTerminalTexture(): THREE.CanvasTexture {
   return new THREE.CanvasTexture(canvas);
 }
 
-// ── IssueGateVisual ────────────────────────────────────────────────────────────
-
-const IssueGateVisual = ({ x, y, z }: { x: number; y: number; z: number }) => {
-  const lightRef = useRef<THREE.PointLight>(null);
-
-  useFrame(({ clock }) => {
-    if (!lightRef.current) return;
-    const t        = clock.getElapsedTime();
-    const phase    = (t % 1.0);
-    const triangle = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
-    lightRef.current.intensity = triangle * 3;
-  });
-
-  return (
-    <group position={[x, y, z]}>
-      <mesh position={[-1.5, 0, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 4, 6]} />
-        <meshBasicMaterial color="#ff6020" />
-      </mesh>
-      <mesh position={[1.5, 0, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 4, 6]} />
-        <meshBasicMaterial color="#ff6020" />
-      </mesh>
-      <mesh position={[0, 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.04, 0.04, 3, 6]} />
-        <meshBasicMaterial color="#ff6020" />
-      </mesh>
-      <mesh position={[0, 1.5, 0]}>
-        <planeGeometry args={[2.8, 0.5]} />
-        <meshBasicMaterial color="#ff8020" transparent opacity={0.7} side={THREE.DoubleSide} />
-      </mesh>
-      <pointLight
-        ref={lightRef}
-        position={[0, 2, 0]}
-        color="#ff8020"
-        intensity={0}
-        distance={10}
-        decay={2}
-      />
-    </group>
-  );
-};
-
 // ── Per-location renderers ─────────────────────────────────────────────────────
 
 const BaseCamp = ({ x, y, z }: { x: number; y: number; z: number }) => {
@@ -301,44 +258,6 @@ const CommunityApproach = ({ x, y, z }: { x: number; y: number; z: number }) => 
   );
 };
 
-const SlalomGate = ({ x, y, z }: { x: number; y: number; z: number }) => (
-  <IssueGateVisual x={x} y={y} z={z} />
-);
-
-const AboutSlope = ({ x, y, z }: { x: number; y: number; z: number }) => {
-  const statsTex = useMemo(() => {
-    const canvas  = document.createElement("canvas");
-    canvas.width  = 512;
-    canvas.height = 256;
-    const ctx     = canvas.getContext("2d")!;
-    ctx.clearRect(0, 0, 512, 256);
-
-    ctx.fillStyle = "#e8f0ff";
-    ctx.font      = "bold 28px sans-serif";
-    ctx.fillText("14 years building.", 20, 50);
-    ctx.font      = "22px sans-serif";
-    ctx.fillStyle = "#c0d0f0";
-    ctx.fillText("1 kid. Infinite problems to solve.", 20, 90);
-    ctx.fillText("Not an expert. Someone doing the work.", 20, 128);
-
-    ctx.font      = "bold 20px monospace";
-    ctx.fillStyle = "#80a0d0";
-    const stats = ["React / RN  14 yrs", "Flutter      3 yrs", "AI/Agents    2 yrs", "PostgreSQL   8 yrs"];
-    stats.forEach((s, i) => ctx.fillText(s, 20, 168 + i * 26));
-
-    return new THREE.CanvasTexture(canvas);
-  }, []);
-
-  return (
-    <group position={[x, y, z]}>
-      <mesh>
-        <planeGeometry args={[5, 2.5]} />
-        <meshBasicMaterial map={statsTex} transparent opacity={0.85} side={THREE.DoubleSide} />
-      </mesh>
-    </group>
-  );
-};
-
 const ContactLanding = ({ x, y, z }: { x: number; y: number; z: number }) => (
   <group position={[x, y, z]}>
     {([-4, -1.5, 1.5, 4] as number[]).map((ox, i) => (
@@ -507,8 +426,6 @@ const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z:
     case "phone-scout":    return <ScoutPerch x={x} y={y} z={z} />;
     case "phone-seedling": return <SeedlingOutcrop x={x} y={y} z={z} />;
     case "map-pins":       return <CommunityApproach x={x} y={y} z={z} />;
-    case "slalom-gate":    return <SlalomGate x={x} y={y} z={z} />;
-    case "snow-text":      return <AboutSlope x={x} y={y} z={z} />;
     case "lit-ground":     return <ContactLanding x={x} y={y} z={z} />;
     case "plaque":         return <EngravingPlaque x={x} y={y} z={z} />;
     case "monolith":       return <MonolithVisual x={x} y={y} z={z} />;
