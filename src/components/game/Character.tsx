@@ -212,7 +212,10 @@ export const Character = ({
       // Hold-jump (SPACE → nearest upper hold)
       if (intent.jump && !jumpingToHold.current && holds.length) {
         const nearest = holds
-          .filter((h) => h.y > posRef.current.y + 0.5)
+          .filter((h) =>
+            h.y > posRef.current.y + 0.5 &&
+            Math.abs(h.z - posRef.current.z) < 15
+          )
           .sort((a, b) =>
             Math.hypot(a.x - posRef.current.x, a.y - posRef.current.y) -
             Math.hypot(b.x - posRef.current.x, b.y - posRef.current.y)
@@ -255,8 +258,8 @@ export const Character = ({
       body.setNextKinematicTranslation({ x: newX, y: newY, z: newZ });
       posRef.current.set(newX, newY, newZ);
 
-      // Exit climb → walk: character descended to ground level
-      if (newY < 2.0) {
+      // Exit climb → walk: character descended to ground level (only exit when not pressing up — prevents flat-ground entry from immediately popping back to walk)
+      if (newY < 2.0 && intent.climbUp <= 0) {
         if (climbingRef.current) {
           climbingRef.current = false;
           onClimbChange?.(false);
@@ -405,17 +408,21 @@ export const Character = ({
       const pos = body.translation();
       const dir = { x: Math.sin(facingYawRef.current), y: 0, z: Math.cos(facingYawRef.current) };
 
-      climbRaycaster.set(
-        tmpVec3A.set(pos.x, pos.y, pos.z),
-        tmpVec3B.set(dir.x, dir.y, dir.z).normalize(),
-      );
+      const dirVec = tmpVec3B.set(dir.x, dir.y, dir.z).normalize();
       climbRaycaster.near = 0;
       climbRaycaster.far = CLIMB_DETECT_RANGE;
 
-      const intersections = climbRaycaster.intersectObject(mountainScene, true);
-      const climbHit = intersections.find(
-        (h) => (h.object as THREE.Mesh).name?.startsWith("climb_") && h.point.y > 0 && h.point.y < 85
-      );
+      const isClimbFace = (h: THREE.Intersection) =>
+        (h.object as THREE.Mesh).name?.startsWith("climb_") && h.point.y > 0 && h.point.y < 85;
+
+      climbRaycaster.set(tmpVec3A.set(pos.x, pos.y, pos.z), dirVec);
+      let climbHit = climbRaycaster.intersectObject(mountainScene, true).find(isClimbFace) ?? null;
+
+      // Fallback: elevated ray catches face geometry above character (e.g. face_2 / face_hidden at y≈3+)
+      if (!climbHit) {
+        climbRaycaster.set(tmpVec3A.set(pos.x, pos.y + 3, pos.z), dirVec);
+        climbHit = climbRaycaster.intersectObject(mountainScene, true).find(isClimbFace) ?? null;
+      }
 
       const isMoving = Math.abs(intent.forward) + Math.abs(intent.strafe) > 0.2;
       if (climbHit && isMoving) {
