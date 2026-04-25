@@ -18,8 +18,13 @@ export const LoadingScreen = ({ loading }: Props) => (
           gap: 24,
         }}
       >
-        <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(1.8rem, 4vw, 3rem)", fontWeight: 700, color: "#F0EDE6", letterSpacing: "-0.02em" }}>
-          Manu Ramchandani
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(1.8rem, 4vw, 3rem)", fontWeight: 700, color: "#F0EDE6", letterSpacing: "-0.02em" }}>
+            Manu Ramchandani
+          </div>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.7rem", color: "rgba(200,134,10,0.7)", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: "8px" }}>
+            Mountain and the Machine
+          </div>
         </div>
         <div style={{ width: 200, height: 2, backgroundColor: "rgba(240,237,230,0.1)", borderRadius: 1, overflow: "hidden" }}>
           <motion.div
