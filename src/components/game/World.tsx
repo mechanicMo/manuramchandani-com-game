@@ -12,6 +12,7 @@ import { HoldMarkers, HOLDS }  from "./HoldMarkers";
 import { ChossSystem }         from "./ChossSystem";
 import { DustParticles }       from "./DustParticles";
 import { SummitLedge }         from "./SummitLedge";
+import { SummitObjects }       from "./SummitObjects";
 import { SnowParticles }       from "./SnowParticles";
 import { GroundTerrain }       from "./GroundTerrain";
 import { ForestBase }          from "./ForestBase";
@@ -170,6 +171,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, audio, 
       </Physics>
 
       <SummitLedge phase={phase} />
+      <SummitObjects phase={phase} />
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
       <DustParticles characterPos={pos} />
       <SnowParticles characterPos={pos} phase={phase} />

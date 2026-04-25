@@ -12,7 +12,9 @@ export type VisualType =
   | "slalom-gate"
   | "snow-text"
   | "lit-ground"
-  | "plaque";
+  | "plaque"
+  | "monolith"
+  | "snowboard-rack";
 
 export type PanelContent = {
   type: "panel";
@@ -42,7 +44,7 @@ export type Location = {
   x: number;
   y: number;
   z: number;
-  phase: "ascent" | "descent";
+  phase: "ascent" | "summit" | "descent";
   visualType: VisualType;
   interactionType: InteractionType;
   proximityRadius: number;
@@ -306,5 +308,33 @@ export const LOCATIONS: Location[] = [
       email: "manu@manuramchandani.com",
       linkLabel: "Send me a message",
     },
+  },
+
+  // ── SUMMIT ────────────────────────────────────────────────────────────────
+  {
+    id: "monolith",
+    name: "The Monolith",
+    x: 4, y: 82, z: -2,
+    phase: "summit",
+    visualType: "monolith",
+    interactionType: "contact",
+    proximityRadius: 6,
+    content: {
+      type: "contact",
+      title: "Manu Ramchandani",
+      description: "14 years building. Currently freelance. Let's talk.",
+      email: "manu@manuramchandani.com",
+      linkLabel: "Send a message",
+    },
+  },
+  {
+    id: "snowboard-cache",
+    name: "Snowboard Cache",
+    x: 0, y: 82, z: 4,
+    phase: "summit",
+    visualType: "snowboard-rack",
+    interactionType: "view",
+    proximityRadius: 4,
+    content: { type: "view", lines: ["The descent awaits.", "Press SPACE to drop in."] },
   },
 ];

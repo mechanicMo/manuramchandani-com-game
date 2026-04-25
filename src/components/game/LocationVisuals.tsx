@@ -405,6 +405,64 @@ const ContactLanding = ({ x, y, z }: { x: number; y: number; z: number }) => (
   </group>
 );
 
+// ── Summit Monolith ────────────────────────────────────────────────────────────
+
+const MonolithVisual = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
+    {/* Standing stone — tall pillar, bottom flush with group Y */}
+    <mesh position={[0, 1.4, 0]} castShadow>
+      <boxGeometry args={[0.75, 2.8, 0.35]} />
+      <meshStandardMaterial color="#4a5060" roughness={0.95} metalness={0} />
+    </mesh>
+    {/* Amber rune etching — center glyph */}
+    <mesh position={[0, 1.6, 0.18]}>
+      <planeGeometry args={[0.5, 1.8]} />
+      <meshStandardMaterial color="#C8860A" emissive="#C8860A" emissiveIntensity={0.9} transparent opacity={0.7} />
+    </mesh>
+    {/* Three thin amber lines (circuit-rune feel) */}
+    {[0.7, 1.4, 2.1].map((yOff, i) => (
+      <mesh key={i} position={[0, yOff, 0.185]}>
+        <planeGeometry args={[0.45, 0.04]} />
+        <meshStandardMaterial color="#C8860A" emissive="#C8860A" emissiveIntensity={1.5} />
+      </mesh>
+    ))}
+    {/* Ambient glow */}
+    <pointLight position={[0, 1.5, 0.5]} color="#C8860A" intensity={1.8} distance={8} decay={2} />
+  </group>
+);
+
+// ── Snowboard Cache ────────────────────────────────────────────────────────────
+
+const SnowboardRackVisual = ({ x, y, z }: { x: number; y: number; z: number }) => (
+  <group position={[x, y, z]}>
+    {/* Left pole */}
+    <mesh position={[-0.75, 0.85, 0]} castShadow>
+      <cylinderGeometry args={[0.04, 0.04, 1.7, 6]} />
+      <meshStandardMaterial color="#706050" metalness={0.4} roughness={0.6} />
+    </mesh>
+    {/* Right pole */}
+    <mesh position={[0.75, 0.85, 0]} castShadow>
+      <cylinderGeometry args={[0.04, 0.04, 1.7, 6]} />
+      <meshStandardMaterial color="#706050" metalness={0.4} roughness={0.6} />
+    </mesh>
+    {/* Horizontal rack bar */}
+    <mesh position={[0, 1.3, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[0.03, 0.03, 1.5, 6]} />
+      <meshStandardMaterial color="#706050" metalness={0.4} roughness={0.6} />
+    </mesh>
+    {/* Snowboard — leaning against rack */}
+    <mesh position={[0.2, 0.85, 0.15]} rotation={[0.15, 0, 0.08]} castShadow>
+      <boxGeometry args={[0.22, 1.55, 0.04]} />
+      <meshStandardMaterial color="#e8eef5" roughness={0.4} metalness={0.1} />
+    </mesh>
+    {/* Board edge stripe */}
+    <mesh position={[0.2, 0.85, 0.17]} rotation={[0.15, 0, 0.08]}>
+      <boxGeometry args={[0.22, 1.55, 0.005]} />
+      <meshStandardMaterial color="#C8860A" emissive="#C8860A" emissiveIntensity={0.4} />
+    </mesh>
+  </group>
+);
+
 // ── Trail marker plaque ────────────────────────────────────────────────────────
 
 const EngravingPlaque = ({ x, y, z }: { x: number; y: number; z: number }) => (
@@ -455,6 +513,8 @@ const LocationVisual = memo(({ x, y, z, visualType }: { x: number; y: number; z:
     case "snow-text":      return <AboutSlope x={x} y={y} z={z} />;
     case "lit-ground":     return <ContactLanding x={x} y={y} z={z} />;
     case "plaque":         return <EngravingPlaque x={x} y={y} z={z} />;
+    case "monolith":       return <MonolithVisual x={x} y={y} z={z} />;
+    case "snowboard-rack": return <SnowboardRackVisual x={x} y={y} z={z} />;
     default:               return null;
   }
 });
