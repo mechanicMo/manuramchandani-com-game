@@ -4,7 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Location } from "@/data/locations";
 import type { useAudioManager } from "@/hooks/useAudioManager";
 
-const DISMISS_LABEL = ("ontouchstart" in window || navigator.maxTouchPoints > 0) ? "dismiss" : "[Enter] dismiss";
+const IS_TOUCH_UI   = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+const DISMISS_LABEL = IS_TOUCH_UI ? "dismiss" : "[Enter] dismiss";
+
+// Responsive panel positioning: full-width on mobile (clear of the virtual joystick),
+// left-anchored side panel on desktop.
+const PANEL_STYLE: React.CSSProperties = IS_TOUCH_UI
+  ? { position: "fixed", top: "8px", left: "8px", right: "8px", width: "auto", maxHeight: "calc(100vh - 240px)", overflowY: "auto", zIndex: 200 }
+  : { position: "fixed", top: "50%", left: "5%", transform: "translateY(-50%)", width: "340px", maxHeight: "90vh", overflowY: "auto", zIndex: 200 };
 
 type Props = {
   location: Location | null;
@@ -266,14 +273,7 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -30 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        style={{
-          position: "fixed",
-          top: "50%",
-          left: "5%",
-          transform: "translateY(-50%)",
-          width: "300px",
-          zIndex: 200,
-        }}
+        style={PANEL_STYLE}
       >
         <div style={{
           background: "rgba(10,10,20,0.88)",
@@ -329,14 +329,7 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -30 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        style={{
-          position: "fixed",
-          top: "50%",
-          left: "5%",
-          transform: "translateY(-50%)",
-          width: "320px",
-          zIndex: 200,
-        }}
+        style={PANEL_STYLE}
       >
         <div style={{
           background: "rgba(10,10,20,0.88)",
@@ -371,16 +364,7 @@ const OverlayContent = ({ location, onDismiss, onBeginDescent }: { location: Loc
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -30 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        style={{
-          position: "fixed",
-          top: "50%",
-          left: "5%",
-          transform: "translateY(-50%)",
-          width: "340px",
-          zIndex: 200,
-          maxHeight: "90vh",
-          overflowY: "auto",
-        }}
+        style={PANEL_STYLE}
       >
         <div style={{
           background: "rgba(10,10,20,0.90)",

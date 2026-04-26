@@ -150,7 +150,6 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showIntera
         <div
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
-            onInteract();
             window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyE", key: "e", bubbles: true }));
           }}
           style={{
