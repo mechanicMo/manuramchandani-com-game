@@ -220,9 +220,9 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <ChalkParticles characterPos={pos} isClimbing={isClimbing} holdGrabTick={holdGrabTick} holdGrabPos={holdGrabPosRef.current} />
       <DustParticles characterPos={pos} count={quality === "low" ? 15 : quality === "medium" ? 30 : 60} />
       <SnowParticles characterPos={pos} phase={phase} count={quality === "low" ? 30 : quality === "medium" ? 60 : 120} />
-      <SpeedLines characterPos={pos} phase={phase} velocityRef={velocityRef} />
-      <DataMotes phase={phase} />
-      <CarveTrail characterPos={pos} phase={phase} />
+      {quality !== "low" && <SpeedLines characterPos={pos} phase={phase} velocityRef={velocityRef} />}
+      {quality !== "low" && <DataMotes phase={phase} />}
+      {quality !== "low" && <CarveTrail characterPos={pos} phase={phase} />}
       <CircuitRunes phase={phase} quality={quality} />
       <StarField phase={phase} characterY={pos.y} quality={quality} />
       <SlalomGates phase={phase} />

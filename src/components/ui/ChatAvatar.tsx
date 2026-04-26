@@ -52,10 +52,13 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
   // phase is available for future context-aware greetings
 
   const fetchWithTimeout = async (url: string, options: RequestInit) => {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Request timeout (8s)")), 8000)
-    );
-    return Promise.race([fetch(url, options), timeout]);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
   };
 
   const send = async () => {

@@ -9,6 +9,8 @@ import { CampfireFlame } from "./CampfireFlame";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import { useMatcaps } from "@/hooks/useMatcaps";
 
+const IS_TOUCH = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
 const SUMMIT_Y = 82;
 const PYRE_POS: [number, number, number] = [-4, SUMMIT_Y, -3];
 const PYRE_INTERACT_RADIUS = 3.5;
@@ -191,7 +193,7 @@ const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
             whiteSpace: "nowrap",
             backdropFilter: "blur(10px)",
           }}>
-            [E] Light the beacon
+            {IS_TOUCH ? "Tap [E] to light" : "[E] Light the beacon"}
           </div>
         </Html>
       )}
