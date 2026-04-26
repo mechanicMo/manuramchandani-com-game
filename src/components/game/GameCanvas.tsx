@@ -136,6 +136,7 @@ export const GameCanvas = () => {
         nearbyName={nearbyName}
         onInteract={handleInteractKey}
         onOpenChat={handleRequestOpenChat}
+        showInteractAlways={gamePhase.phase === "summit"}
       />
       <AudioLoader audio={audio} />
 

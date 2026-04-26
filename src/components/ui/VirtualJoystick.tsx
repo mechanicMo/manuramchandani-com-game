@@ -11,9 +11,10 @@ type Props = {
   nearbyName: string | null;
   onInteract: () => void;
   onOpenChat: () => void;
+  showInteractAlways?: boolean;
 };
 
-export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat }: Props) => {
+export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showInteractAlways = false }: Props) => {
   if (!isTouchDevice()) return null;
 
   const knobRef      = useRef<HTMLDivElement>(null);
@@ -144,10 +145,14 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat }: Props) =
         </span>
       </div>
 
-      {/* Interact button — above jump, only when nearbyName is set */}
-      {nearbyName && (
+      {/* Interact button — above jump, shown when near a panel/contact OR when showInteractAlways */}
+      {(nearbyName || showInteractAlways) && (
         <div
-          onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); onInteract(); }}
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            onInteract();
+            window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyE", key: "e", bubbles: true }));
+          }}
           style={{
             position: "absolute",
             bottom: 136,
@@ -155,8 +160,8 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat }: Props) =
             width: 52,
             height: 52,
             borderRadius: "50%",
-            background: "rgba(200,134,10,0.18)",
-            border: "1.5px solid rgba(200,134,10,0.65)",
+            background: nearbyName ? "rgba(200,134,10,0.18)" : "rgba(200,134,10,0.06)",
+            border: `1.5px solid rgba(200,134,10,${nearbyName ? "0.65" : "0.30"})`,
             backdropFilter: "blur(6px)",
             display: "flex",
             alignItems: "center",
@@ -167,7 +172,7 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat }: Props) =
             userSelect: "none",
           }}
         >
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "10px", color: "#C8860A", letterSpacing: "0.04em" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "10px", color: nearbyName ? "#C8860A" : "rgba(200,134,10,0.45)", letterSpacing: "0.04em" }}>
             [E]
           </span>
         </div>
