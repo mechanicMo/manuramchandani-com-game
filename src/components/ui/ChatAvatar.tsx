@@ -121,7 +121,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
   return (
     <div style={{
       position: "fixed",
-      bottom: isTouchUI ? "180px" : "24px",
+      bottom: isTouchUI ? "calc(180px + env(safe-area-inset-bottom, 0px))" : "24px",
       right: isTouchUI ? "8px" : "24px",
       zIndex: 300,
       width: isTouchUI ? "min(300px, calc(100vw - 16px))" : undefined,
