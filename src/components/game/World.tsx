@@ -52,11 +52,12 @@ type Props = {
   onRequestOpenChat: () => void;
   audio: ReturnType<typeof useAudioManager>;
   muted: boolean;
+  audioReady?: boolean;
   altBarRef?: React.RefObject<HTMLDivElement | null>;
   altTextRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onRequestOpenChat, audio, muted, altBarRef, altTextRef }: Props) => {
+export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onRequestOpenChat, audio, muted, audioReady = false, altBarRef, altTextRef }: Props) => {
   const [pos, setPos]                        = useState(() => new THREE.Vector3());
   const [characterHeading, setCharacterHeading] = useState(0);
   const [mountainScene, setMountainScene]    = useState<THREE.Object3D | null>(null);
@@ -78,16 +79,17 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const rimLightRef                          = useRef<THREE.SpotLight>(null);
   const rimTargetRef                         = useRef(new THREE.Object3D());
 
-  // Start ambient wind loops once (audio buffers may not be ready yet — setLoopVolume handles gracefully)
+  // Start ambient wind loops — fires on mount (no-ops if audio not ready) and again once
+  // audioReady flips true (after first user gesture unlocks AudioContext + buffers load).
   useEffect(() => {
-    if (muted) return;
+    if (muted || !audioReady) return;
     audio.loop("wind-low", 0.5);
     audio.loop("wind-high", 0.0);
     return () => {
       audio.stopAllLoops();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [muted]);
+  }, [muted, audioReady]);
 
   // Phase-based audio triggers
   useEffect(() => {

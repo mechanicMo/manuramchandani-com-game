@@ -34,6 +34,7 @@ const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints
 
 export const GameCanvas = () => {
   const [loading, setLoading]               = useState(true);
+  const [audioReady, setAudioReady]         = useState(false);
   const [activeLocation, setActiveLocation] = useState<Location | null>(null);
   const [nearbyName, setNearbyName]         = useState<string | null>(null);
   const [muted, setMuted]                   = useState(false);
@@ -138,7 +139,7 @@ export const GameCanvas = () => {
         onOpenChat={handleRequestOpenChat}
         showInteractAlways={gamePhase.phase === "summit"}
       />
-      <AudioLoader audio={audio} />
+      <AudioLoader audio={audio} onAudioReady={() => setAudioReady(true)} />
 
       {/* Altitude progress bar + readout — right edge, visible during ascent only */}
       {gamePhase.phase === "ascent" && (
@@ -271,6 +272,7 @@ export const GameCanvas = () => {
               onRequestOpenChat={handleRequestOpenChat}
               audio={audio}
               muted={muted}
+              audioReady={audioReady}
               altBarRef={altBarRef}
               altTextRef={altTextRef}
             />
@@ -318,11 +320,11 @@ const KeyboardInterceptor = ({ onEnter }: { onEnter: () => void }) => {
   return null;
 };
 
-const AudioLoader = ({ audio }: { audio: ReturnType<typeof useAudioManager> }) => {
+const AudioLoader = ({ audio, onAudioReady }: { audio: ReturnType<typeof useAudioManager>; onAudioReady: () => void }) => {
   const loaded = useRef(false);
 
   useEffect(() => {
-    const onInteract = () => {
+    const onInteract = async () => {
       if (loaded.current) return;
       loaded.current = true;
       audio.unlock();
@@ -340,7 +342,8 @@ const AudioLoader = ({ audio }: { audio: ReturnType<typeof useAudioManager> }) =
         ["panel-open",     "/audio/panel-open.mp3"],
         ["panel-close",    "/audio/panel-close.mp3"],
       ];
-      files.forEach(([key, url]) => audio.load(key, url));
+      await Promise.all(files.map(([key, url]) => audio.load(key, url)));
+      onAudioReady();
     };
     window.addEventListener("click",      onInteract, { once: true });
     window.addEventListener("keydown",    onInteract, { once: true });
@@ -350,6 +353,7 @@ const AudioLoader = ({ audio }: { audio: ReturnType<typeof useAudioManager> }) =
       window.removeEventListener("keydown",    onInteract);
       window.removeEventListener("touchstart", onInteract);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audio]);
 
   return null;
