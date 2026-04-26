@@ -15,8 +15,7 @@ type Props = {
 };
 
 export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showInteractAlways = false }: Props) => {
-  if (!isTouchDevice()) return null;
-
+  // All hooks must be declared before any conditional return (React rules of hooks)
   const knobRef      = useRef<HTMLDivElement>(null);
   const activeId     = useRef<number | null>(null);
   const ringCenter   = useRef({ x: 0, y: 0 });
@@ -67,6 +66,8 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showIntera
   const onJumpUp = useCallback(() => {
     setMobileJump(false);
   }, []);
+
+  if (!isTouchDevice()) return null;
 
   return (
     <div

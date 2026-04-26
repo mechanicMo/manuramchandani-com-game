@@ -429,7 +429,7 @@ export const Character = ({
 
     // Animation
     if (actions) {
-      const airborne = !controller.computedGrounded();
+      const airborne = !grounded;
       if (airborne && vertVelRef.current > 2) {
         crossFade(actions, "jump");
       } else if (airborne && vertVelRef.current < -2) {
