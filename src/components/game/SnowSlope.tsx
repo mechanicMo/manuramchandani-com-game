@@ -230,7 +230,7 @@ export const SnowSlope = ({ phase }: Props) => {
     });
 
     refs.forEach(r => { r.current.instanceMatrix.needsUpdate = true; });
-  }, []);
+  }, [phase]);
 
   if (phase === "ascent") return null;
 

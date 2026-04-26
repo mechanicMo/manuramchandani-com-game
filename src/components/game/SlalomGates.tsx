@@ -76,7 +76,7 @@ export const SlalomGates = ({ phase }: Props) => {
 
     pole.instanceMatrix.needsUpdate  = true;
     spike.instanceMatrix.needsUpdate = true;
-  }, []);
+  }, [phase]);
 
   // Single useFrame updates all flag rotations via InstancedMesh matrices
   useFrame(({ clock }) => {

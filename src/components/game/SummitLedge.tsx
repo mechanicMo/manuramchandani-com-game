@@ -108,7 +108,7 @@ export const SummitLedge = ({ phase, quality = "high" }: { phase: GamePhase; qua
       m.setMatrixAt(i, _mat);
     });
     m.instanceMatrix.needsUpdate = true;
-  }, [icicles]);
+  }, [icicles, phase]);
 
   // Stamp snow drift matrices — uniform scale, identity rotation
   useEffect(() => {
@@ -122,7 +122,7 @@ export const SummitLedge = ({ phase, quality = "high" }: { phase: GamePhase; qua
       m.setMatrixAt(i, _mat);
     });
     m.instanceMatrix.needsUpdate = true;
-  }, []);
+  }, [phase]);
 
   // Stamp edge rock matrices — uniform scale, identity rotation
   useEffect(() => {
@@ -136,7 +136,7 @@ export const SummitLedge = ({ phase, quality = "high" }: { phase: GamePhase; qua
       m.setMatrixAt(i, _mat);
     });
     m.instanceMatrix.needsUpdate = true;
-  }, []);
+  }, [phase]);
 
   if (phase === "ascent") return null;
 
