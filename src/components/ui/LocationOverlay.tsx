@@ -10,7 +10,7 @@ const DISMISS_LABEL = IS_TOUCH_UI ? "dismiss" : "[Enter] dismiss";
 // Responsive panel positioning: full-width on mobile (clear of the virtual joystick),
 // left-anchored side panel on desktop.
 const PANEL_STYLE: React.CSSProperties = IS_TOUCH_UI
-  ? { position: "fixed", top: "8px", left: "8px", right: "8px", width: "auto", maxHeight: "calc(100vh - 240px)", overflowY: "auto", zIndex: 200 }
+  ? { position: "fixed", top: "calc(8px + env(safe-area-inset-top, 0px))", left: "8px", right: "8px", width: "auto", maxHeight: "calc(100vh - 240px)", overflowY: "auto", zIndex: 200 }
   : { position: "fixed", top: "50%", left: "5%", transform: "translateY(-50%)", width: "340px", maxHeight: "90vh", overflowY: "auto", zIndex: 200 };
 
 type Props = {
