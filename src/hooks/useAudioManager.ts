@@ -20,9 +20,13 @@ export const useAudioManager = () => {
 
   const load = useCallback(async (key: string, url: string) => {
     if (!audioCtx || buffers.has(key)) return;
-    const res = await fetch(url);
-    const arr = await res.arrayBuffer();
-    buffers.set(key, await audioCtx.decodeAudioData(arr));
+    try {
+      const res = await fetch(url);
+      const arr = await res.arrayBuffer();
+      buffers.set(key, await audioCtx.decodeAudioData(arr));
+    } catch {
+      // Audio load failure is non-fatal — game continues silently
+    }
   }, []);
 
   const play = useCallback((key: string, volume = 1.0) => {

@@ -85,7 +85,7 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showIntera
         onPointerCancel={onPointerUp}
         style={{
           position: "absolute",
-          bottom: 60,
+          bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
           left: 44,
           width:  RING_RADIUS * 2,
           height: RING_RADIUS * 2,
@@ -123,7 +123,7 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showIntera
         onPointerCancel={onJumpUp}
         style={{
           position: "absolute",
-          bottom: 72,
+          bottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
           right: 52,
           width: 52,
           height: 52,
@@ -154,7 +154,7 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showIntera
           }}
           style={{
             position: "absolute",
-            bottom: 136,
+            bottom: "calc(136px + env(safe-area-inset-bottom, 0px))",
             right: 52,
             width: 52,
             height: 52,
@@ -182,7 +182,7 @@ export const VirtualJoystick = ({ nearbyName, onInteract, onOpenChat, showIntera
         onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); onOpenChat(); }}
         style={{
           position: "absolute",
-          bottom: 72,
+          bottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
           right: 116,
           width: 44,
           height: 44,

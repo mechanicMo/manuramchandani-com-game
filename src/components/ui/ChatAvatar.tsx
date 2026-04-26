@@ -36,6 +36,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading]   = useState(false);
   const messagesEndRef          = useRef<HTMLDivElement>(null);
+  const inputRef                = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,6 +49,14 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, openedByBeacon]);
+
+  // Auto-focus input on desktop when chat opens — avoids extra click to start typing
+  useEffect(() => {
+    if (open && !isTouchUI) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // phase is available for future context-aware greetings
 
@@ -174,7 +183,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
             </div>
 
             {/* Messages */}
-            <div style={{ height: "240px", overflowY: "auto", padding: "12px 16px" }}>
+            <div style={{ height: isTouchUI ? "min(200px, 35vh)" : "240px", overflowY: "auto", padding: "12px 16px" }}>
               {messages.length === 0 && (
                 <p style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", color: "rgba(250,248,244,0.4)", margin: 0, lineHeight: 1.5 }}>
                   Ask me about Manu's projects, background, or what this site is.
@@ -213,6 +222,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
             {/* Input */}
             <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(200,134,10,0.15)", display: "flex", gap: "8px" }}>
               <input
+                ref={inputRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") { e.stopPropagation(); send(); } }}
