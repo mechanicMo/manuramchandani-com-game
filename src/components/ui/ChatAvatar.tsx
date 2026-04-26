@@ -212,7 +212,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
                 </div>
               ))}
               {loading && (
-                <p style={{ fontFamily: "DM Mono, monospace", fontSize: "12px", color: "rgba(125,249,240,0.55)", margin: 0 }}>
+                <p style={{ fontFamily: "DM Mono, monospace", fontSize: "12px", color: "rgba(125,249,240,0.55)", margin: 0, animation: "blink 1.1s ease-in-out infinite" }}>
                   ...
                 </p>
               )}
