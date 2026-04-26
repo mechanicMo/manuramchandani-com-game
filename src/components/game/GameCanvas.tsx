@@ -5,8 +5,6 @@ import { KeyboardControls }  from "@react-three/drei";
 import * as THREE            from "three";
 import { EffectComposer, Bloom, Vignette, ToneMapping, ChromaticAberration } from "@react-three/postprocessing";
 import { ToneMappingMode }   from "postprocessing";
-
-const CA_OFFSET = new THREE.Vector2(0.0018, 0.0012);
 import { World }             from "./World";
 import { LoadingScreen }     from "@/components/ui/LoadingScreen";
 import { KeyHints }          from "@/components/ui/KeyHints";
@@ -20,6 +18,8 @@ import { useGamePhase }      from "@/hooks/useGamePhase";
 import { useAudioManager }   from "@/hooks/useAudioManager";
 import { useDeviceQuality }  from "@/hooks/useDeviceQuality";
 import type { Location }     from "@/data/locations";
+
+const CA_OFFSET = new THREE.Vector2(0.0018, 0.0012);
 
 const KEY_MAP = [
   { name: "up",       keys: ["ArrowUp",    "KeyW"] },

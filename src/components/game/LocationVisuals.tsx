@@ -3,13 +3,14 @@ import { useRef, useMemo, memo, Suspense } from "react";
 import type { ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 
-const IS_TOUCH = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 import * as THREE from "three";
 import { LOCATIONS } from "@/data/locations";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import { CampfireFlame } from "./CampfireFlame";
 import { ScreenMesh } from "./ScreenMesh";
 import { useMatcaps } from "@/hooks/useMatcaps";
+
+const IS_TOUCH = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
 type Props = { phase: GamePhase };
 
