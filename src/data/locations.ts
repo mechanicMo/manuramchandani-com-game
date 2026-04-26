@@ -299,7 +299,7 @@ export const LOCATIONS: Location[] = [
     id: "marker-2018", name: "2018",
     x: 8, y: 27, z: 39,
     phase: "ascent", visualType: "plaque", interactionType: "marker", proximityRadius: 5,
-    content: { type: "vignette", text: "2018\nFirst shipped product." },
+    content: { type: "vignette", text: "2018\nFirst shipped product. Real users. Real bugs." },
   },
   {
     id: "marker-2020", name: "2020",
