@@ -2,6 +2,8 @@
 import { useRef, useMemo, memo, Suspense } from "react";
 import type { ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
+
+const IS_TOUCH = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 import * as THREE from "three";
 import { LOCATIONS } from "@/data/locations";
 import type { GamePhase } from "@/hooks/useGamePhase";
@@ -502,7 +504,7 @@ const NewsletterKiosk = ({ x, y, z }: { x: number; y: number; z: number }) => {
 
     ctx.font = "13px monospace";
     ctx.fillStyle = "rgba(200,134,10,0.5)";
-    ctx.fillText("[E] to open", 24, 244);
+    ctx.fillText(IS_TOUCH ? "approach to open" : "[E] to open", 24, 244);
 
     return new THREE.CanvasTexture(canvas);
   }, []);
@@ -599,7 +601,7 @@ const MonolithVisual = ({ x, y, z }: { x: number; y: number; z: number }) => {
     ctx.beginPath(); ctx.moveTo(30, 380); ctx.lineTo(226, 380); ctx.stroke();
     ctx.fillStyle = "rgba(200,134,10,0.35)";
     ctx.font      = "10px monospace";
-    ctx.fillText("[E] to copy", 128, 404);
+    ctx.fillText(IS_TOUCH ? "tap [E] to open" : "[E] to copy", 128, 404);
 
     return new THREE.CanvasTexture(canvas);
   }, []);
@@ -670,7 +672,7 @@ const FaceCarving = ({ x, y, z }: { x: number; y: number; z: number }) => {
     ctx.beginPath(); ctx.moveTo(10, 172); ctx.lineTo(490, 172); ctx.stroke();
     ctx.font      = "14px monospace";
     ctx.fillStyle = "rgba(200,134,10,0.45)";
-    ctx.fillText("[E] to contact", 20, 200);
+    ctx.fillText(IS_TOUCH ? "Tap [E] button to contact" : "[E] to contact", 20, 200);
 
     return new THREE.CanvasTexture(canvas);
   }, []);
