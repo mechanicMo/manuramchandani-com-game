@@ -5,6 +5,7 @@
 // Far layer: near-black MeshBasicMaterial (pure silhouette, fades with fog).
 import { useMemo } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { QualityLevel } from "@/hooks/useDeviceQuality";
 import { useMatcaps } from "@/hooks/useMatcaps";
 
@@ -80,34 +81,46 @@ const LAYERS = [
   },
 ] as const;
 
+const _mergeQuat = new THREE.Quaternion();
+
 export const BackgroundMountains = ({ quality = "high" }: Props) => {
-  const matcaps   = useMatcaps();
+  const matcaps    = useMatcaps();
   const layerCount = LAYER_COUNTS[quality];
 
-  const geometries = useMemo(
+  const profileGeos = useMemo(
     () => RIDGE_PROFILES.map(buildRidgeGeometry),
     []
   );
 
+  // Per-layer merged geometry: bake ridge position+scale transforms into vertices
+  // so each layer renders as one draw call instead of three.
+  const mergedPerLayer = useMemo(() => {
+    return LAYERS.slice(0, layerCount).map(layer => {
+      const geos = layer.ridges.map(ridge => {
+        const geo = profileGeos[ridge.profileIdx].clone();
+        geo.applyMatrix4(new THREE.Matrix4().compose(
+          new THREE.Vector3(ridge.x, layer.y, layer.z),
+          _mergeQuat,
+          new THREE.Vector3(ridge.width, ridge.height, 1),
+        ));
+        return geo;
+      });
+      return mergeGeometries(geos);
+    });
+  }, [profileGeos, layerCount]);
+
   return (
     <group>
       {LAYERS.slice(0, layerCount).map((layer, li) =>
-        layer.ridges.map((ridge, ri) => (
-          <mesh
-            key={`${li}-${ri}`}
-            geometry={geometries[ridge.profileIdx]}
-            position={[ridge.x, layer.y, layer.z]}
-            scale={[ridge.width, ridge.height, 1]}
-            castShadow={false}
-            receiveShadow={false}
-          >
+        mergedPerLayer[li] && (
+          <mesh key={li} geometry={mergedPerLayer[li]!} castShadow={false} receiveShadow={false}>
             {layer.matcapKey ? (
               <meshMatcapMaterial matcap={matcaps[layer.matcapKey]} fog />
             ) : (
               <meshBasicMaterial color={(layer as { color: string }).color} fog />
             )}
           </mesh>
-        ))
+        )
       )}
     </group>
   );

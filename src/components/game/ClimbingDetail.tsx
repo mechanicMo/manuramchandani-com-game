@@ -3,6 +3,7 @@
 // Updated to use full 3D hold positions (z≈36 on the mountain's front climb face).
 import { useMemo, useRef, useEffect } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { HOLDS } from "./HoldMarkers";
 import type { GamePhase } from "@/hooks/useGamePhase";
 
@@ -44,13 +45,11 @@ const PITON_GEO = new THREE.CylinderGeometry(0.025, 0.02, 0.28, 5);
 const PITON_MAT = new THREE.MeshBasicMaterial({ color: "#5a5040" });
 
 export const ClimbingDetail = ({ phase }: Props) => {
-  const ropeGeometries = useMemo(() => {
-    return ROPE_PAIRS.map(([ai, bi]) => {
+  const mergedRopeGeo = useMemo(() => {
+    const geos = ROPE_PAIRS.map(([ai, bi]) => {
       const a = HOLDS[ai];
       const b = HOLDS[bi];
       if (!a || !b) return null;
-
-      // Catenary sag toward the rock face (negative z offset for midpoint)
       const mid = new THREE.Vector3(
         (a.x + b.x) / 2,
         Math.min(a.y, b.y) - 1.0,
@@ -63,6 +62,7 @@ export const ClimbingDetail = ({ phase }: Props) => {
       );
       return new THREE.TubeGeometry(curve, 14, 0.025, 5, false);
     }).filter(Boolean) as THREE.TubeGeometry[];
+    return geos.length > 0 ? mergeGeometries(geos) : null;
   }, []);
 
   const pitons = useMemo(() => makePitons(), []);
@@ -101,10 +101,8 @@ export const ClimbingDetail = ({ phase }: Props) => {
 
   return (
     <group>
-      {/* Rope segments — worn tan hemp rope; each geometry is unique so can't be instanced */}
-      {ropeGeometries.map((geo, i) => (
-        <mesh key={i} geometry={geo} material={ROPE_MAT} />
-      ))}
+      {/* Rope segments — 12 unique tube paths merged into 1 draw call */}
+      {mergedRopeGeo && <mesh geometry={mergedRopeGeo} material={ROPE_MAT} />}
 
       {/* Chalk smears and pitons batched into InstancedMesh (9 + 5 → 2 draw calls) */}
       <instancedMesh ref={chalkRef} args={[CHALK_GEO, CHALK_MAT, CHALK_HOLDS.length]} />

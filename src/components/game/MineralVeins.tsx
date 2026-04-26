@@ -8,6 +8,8 @@ import { HOLDS } from "./HoldMarkers";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import type { QualityLevel } from "@/hooks/useDeviceQuality";
 
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+
 // Shared sphere geometry + scratch objects for pulse InstancedMesh
 const PULSE_GEO  = new THREE.SphereGeometry(0.045, 5, 5);
 const _pulsePos  = new THREE.Vector3();
@@ -50,13 +52,14 @@ export const MineralVeins = ({ phase, quality = "high" }: Props) => {
   const pulseRef = useRef<THREE.InstancedMesh>(null!);
   const pulseT   = useRef<number[]>([]);
 
-  const { tubeGeos, paths } = useMemo(() => {
+  const { mergedVeinGeo, paths } = useMemo(() => {
     const paths = buildVeinPaths();
     const tubeGeos = paths.map(p =>
       new THREE.TubeGeometry(p.curve, 18, 0.012, 4, false)
     );
     pulseT.current = paths.map((_, i) => (i / paths.length));
-    return { tubeGeos, paths };
+    const mergedVeinGeo = tubeGeos.length > 0 ? mergeGeometries(tubeGeos) : null;
+    return { mergedVeinGeo, paths };
   }, []);
 
   // Stamp initial pulse matrices so spheres appear before first useFrame tick
@@ -90,12 +93,12 @@ export const MineralVeins = ({ phase, quality = "high" }: Props) => {
 
   return (
     <group>
-      {/* Static vein lines */}
-      {tubeGeos.map((geo, i) => (
-        <mesh key={i} geometry={geo}>
+      {/* Static vein lines — 12 unique tube paths merged into 1 draw call */}
+      {mergedVeinGeo && (
+        <mesh geometry={mergedVeinGeo}>
           <meshBasicMaterial color={AMBER} transparent opacity={0.35} depthWrite={false} />
         </mesh>
-      ))}
+      )}
 
       {/* Traveling pulse spheres — high quality only, 12 meshes → 1 draw call */}
       {quality === "high" && (
