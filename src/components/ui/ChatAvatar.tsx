@@ -168,6 +168,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
               </div>
               <button
                 onClick={onClose}
+                aria-label="Close chat"
                 style={{
                   background: "none",
                   border: "none",
@@ -227,6 +228,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") { e.stopPropagation(); send(); } }}
                 placeholder="Ask something..."
+                aria-label="Chat message"
                 style={{
                   flex: 1,
                   background: "rgba(255,255,255,0.05)",
@@ -242,6 +244,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
               <button
                 onClick={send}
                 disabled={loading || !input.trim()}
+                aria-label="Send message"
                 style={{
                   background: "#C8860A",
                   border: "none",

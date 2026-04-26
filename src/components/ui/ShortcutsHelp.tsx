@@ -51,6 +51,9 @@ export const ShortcutsHelp = ({ open, onClose }: Props) => {
           />
 
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Keyboard shortcuts"
             initial={{ opacity: 0, scale: 0.96, y: -8 }}
             animate={{ opacity: 1, scale: 1,    y:  0 }}
             exit={{ opacity: 0, scale: 0.96, y: -8 }}
@@ -87,6 +90,7 @@ export const ShortcutsHelp = ({ open, onClose }: Props) => {
               </p>
               <button
                 onClick={onClose}
+                aria-label="Close shortcuts"
                 style={{
                   background: "none",
                   border: "none",
