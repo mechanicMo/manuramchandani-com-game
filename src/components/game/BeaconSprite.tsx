@@ -3,15 +3,6 @@ import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
-
-// Module-level scratch + shared geometry for TrailParticles InstancedMesh
-const IS_TOUCH = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-const TRAIL_GEO    = new THREE.SphereGeometry(1, 6, 5);
-const _trailMat    = new THREE.Matrix4();
-const _trailPos    = new THREE.Vector3();
-const _trailScale  = new THREE.Vector3();
-const _trailQuat   = new THREE.Quaternion(); // identity — trail particles don't rotate
-const _trailColor  = new THREE.Color();
 import {
   PROXIMITY_HINTS,
   ALTITUDE_HINTS,
@@ -21,6 +12,15 @@ import { LOCATIONS } from "@/data/locations";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import type { useAudioManager } from "@/hooks/useAudioManager";
 import type { QualityLevel } from "@/hooks/useDeviceQuality";
+
+// Module-level scratch + shared geometry for TrailParticles InstancedMesh
+const IS_TOUCH = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+const TRAIL_GEO    = new THREE.SphereGeometry(1, 6, 5);
+const _trailMat    = new THREE.Matrix4();
+const _trailPos    = new THREE.Vector3();
+const _trailScale  = new THREE.Vector3();
+const _trailQuat   = new THREE.Quaternion(); // identity — trail particles don't rotate
+const _trailColor  = new THREE.Color();
 
 type Props = {
   characterPos: THREE.Vector3;
