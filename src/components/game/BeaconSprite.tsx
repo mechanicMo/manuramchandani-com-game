@@ -3,6 +3,14 @@ import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
+
+// Module-level scratch + shared geometry for TrailParticles InstancedMesh
+const TRAIL_GEO    = new THREE.SphereGeometry(1, 6, 5);
+const _trailMat    = new THREE.Matrix4();
+const _trailPos    = new THREE.Vector3();
+const _trailScale  = new THREE.Vector3();
+const _trailQuat   = new THREE.Quaternion(); // identity — trail particles don't rotate
+const _trailColor  = new THREE.Color();
 import {
   PROXIMITY_HINTS,
   ALTITUDE_HINTS,
@@ -259,35 +267,42 @@ export const BeaconSprite = ({
   );
 };
 
+// 6 individual meshes → 1 InstancedMesh draw call.
+// Per-instance opacity isn't supported in THREE.js; we approximate fading by varying
+// color brightness — against the dark background the effect is visually identical.
 function TrailParticles({ parentPos, count }: { parentPos: React.MutableRefObject<THREE.Vector3>; count: number }) {
-  const history  = useRef<THREE.Vector3[]>(
+  const history = useRef<THREE.Vector3[]>(
     Array.from({ length: count }, () => new THREE.Vector3())
   );
-  const meshRefs = useRef<(THREE.Mesh | null)[]>(Array(count).fill(null));
+  const meshRef = useRef<THREE.InstancedMesh>(null!);
 
   useFrame((_, delta) => {
+    const m = meshRef.current;
+    if (!m) return;
+
     for (let i = count - 1; i > 0; i--) {
       history.current[i].lerp(history.current[i - 1], 1 - Math.exp(-12 * delta));
     }
     history.current[0].lerp(parentPos.current, 1 - Math.exp(-20 * delta));
 
     for (let i = 0; i < count; i++) {
-      const mesh = meshRefs.current[i];
-      if (!mesh) continue;
-      mesh.position.copy(history.current[i]).sub(parentPos.current);
-      (mesh.material as THREE.MeshBasicMaterial).opacity =
-        (1 - i / count) * 0.5;
+      _trailPos.copy(history.current[i]).sub(parentPos.current);
+      _trailScale.setScalar(Math.max(0.02, 0.06 - i * 0.007));
+      _trailMat.compose(_trailPos, _trailQuat, _trailScale);
+      m.setMatrixAt(i, _trailMat);
+
+      // Encode fade as brightness: closest particle is full #7df9f0, furthest is near-black
+      const b = (1 - i / count);
+      _trailColor.setRGB(0.49 * b, 0.976 * b, 0.941 * b);
+      m.setColorAt(i, _trailColor);
     }
+    m.instanceMatrix.needsUpdate = true;
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
   });
 
   return (
-    <>
-      {Array.from({ length: count }, (_, i) => (
-        <mesh key={i} ref={(el) => { meshRefs.current[i] = el; }}>
-          <sphereGeometry args={[Math.max(0.02, 0.06 - i * 0.007), 8, 8]} />
-          <meshBasicMaterial color="#7df9f0" transparent opacity={0.5} />
-        </mesh>
-      ))}
-    </>
+    <instancedMesh ref={meshRef} args={[TRAIL_GEO, undefined, count]}>
+      <meshBasicMaterial color="#ffffff" transparent opacity={0.5} depthWrite={false} />
+    </instancedMesh>
   );
 }

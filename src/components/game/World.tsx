@@ -150,7 +150,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
   const handlePositionChange = (p: THREE.Vector3) => {
     velocityRef.current = { x: p.x - prevPosRef.current.x, y: p.y - prevPosRef.current.y };
     prevPosRef.current.copy(p);
-    setPos(p.clone());
+    setPos(p); // p is already a clone from Character — no need to clone again
     onCharacterY(p.y, p.z);
     // Imperatively update altitude bar + label — avoids React re-render per frame
     if (altBarRef?.current && phase === "ascent") {

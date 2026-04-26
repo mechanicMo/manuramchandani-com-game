@@ -74,7 +74,6 @@ export const DataMotes = ({ phase }: Props) => {
         m.by + m.oy + floatY,
         m.bz + m.oz + driftZ,
       );
-      dummy.scale.setScalar(1);
       dummy.updateMatrix();
       meshRef.current.setMatrixAt(i, dummy.matrix);
     }
