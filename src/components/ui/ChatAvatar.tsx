@@ -104,8 +104,16 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
     }
   };
 
+  const isTouchUI = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
   return (
-    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 300 }}>
+    <div style={{
+      position: "fixed",
+      bottom: isTouchUI ? "180px" : "24px",
+      right: isTouchUI ? "8px" : "24px",
+      zIndex: 300,
+      width: isTouchUI ? "min(300px, calc(100vw - 16px))" : undefined,
+    }}>
       <AnimatePresence>
         {open && (
           <motion.div
@@ -114,7 +122,7 @@ export const ChatAvatar = ({ phase, open, onClose, openedByBeacon = false }: Pro
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
             style={{
-              width: "300px",
+              width: isTouchUI ? "100%" : "300px",
               background: "rgba(8,8,16,0.92)",
               border: "1px solid rgba(200,134,10,0.3)",
               borderRadius: "12px",

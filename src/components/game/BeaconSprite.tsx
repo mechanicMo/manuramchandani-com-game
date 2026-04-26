@@ -5,6 +5,7 @@ import { Html } from "@react-three/drei";
 import * as THREE from "three";
 
 // Module-level scratch + shared geometry for TrailParticles InstancedMesh
+const IS_TOUCH = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 const TRAIL_GEO    = new THREE.SphereGeometry(1, 6, 5);
 const _trailMat    = new THREE.Matrix4();
 const _trailPos    = new THREE.Vector3();
@@ -100,7 +101,7 @@ export const BeaconSprite = ({
       if (spawnGreeted.current) return;
       spawnGreeted.current = true;
       lastHintTime.current = Date.now();
-      setHintText("Hi, I'm Beacon. Press [C] to chat.");
+      setHintText(IS_TOUCH ? "Hi, I'm Beacon. Tap CHAT to talk to me." : "Hi, I'm Beacon. Press [C] to chat.");
       playSyntheticChirp();
       hintTimer.current = setTimeout(() => setHintText(null), 5000);
     }, 2000);
@@ -164,7 +165,13 @@ export const BeaconSprite = ({
     } else if (now - lastMoveTime.current > IDLE_THRESHOLD_MS) {
       const hint = IDLE_HINTS[idleIndex.current % IDLE_HINTS.length];
       idleIndex.current += 1;
-      fireHint(hint.text);
+      // Replace keyboard-specific hints with mobile equivalents
+      let text = hint.text;
+      if (IS_TOUCH) {
+        if (hint.id === "idle-2") text = "Use the joystick to move. Tap JMP to jump or CHAT to talk to me.";
+        if (hint.id === "idle-3") text = "Look around — there are hidden things on this mountain.";
+      }
+      fireHint(text);
       lastMoveTime.current = now;
     }
 

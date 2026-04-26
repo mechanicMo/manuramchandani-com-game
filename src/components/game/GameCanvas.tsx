@@ -5,6 +5,8 @@ import { KeyboardControls }  from "@react-three/drei";
 import * as THREE            from "three";
 import { EffectComposer, Bloom, Vignette, ToneMapping, ChromaticAberration } from "@react-three/postprocessing";
 import { ToneMappingMode }   from "postprocessing";
+
+const CA_OFFSET = new THREE.Vector2(0.0018, 0.0012);
 import { World }             from "./World";
 import { LoadingScreen }     from "@/components/ui/LoadingScreen";
 import { KeyHints }          from "@/components/ui/KeyHints";
@@ -288,7 +290,7 @@ export const GameCanvas = () => {
               />
             )}
             {quality !== "low" && gamePhase.phase === "descent" && (
-              <ChromaticAberration offset={new THREE.Vector2(0.0018, 0.0012)} />
+              <ChromaticAberration offset={CA_OFFSET} />
             )}
           </EffectComposer>
         </Canvas>
