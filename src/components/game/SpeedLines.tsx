@@ -49,7 +49,7 @@ export const SpeedLines = ({ characterPos, phase, velocityRef }: Props) => {
 
     // Update opacity imperatively so React doesn't need to re-render
     if (matRef.current) {
-      matRef.current.opacity = 0.10 + carveIntensity * 0.30;
+      matRef.current.opacity = 0.18 + carveIntensity * 0.32;
     }
 
     for (let i = 0; i < COUNT; i++) {

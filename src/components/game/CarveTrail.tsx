@@ -6,7 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { GamePhase } from "@/hooks/useGamePhase";
 
-const POOL_N = 48;
+const POOL_N = 64;
 const CARVE_THRESHOLD = 0.02; // min |dx| per frame to trigger spray
 
 type P = {
@@ -50,7 +50,7 @@ export const CarveTrail = ({ characterPos, phase }: Props) => {
       spawnTimer.current = 0;
       const sprayDir = dx > 0 ? 1 : -1; // spray outward from turn
 
-      for (let k = 0; k < 3; k++) {
+      for (let k = 0; k < 4; k++) {
         const i = poolHead.current % POOL_N;
         poolHead.current++;
         const p = pool.current[i];
@@ -102,7 +102,7 @@ export const CarveTrail = ({ characterPos, phase }: Props) => {
         <bufferAttribute attach="attributes-color"    array={colors}    count={POOL_N} itemSize={3} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.07}
+        size={0.08}
         vertexColors
         transparent
         opacity={0.75}

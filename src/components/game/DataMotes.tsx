@@ -84,8 +84,8 @@ export const DataMotes = ({ phase }: Props) => {
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, COUNT]}>
-      <sphereGeometry args={[0.022, 4, 4]} />
-      <meshBasicMaterial color="#C8860A" transparent opacity={0.45} depthWrite={false} />
+      <sphereGeometry args={[0.028, 4, 4]} />
+      <meshBasicMaterial color="#C8860A" transparent opacity={0.55} depthWrite={false} />
     </instancedMesh>
   );
 };
