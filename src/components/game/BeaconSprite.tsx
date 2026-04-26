@@ -169,7 +169,7 @@ export const BeaconSprite = ({
       let text = hint.text;
       if (IS_TOUCH) {
         if (hint.id === "idle-2") text = "Use the joystick to move. Tap JMP to jump or CHAT to talk to me.";
-        if (hint.id === "idle-3") text = "Look around — there are hidden things on this mountain.";
+        if (hint.id === "idle-3") text = "Tap me anytime to open chat — I can answer questions about Manu.";
       }
       fireHint(text);
       lastMoveTime.current = now;
