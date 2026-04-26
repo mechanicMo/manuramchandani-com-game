@@ -146,7 +146,7 @@ export const GameCanvas = () => {
           style={{
             position: "fixed",
             right: "14px",
-            bottom: "60px",
+            bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-end",
@@ -226,7 +226,7 @@ export const GameCanvas = () => {
         title={muted ? "Unmute" : "Mute"}
         style={{
           position: "fixed",
-          top: "16px",
+          top: "calc(16px + env(safe-area-inset-top, 0px))",
           right: "16px",
           zIndex: 300,
           background: "rgba(10,10,20,0.6)",
