@@ -182,7 +182,9 @@ export const BeaconSprite = ({
         const hint = PROXIMITY_HINTS[loc.id];
         if (hint) {
           firedProximity.current.add(loc.id);
-          fireHint(hint.text);
+          let text = hint.text;
+          if (IS_TOUCH) text = text.replace("Press [E]", "Tap [E]");
+          fireHint(text);
           break;
         }
       }

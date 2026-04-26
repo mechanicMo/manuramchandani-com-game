@@ -342,11 +342,13 @@ const AudioLoader = ({ audio }: { audio: ReturnType<typeof useAudioManager> }) =
       ];
       files.forEach(([key, url]) => audio.load(key, url));
     };
-    window.addEventListener("click", onInteract, { once: true });
-    window.addEventListener("keydown", onInteract, { once: true });
+    window.addEventListener("click",      onInteract, { once: true });
+    window.addEventListener("keydown",    onInteract, { once: true });
+    window.addEventListener("touchstart", onInteract, { once: true, passive: true });
     return () => {
-      window.removeEventListener("click", onInteract);
-      window.removeEventListener("keydown", onInteract);
+      window.removeEventListener("click",      onInteract);
+      window.removeEventListener("keydown",    onInteract);
+      window.removeEventListener("touchstart", onInteract);
     };
   }, [audio]);
 
