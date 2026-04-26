@@ -1,24 +1,56 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
-const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
-      </div>
+const NotFound = () => (
+  <div style={{
+    height: "100%",
+    overflowY: "auto",
+    backgroundColor: "#06091A",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}>
+    <div style={{ textAlign: "center" }}>
+      <p style={{
+        fontFamily: "'DM Mono', monospace",
+        fontSize: "11px",
+        color: "#C8860A",
+        letterSpacing: "0.15em",
+        textTransform: "uppercase",
+        margin: "0 0 16px",
+      }}>
+        404
+      </p>
+      <h1 style={{
+        fontFamily: "'Playfair Display', serif",
+        fontSize: "clamp(2rem, 5vw, 3rem)",
+        color: "#FAF8F4",
+        margin: "0 0 16px",
+        fontWeight: 700,
+      }}>
+        Off the map.
+      </h1>
+      <p style={{
+        fontFamily: "'Inter', sans-serif",
+        fontSize: "14px",
+        color: "rgba(250,248,244,0.5)",
+        margin: "0 0 32px",
+      }}>
+        That route doesn't exist on this mountain.
+      </p>
+      <Link to="/" style={{
+        fontFamily: "'DM Mono', monospace",
+        fontSize: "12px",
+        color: "#C8860A",
+        textDecoration: "none",
+        letterSpacing: "0.06em",
+        border: "1px solid rgba(200,134,10,0.35)",
+        borderRadius: "4px",
+        padding: "8px 16px",
+      }}>
+        Back to the climb
+      </Link>
     </div>
-  );
-};
+  </div>
+);
 
 export default NotFound;

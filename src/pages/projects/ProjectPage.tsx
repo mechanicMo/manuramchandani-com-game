@@ -30,7 +30,7 @@ const ProjectPage = () => {
   );
 
   return (
-    <div style={{ backgroundColor: "#FAF8F4", minHeight: "100vh", padding: "48px 24px" }}>
+    <div style={{ backgroundColor: "#FAF8F4", height: "100%", overflowY: "auto", padding: "48px 24px" }}>
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
 
         <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: sans, fontSize: "0.875rem", color: "#6B6B5E", textDecoration: "none", marginBottom: 48 }}>
