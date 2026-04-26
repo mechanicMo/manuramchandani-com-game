@@ -13,6 +13,18 @@ const SUMMIT_Y = 82;
 const PYRE_POS: [number, number, number] = [-4, SUMMIT_Y, -3];
 const PYRE_INTERACT_RADIUS = 3.5;
 
+// Shared unit geometries — module-level to avoid re-allocation
+const LOG_GEO    = new THREE.CylinderGeometry(0.07, 0.09, 1.1, 6);
+const BEACON_GEO = new THREE.SphereGeometry(0.6, 8, 8);
+const CAIRN_GEO  = new THREE.DodecahedronGeometry(1, 0); // unit r=1, scaled per instance
+
+// Scratch objects for matrix stamping
+const _sm   = new THREE.Matrix4();
+const _sp   = new THREE.Vector3();
+const _sq   = new THREE.Quaternion();
+const _ss   = new THREE.Vector3();
+const _sEul = new THREE.Euler();
+
 type Props = { phase: GamePhase; characterPos: THREE.Vector3; onBeaconLit?: () => void };
 
 export const SummitObjects = ({ phase, characterPos, onBeaconLit }: Props) => {
@@ -47,12 +59,29 @@ type PyreProps = {
 const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
   const matcaps  = useMatcaps();
   const lightRef = useRef<THREE.PointLight>(null);
+  const logRef   = useRef<THREE.InstancedMesh>(null!);
   const flameOpacity = useRef(0);
   const lightTarget  = useRef(0);
   const [showHint, setShowHint]   = useState(false);
   const [litFlash, setLitFlash]   = useState(false);
   const litRef = useRef(pyreLit);
   litRef.current = pyreLit;
+
+  // Stamp 4 log matrices once at mount
+  useEffect(() => {
+    const m = logRef.current;
+    if (!m) return;
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI;
+      _sp.set(Math.cos(angle) * 0.45, 0.45, Math.sin(angle) * 0.45);
+      _sEul.set(0, angle, Math.PI / 8);
+      _sq.setFromEuler(_sEul);
+      _ss.setScalar(1);
+      _sm.compose(_sp, _sq, _ss);
+      m.setMatrixAt(i, _sm);
+    }
+    m.instanceMatrix.needsUpdate = true;
+  }, []);
 
   // Single useFrame: animate light + check proximity for hint
   useFrame(({ clock }, delta) => {
@@ -114,21 +143,10 @@ const BeaconPyre = ({ pyreLit, onLight, characterPos, phase }: PyreProps) => {
         <meshMatcapMaterial matcap={matcaps.stoneDark} />
       </mesh>
 
-      {/* Log ring — 4 logs crossed */}
-      {[0, 1, 2, 3].map(i => {
-        const angle = (i / 4) * Math.PI;
-        return (
-          <mesh
-            key={i}
-            position={[Math.cos(angle) * 0.45, 0.45, Math.sin(angle) * 0.45]}
-            rotation={[0, angle, Math.PI / 8]}
-            castShadow
-          >
-            <cylinderGeometry args={[0.07, 0.09, 1.1, 6]} />
-            <meshMatcapMaterial matcap={matcaps.wood} />
-          </mesh>
-        );
-      })}
+      {/* Log ring — 4 logs → 1 draw call */}
+      <instancedMesh ref={logRef} args={[LOG_GEO, undefined, 4]} castShadow>
+        <meshMatcapMaterial matcap={matcaps.wood} />
+      </instancedMesh>
 
       {/* Flame — only visible when lit */}
       {pyreLit && (
@@ -218,49 +236,59 @@ const DISTANT_BEACON_POSITIONS: [number, number, number][] = [
 ];
 
 const DistantBeacons = () => {
-  const opacity  = useRef(0);
+  const opacity   = useRef(0);
+  const meshRef   = useRef<THREE.InstancedMesh>(null!);
   const lightRefs = [
     useRef<THREE.PointLight>(null),
     useRef<THREE.PointLight>(null),
     useRef<THREE.PointLight>(null),
   ];
-  const meshRefs = [
-    useRef<THREE.Mesh>(null),
-    useRef<THREE.Mesh>(null),
-    useRef<THREE.Mesh>(null),
-  ];
+
+  // Stamp static beacon sphere matrices once at mount
+  useEffect(() => {
+    const m = meshRef.current;
+    if (!m) return;
+    DISTANT_BEACON_POSITIONS.forEach(([bx, by, bz], i) => {
+      _sp.set(bx, by, bz);
+      _sq.identity();
+      _ss.setScalar(1);
+      _sm.compose(_sp, _sq, _ss);
+      m.setMatrixAt(i, _sm);
+    });
+    m.instanceMatrix.needsUpdate = true;
+  }, []);
 
   useFrame(({ clock }, delta) => {
     opacity.current = Math.min(opacity.current + 0.5 * delta, 1);
     const flicker = 1 + Math.sin(clock.getElapsedTime() * 4.3) * 0.2;
 
+    if (meshRef.current) {
+      (meshRef.current.material as THREE.MeshBasicMaterial).opacity = opacity.current * 0.9;
+    }
     for (let i = 0; i < 3; i++) {
       if (lightRefs[i].current) {
         lightRefs[i].current!.intensity = opacity.current * 6 * flicker;
-      }
-      if (meshRefs[i].current) {
-        (meshRefs[i].current!.material as THREE.MeshBasicMaterial).opacity =
-          opacity.current * 0.9;
       }
     }
   });
 
   return (
     <>
+      {/* 3 beacon spheres → 1 draw call */}
+      <instancedMesh ref={meshRef} args={[BEACON_GEO, undefined, 3]}>
+        <meshBasicMaterial color="#ff8010" transparent opacity={0} />
+      </instancedMesh>
+      {/* Individual point lights — can't batch */}
       {DISTANT_BEACON_POSITIONS.map((pos, i) => (
-        <group key={i} position={pos}>
-          <mesh ref={meshRefs[i]}>
-            <sphereGeometry args={[0.6, 8, 8]} />
-            <meshBasicMaterial color="#ff8010" transparent opacity={0} />
-          </mesh>
-          <pointLight
-            ref={lightRefs[i]}
-            color="#ff9020"
-            intensity={0}
-            distance={60}
-            decay={2}
-          />
-        </group>
+        <pointLight
+          key={i}
+          ref={lightRefs[i]}
+          position={pos}
+          color="#ff9020"
+          intensity={0}
+          distance={60}
+          decay={2}
+        />
       ))}
     </>
   );
@@ -384,11 +412,39 @@ const SheraniSnowman = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
 const JOURNAL_POS: [number, number, number] = [-7, SUMMIT_Y, 5];
 const JOURNAL_RADIUS = 3.0;
 
+// Cairn stones: 2 stoneDark + 2 stoneLight → 2 InstancedMesh
+const CAIRN_DARK: Array<[number, number, number, number]> = [
+  [0,    0.18, 0,     0.35],
+  [0.06, 0.55, 0.03,  0.26],
+];
+const CAIRN_LIGHT: Array<[number, number, number, number]> = [
+  [-0.04, 0.84, -0.02, 0.19],
+  [ 0.05, 1.08,  0.04, 0.12],
+];
+
 const SummitJournal = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
   const matcaps  = useMatcaps();
+  const darkRef  = useRef<THREE.InstancedMesh>(null!);
+  const lightRef2 = useRef<THREE.InstancedMesh>(null!);
   const [open, setOpen] = useState(false);
   const seenRef  = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const stamp = (m: THREE.InstancedMesh, defs: Array<[number, number, number, number]>) => {
+      if (!m) return;
+      defs.forEach(([x, y, z, r], i) => {
+        _sp.set(x, y, z);
+        _sq.identity();
+        _ss.setScalar(r);
+        _sm.compose(_sp, _sq, _ss);
+        m.setMatrixAt(i, _sm);
+      });
+      m.instanceMatrix.needsUpdate = true;
+    };
+    stamp(darkRef.current, CAIRN_DARK);
+    stamp(lightRef2.current, CAIRN_LIGHT);
+  }, []);
 
   useFrame(() => {
     if (seenRef.current) return;
@@ -404,23 +460,13 @@ const SummitJournal = ({ characterPos }: { characterPos: THREE.Vector3 }) => {
 
   return (
     <group position={JOURNAL_POS}>
-      {/* Cairn — 4 stacked stones, slightly irregular */}
-      <mesh position={[0, 0.18, 0]} castShadow>
-        <dodecahedronGeometry args={[0.35, 0]} />
+      {/* Cairn — 4 stacked stones → 2 draw calls (by matcap) */}
+      <instancedMesh ref={darkRef} args={[CAIRN_GEO, undefined, 2]} castShadow>
         <meshMatcapMaterial matcap={matcaps.stoneDark} />
-      </mesh>
-      <mesh position={[0.06, 0.55, 0.03]} castShadow>
-        <dodecahedronGeometry args={[0.26, 0]} />
-        <meshMatcapMaterial matcap={matcaps.stoneDark} />
-      </mesh>
-      <mesh position={[-0.04, 0.84, -0.02]} castShadow>
-        <dodecahedronGeometry args={[0.19, 0]} />
+      </instancedMesh>
+      <instancedMesh ref={lightRef2} args={[CAIRN_GEO, undefined, 2]} castShadow>
         <meshMatcapMaterial matcap={matcaps.stoneLight} />
-      </mesh>
-      <mesh position={[0.05, 1.08, 0.04]} castShadow>
-        <dodecahedronGeometry args={[0.12, 0]} />
-        <meshMatcapMaterial matcap={matcaps.stoneLight} />
-      </mesh>
+      </instancedMesh>
       {/* Very faint amber warmth — barely visible, suggests something lived-in */}
       <pointLight position={[0, 0.8, 0.4]} color="#C8860A" intensity={0.35} distance={5} decay={2} />
 
