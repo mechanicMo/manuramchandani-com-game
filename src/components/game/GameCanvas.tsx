@@ -201,6 +201,7 @@ export const GameCanvas = () => {
       {/* Help button — top-left (keyboard-only, hidden on touch devices) */}
       {!isTouchDevice() && <button
         onClick={() => setHelpOpen(true)}
+        aria-label="Show keyboard shortcuts"
         style={{
           position: "fixed",
           top: "20px",
