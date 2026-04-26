@@ -223,7 +223,7 @@ export const World = ({ gamePhase, onLocationChange, onClimbStateChange, onReque
       <SpeedLines characterPos={pos} phase={phase} velocityRef={velocityRef} />
       <DataMotes phase={phase} />
       <CarveTrail characterPos={pos} phase={phase} />
-      <CircuitRunes phase={phase} />
+      <CircuitRunes phase={phase} quality={quality} />
       <StarField phase={phase} characterY={pos.y} quality={quality} />
       <SlalomGates phase={phase} />
       <CloudLayer phase={phase} quality={quality} />

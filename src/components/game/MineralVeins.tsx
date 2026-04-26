@@ -1,12 +1,19 @@
 // src/components/game/MineralVeins.tsx
 // Amber circuit veins embedded in the rock face — "Mountain and the Machine."
 // Thin TubeGeometry paths between hold positions with traveling pulse particles.
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { HOLDS } from "./HoldMarkers";
 import type { GamePhase } from "@/hooks/useGamePhase";
 import type { QualityLevel } from "@/hooks/useDeviceQuality";
+
+// Shared sphere geometry + scratch objects for pulse InstancedMesh
+const PULSE_GEO  = new THREE.SphereGeometry(0.045, 5, 5);
+const _pulsePos  = new THREE.Vector3();
+const _pulseQuat = new THREE.Quaternion();
+const _pulseScale = new THREE.Vector3(1, 1, 1);
+const _pulseMat  = new THREE.Matrix4();
 
 const VEIN_PAIRS: [number, number][] = [
   [0, 3], [1, 4], [3, 6], [4, 7],
@@ -40,8 +47,8 @@ function buildVeinPaths(): VeinPath[] {
 type Props = { phase: GamePhase; quality?: QualityLevel };
 
 export const MineralVeins = ({ phase, quality = "high" }: Props) => {
-  const pulseRefs = useRef<(THREE.Mesh | null)[]>([]);
-  const pulseT    = useRef<number[]>([]);
+  const pulseRef = useRef<THREE.InstancedMesh>(null!);
+  const pulseT   = useRef<number[]>([]);
 
   const { tubeGeos, paths } = useMemo(() => {
     const paths = buildVeinPaths();
@@ -52,15 +59,31 @@ export const MineralVeins = ({ phase, quality = "high" }: Props) => {
     return { tubeGeos, paths };
   }, []);
 
+  // Stamp initial pulse matrices so spheres appear before first useFrame tick
+  useEffect(() => {
+    const m = pulseRef.current;
+    if (!m || quality !== "high") return;
+    paths.forEach((path, i) => {
+      path.curve.getPoint(pulseT.current[i], _pulsePos);
+      _pulseMat.compose(_pulsePos, _pulseQuat, _pulseScale);
+      m.setMatrixAt(i, _pulseMat);
+    });
+    m.instanceMatrix.needsUpdate = true;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paths]);
+
   useFrame((_, delta) => {
     // Pulse spheres only on high quality
     if (quality !== "high") return;
-    paths.forEach((_, i) => {
+    const m = pulseRef.current;
+    if (!m) return;
+    paths.forEach((path, i) => {
       pulseT.current[i] = (pulseT.current[i] + delta * 0.18) % 1;
-      const mesh = pulseRefs.current[i];
-      if (!mesh) return;
-      paths[i].curve.getPoint(pulseT.current[i], mesh.position);
+      path.curve.getPoint(pulseT.current[i], _pulsePos);
+      _pulseMat.compose(_pulsePos, _pulseQuat, _pulseScale);
+      m.setMatrixAt(i, _pulseMat);
     });
+    m.instanceMatrix.needsUpdate = true;
   });
 
   if (quality === "low" || phase !== "ascent") return null;
@@ -74,17 +97,12 @@ export const MineralVeins = ({ phase, quality = "high" }: Props) => {
         </mesh>
       ))}
 
-      {/* Traveling pulse spheres — high quality only */}
-      {quality === "high" && paths.map((_, i) => (
-        <mesh
-          key={`pulse-${i}`}
-          ref={el => { pulseRefs.current[i] = el; }}
-          position={[0, 0, 0]}
-        >
-          <sphereGeometry args={[0.045, 5, 5]} />
+      {/* Traveling pulse spheres — high quality only, 12 meshes → 1 draw call */}
+      {quality === "high" && (
+        <instancedMesh ref={pulseRef} args={[PULSE_GEO, undefined, paths.length]}>
           <meshBasicMaterial color="#ffa040" />
-        </mesh>
-      ))}
+        </instancedMesh>
+      )}
     </group>
   );
 };

@@ -6,6 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { LOCATIONS } from "@/data/locations";
 import type { GamePhase } from "@/hooks/useGamePhase";
+import type { QualityLevel } from "@/hooks/useDeviceQuality";
 
 const TECH_IDS = new Set([
   "prism-ledge",
@@ -93,9 +94,9 @@ type RunePlate = {
 // Shared geometry for all rune plates (all are 0.3×0.3 planes)
 const RUNE_PLANE_GEO = new THREE.PlaneGeometry(0.3, 0.3);
 
-type Props = { phase: GamePhase };
+type Props = { phase: GamePhase; quality?: QualityLevel };
 
-export const CircuitRunes = ({ phase }: Props) => {
+export const CircuitRunes = ({ phase, quality = "high" }: Props) => {
   const lightRefs = useRef<(THREE.PointLight | null)[]>([]);
 
   const plates = useMemo<RunePlate[]>(() => {
@@ -114,7 +115,9 @@ export const CircuitRunes = ({ phase }: Props) => {
 
   const textures = useMemo(() => plates.map(p => makeRuneTex(p.seed)), [plates]);
 
+  // Animate lights on high quality only — avoids per-frame work on low/medium
   useFrame(s => {
+    if (quality !== "high") return;
     const t = s.clock.elapsedTime;
     lightRefs.current.forEach((lr, i) => {
       if (lr) lr.intensity = 0.18 + Math.sin(t * 1.4 + i * 0.9) * 0.08;
@@ -130,13 +133,16 @@ export const CircuitRunes = ({ phase }: Props) => {
           <mesh geometry={RUNE_PLANE_GEO}>
             <meshBasicMaterial map={textures[i]} transparent opacity={0.8} side={THREE.DoubleSide} depthWrite={false} />
           </mesh>
-          <pointLight
-            ref={el => { lightRefs.current[i] = el; }}
-            color="#C8860A"
-            intensity={0.18}
-            distance={2.5}
-            decay={2}
-          />
+          {/* 24 point lights are skipped on low/medium — too expensive on mobile */}
+          {quality === "high" && (
+            <pointLight
+              ref={el => { lightRefs.current[i] = el; }}
+              color="#C8860A"
+              intensity={0.18}
+              distance={2.5}
+              decay={2}
+            />
+          )}
         </group>
       ))}
     </>
